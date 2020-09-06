@@ -12,9 +12,9 @@ list =
     | process
 
 process =
-    | atom // start from AtomName
-    | redir // start from PointerName
-    | "(" line ")" // start from opening parentheses
+    | atom		(* start from AtomName *)
+    | redir		(* start from PointerName *)
+    | "(" line ")"	(* start from opening parentheses *)
 
 atom =
     | AtomName "("  ")"
@@ -33,4 +33,4 @@ redir =
     | PointerName "->" pointing_to    
 
 
-"." < ":-" < "," 
+(* "." < ":-" < ","  *)
