@@ -1,70 +1,106 @@
 module Main where
 import System.Environment
+import Data.List
 import Text.ParserCombinators.Parsec
 import qualified Data.Map.Strict as M
 
-symbol :: Parser Char
-symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f (a, b, c) = f a b c 
+
+data Pointer = Pointer String
+             | Atom String [Pointer]
+
+data Proc = FromLocal (Maybe String) String [Pointer]
+          | FromFreeTail String String [Pointer]
+          | Rule [Proc] [Proc]
+
+showBlock :: [Proc] -> String
+showBlock = intercalate ". " . map showProc
+
+showProc :: Proc -> String
+showProc (FromLocal (Just parent) name args) = parent ++ " -> (" ++ name ++ unwordsList args ++ ")"
+showProc (FromLocal Nothing name args) = name ++ "(" ++ unwordsList args ++ ")"
+
+
+unwordsList :: [Pointer] -> String
+unwordsList = intercalate ", " . map showPointer
+
+showPointer :: Pointer -> String
+showPointer (Pointer pointer) = pointer
+showPointer (Atom name args) = name ++ "(" ++ unwordsList args ++ ")"
 
 pointerName :: Parser String
-pointerName = try upper >> many (alphaNum <|> char '_') >>= return 
+pointerName = do x <- upper <|> char '_'
+                 y <- many (alphaNum <|> char '_')
+                 return $ x : y 
 
 atomName :: Parser String
-atomName = do try lower >> many (alphaNum <|> char '_') >>= return
+atomName = (do x <- lower
+               y <- many (alphaNum <|> char '_')
+               return $ x : y)
            <|> do char '`' 
                   x <- many $ noneOf "`"
                   char '`'
                   return x
 
 parsePointer :: Parser Pointer
-parsePointer = (return . flip Pointer 0 =<< pointerName)
+parsePointer = (return . Pointer =<< pointerName)
                <|> return . uncurry Atom =<< parseAtom
 
 sepByComma :: Parser a -> Parser [a]
 sepByComma parser = sepBy parser (spaces >> char ',' >> spaces)
 
+paren :: Parser a -> Parser a
+paren parser = do char '(' >> spaces
+                  x <- parser
+                  spaces >> char ')' >> spaces
+                  return x
+
+parenSepByComma :: Parser a -> Parser [a]
+parenSepByComma parser = do char '(' >> spaces
+                            x <- sepBy parser (spaces >> char ',' >> spaces)
+                            spaces >> char ')' >> spaces
+                            return x
+
 parseAtom :: Parser (String, [Pointer])
 parseAtom = do name <- atomName
-               args <- (do char '('
-                           args <- sepByComma parsePointer
-                           char ')'
-                           return args)
+               spaces
+               args <- (parenSepByComma parsePointer)
                        <|> return []
                return (name, args)
                
 alias :: Parser (String, String, [Pointer])
 alias = do parent <- pointerName
-           string "->"
+           spaces >> string "->" >> spaces
            (name, args) <- parseAtom
            return (parent, name, args)
 
 parseProcess :: Parser [Proc]
-parseProcess = (do (parent, name, args) <- char '*' >> spaces >> alias
-                   return [FromFreeTail (Pointer parent 0) name args])
+parseProcess = (char '*' >> spaces >> alias >>= return . (:[]) . uncurry3 FromFreeTail)
                <|> (do (parent, name, args) <- alias
-                       return [FromLocal (Just $ Pointer parent 0) name args])
-               <|> (do (name, args) <- parseAtom
-                       return [FromLocal Nothing name args])
-               <|> do char '('
-                      line <- parseLine
-                      char ')'
-                      return line
+                       return [FromLocal (Just parent) name args])
+               <|> (return . (:[]) . uncurry (FromLocal Nothing) =<< parseAtom)
+               <|> paren parseLine
                       
+parseList :: Parser [Proc]
+parseList = return . concat =<< sepByComma parseProcess  
+
 parseLine :: Parser [Proc]
-parseLine = return . concat =<< sepByComma parseProcess  
+parseLine = do x <- parseList
+               spaces
+               (string ":-" >> spaces >> parseList >>= return . (:[]) . Rule x)
+                 <|> return x
+
+parseBlock :: Parser [Proc]
+parseBlock = do spaces
+                x <- sepBy parseLine (spaces >> char '.' >> space >> spaces) 
+                (spaces >> char '.' >> spaces) <|> spaces
+                return $ concat x
 
 readExpr :: String -> String
-readExpr input = case parse pointerName "lisp" input of
+readExpr input = case parse parseBlock "lisp" input of
   Left err -> "No match: " ++ show err
-  Right val -> "Found value" 
-
-data Pointer = Pointer String Int
-             | Atom String [Pointer]
-
-data Proc = FromLocal (Maybe Pointer) String [Pointer]
-          | FromFreeTail Pointer String [Pointer]
-          | Rule [Proc] [Proc]
-          | Molecule [Proc]
+  Right val -> "Found value: " ++ showBlock val
 
 main :: IO()
 main = do
