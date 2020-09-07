@@ -14,21 +14,33 @@ data Proc = FromLocal (Maybe String) String [Pointer]
           | FromFreeTail String String [Pointer]
           | Rule [Proc] [Proc]
 
+-- show
 showBlock :: [Proc] -> String
 showBlock = intercalate ". " . map showProc
 
+showProcList :: [Proc] -> String
+showProcList = intercalate ", " . map showProc_
+  where showProc_ r@(Rule _ _) = "(" ++ showProc r ++ ")"
+        showProc_ otherwise = showProc otherwise
+
+showPointerList :: [Pointer] -> String
+showPointerList [] = ""
+showPointerList args = "(" ++ unwordsList args ++ ")"
+  where unwordsList = intercalate ", " . map showPointer
+
 showProc :: Proc -> String
-showProc (FromLocal (Just parent) name args) = parent ++ " -> (" ++ name ++ unwordsList args ++ ")"
-showProc (FromLocal Nothing name args) = name ++ "(" ++ unwordsList args ++ ")"
+showProc (FromLocal (Just parent) name args) = parent ++ " -> " ++ name ++ showPointerList args
+showProc (FromLocal Nothing name args) = name ++ showPointerList args
+showProc (FromFreeTail parent name args) = "*" ++ parent ++ " -> " ++ name ++ showPointerList args
+showProc (Rule lhs rhs) = showProcList lhs ++ " :- " ++ showProcList rhs
 
 
-unwordsList :: [Pointer] -> String
-unwordsList = intercalate ", " . map showPointer
 
 showPointer :: Pointer -> String
 showPointer (Pointer pointer) = pointer
-showPointer (Atom name args) = name ++ "(" ++ unwordsList args ++ ")"
+showPointer (Atom name args) = name ++ showPointerList args
 
+-- parser
 pointerName :: Parser String
 pointerName = do x <- upper <|> char '_'
                  y <- many (alphaNum <|> char '_')
@@ -93,12 +105,12 @@ parseLine = do x <- parseList
 
 parseBlock :: Parser [Proc]
 parseBlock = do spaces
-                x <- sepBy parseLine (spaces >> char '.' >> space >> spaces) 
+                x <- sepBy parseLine $ try $ spaces >> char '.' >> space >> spaces
                 (spaces >> char '.' >> spaces) <|> spaces
                 return $ concat x
 
 readExpr :: String -> String
-readExpr input = case parse parseBlock "lisp" input of
+readExpr input = case parse parseBlock "vertex" input of
   Left err -> "No match: " ++ show err
   Right val -> "Found value: " ++ showBlock val
 
