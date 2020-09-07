@@ -15,6 +15,7 @@ data Pointer = Pointer String
 
 data Proc = FromLocal (Maybe String) String [Pointer]
           | FromFreeTail String String [Pointer]
+          | Alias String String
           | Rule [Proc] [Proc]
 
 -- show
@@ -51,14 +52,14 @@ atomName :: Parser String
 atomName = (do x <- lower
                y <- many (alphaNum <|> char '_')
                return $ x : y)
-           <|> do char '`' 
+           <|> do char '`'
                   x <- many $ noneOf "`"
                   char '`'
                   return x
 
 parsePointer :: Parser Pointer
 parsePointer = (return . Pointer =<< pointerName)
-               <|> return . uncurry Atom =<< parseAtom
+               <|> return . uncurry Atom =<< parseAtomBody
 
 sepByComma :: Parser a -> Parser [a]
 sepByComma parser = sepBy parser (spaces >> char ',' >> spaces)
@@ -75,24 +76,30 @@ parenSepByComma parser = do char '(' >> spaces
                             spaces >> char ')' >> spaces
                             return x
 
-parseAtom :: Parser (String, [Pointer])
-parseAtom = do name <- atomName
-               spaces
-               args <- (parenSepByComma parsePointer)
-                       <|> return []
-               return (name, args)
+parseAtomBody :: Parser (String, [Pointer])
+parseAtomBody = do name <- atomName
+                   spaces
+                   args <- (parenSepByComma parsePointer)
+                           <|> return []
+                   return (name, args)
                
-alias :: Parser (String, String, [Pointer])
-alias = do parent <- pointerName
-           spaces >> string "->" >> spaces
-           (name, args) <- parseAtom
-           return (parent, name, args)
+parseAtom :: Parser (String, String, [Pointer])
+parseAtom = do parent <- pointerName
+               spaces >> string "->" >> spaces
+               (name, args) <- parseAtomBody
+               return (parent, name, args)
 
 parseProcess :: Parser [Proc]
-parseProcess = (char '*' >> spaces >> alias >>= return . (:[]) . uncurry3 FromFreeTail)
-               <|> (do (parent, name, args) <- alias
+parseProcess = (do char '*' >> spaces
+                   parent <- pointerName
+                   spaces >> string "->" >> spaces
+                   (do (name, args) <- parseAtomBody
+                       return [FromFreeTail parent name args])
+                     <|> (do to <- pointerName
+                             return $ [Alias parent to]))
+               <|> (do (parent, name, args) <- parseAtom
                        return [FromLocal (Just parent) name args])
-               <|> (return . (:[]) . uncurry (FromLocal Nothing) =<< parseAtom)
+               <|> (return . (:[]) . uncurry (FromLocal Nothing) =<< parseAtomBody)
                <|> paren parseLine
                       
 parseList :: Parser [Proc]
