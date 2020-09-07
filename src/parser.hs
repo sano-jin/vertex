@@ -1,8 +1,11 @@
-module Main where
-import System.Environment
+module Parser (
+  readExpr,
+  showBlock,
+  Pointer (Pointer, Atom),
+  Proc (FromLocal, FromFreeTail, Rule)
+  ) where
 import Data.List
 import Text.ParserCombinators.Parsec
-import qualified Data.Map.Strict as M
 
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (a, b, c) = f a b c 
@@ -28,17 +31,15 @@ showPointerList [] = ""
 showPointerList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showPointer
 
+showPointer :: Pointer -> String
+showPointer (Pointer pointer) = pointer
+showPointer (Atom name args) = name ++ showPointerList args
+
 showProc :: Proc -> String
 showProc (FromLocal (Just parent) name args) = parent ++ " -> " ++ name ++ showPointerList args
 showProc (FromLocal Nothing name args) = name ++ showPointerList args
 showProc (FromFreeTail parent name args) = "*" ++ parent ++ " -> " ++ name ++ showPointerList args
 showProc (Rule lhs rhs) = showProcList lhs ++ " :- " ++ showProcList rhs
-
-
-
-showPointer :: Pointer -> String
-showPointer (Pointer pointer) = pointer
-showPointer (Atom name args) = name ++ showPointerList args
 
 -- parser
 pointerName :: Parser String
@@ -109,12 +110,5 @@ parseBlock = do spaces
                 (spaces >> char '.' >> spaces) <|> spaces
                 return $ concat x
 
-readExpr :: String -> String
-readExpr input = case parse parseBlock "vertex" input of
-  Left err -> "No match: " ++ show err
-  Right val -> "Found value: " ++ showBlock val
-
-main :: IO()
-main = do
-  args <- getArgs
-  putStrLn $ readExpr $ head args 
+readExpr :: String -> Either ParseError [Proc]
+readExpr = parse parseBlock "vertex"
