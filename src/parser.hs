@@ -27,8 +27,8 @@ data Proc = FromLocal (Maybe String) String [Pointer]
 -- lexer
 languageDef =
   emptyDef { Token.commentStart    = "/*"
-           , Token.commentEnd    = "*/"
-           , Token.commentLine    = "%"
+           , Token.commentEnd      = "*/"
+           , Token.commentLine     = "%"
            , Token.identStart      = letter
            , Token.identLetter     = alphaNum <|> char '_'
            , Token.reservedNames   = []
@@ -56,10 +56,10 @@ reserevedOP = Token.reservedOp lexer
 comma       = Token.comma      lexer
 dot         = Token.dot        lexer 
 whiteSpace  = Token.whiteSpace lexer 
+commaSep    = Token.commaSep   lexer
 arrow       = Token.lexeme lexer $ string "->"
 turnstile   = Token.lexeme lexer $ string ":-"
 star        = Token.lexeme lexer $ char '*'
-commaSep    = Token.commaSep   lexer
 
 -- parser
 whileParser :: Parser (S.Set Proc)
