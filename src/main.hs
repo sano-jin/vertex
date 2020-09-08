@@ -7,13 +7,27 @@ import qualified Parser (
   readExpr,
   showBlock,
   Pointer (Pointer, Atom),
-  Proc (FromLocal, FromFreeTail, Rule)
+  Proc (FromLocal, FromFreeTail, Rule),
+  ParseError
   )
 
 type Env = IORef (M.Map String (IORef (Int, Maybe Parser.Pointer)))
 
-data CanonicError = IsNotSerial String
+data CompileError = IsNotSerial String
                   | IsNotFunctional String
+                  | RedundantAliasing String String
+                  | Free2FreeAliasingOnLHS String String
+                  | Parser Parser.ParseError
+
+showError :: CompileError -> String
+showError (IsNotSerial pointer) = "pointer '" ++ pointer ++ "' is not serial"
+showError (IsNotFunctional pointer) = "pointer '" ++ pointer ++ "' is not functional"
+showError (RedundantAliasing x y) = "aliasing from '" ++ x ++ "' to '" ++ y ++ "' is redundant"
+showError (Free2FreeAliasingOnLHS x y) = "aliasing from free tail pointer '"
+                                         ++ x ++ "' to free head pointer'" ++ y ++ "'"
+instance Show CompileError where show = showError
+
+
 
 nullEnv :: IO Env
 nullEnv = newIORef M.empty

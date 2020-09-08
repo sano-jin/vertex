@@ -2,7 +2,8 @@ module Parser (
   readExpr,
   showBlock,
   Pointer (Pointer, Atom),
-  Proc (FromLocal, FromFreeTail, Rule)
+  Proc (FromLocal, FromFreeTail, Rule),
+  ParseError
   ) where
 import Data.List
 import Control.Monad
