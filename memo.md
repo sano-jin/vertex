@@ -7,15 +7,15 @@
 ```
 P = null
   | X -> p(X1, ..., Xn)
-  | P, P
-  | P :- P
+  | (P, P)
+  | (P :- P)
 ```
 which corresponds to
 
 ```
 T = x
-  | T T
-  | \x.T
+  | (T T)
+  | (\x.T)
 ```
 
 
