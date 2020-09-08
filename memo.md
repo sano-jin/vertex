@@ -4,7 +4,7 @@
 - `X = _*[A-Z][a-zA-Z_]*`
 - `p = [a-z][a-zA-Z_]*`
 
-```
+```math
 P = X -> p(X1, ..., Xn)
   | P, P
   | P :- P
