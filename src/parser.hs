@@ -23,6 +23,7 @@ data Proc = FromLocal (Maybe String) String [Pointer]
           | Rule (S.Set Proc) (S.Set Proc)
           deriving(Eq, Ord)
 
+-- lexer
 languageDef =
   emptyDef { Token.commentStart    = "/*"
            , Token.commentEnd    = "*/"
