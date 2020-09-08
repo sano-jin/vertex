@@ -1,8 +1,8 @@
 module Parser (
   readExpr,
   showBlock,
-  Pointer (Pointer, Atom),
-  Proc (FromLocal, FromFreeTail, Rule),
+  Pointer (..),
+  Proc (..),
   ParseError
   ) where
 import Data.List
@@ -11,17 +11,16 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import qualified Data.Map.Strict as M
-import qualified Data.Set as S
+-- import qualified Data.Map.Strict as M
+-- import qualified Data.Set as S
 
-data Pointer = Pointer String
+data Pointer = Pointer Int String
              | Atom String [Pointer]
              deriving(Eq, Ord)
 
-data Proc = FromLocal (Maybe String) String [Pointer]
-          | FromFreeTail String String [Pointer]
-          | Alias String String
-          | Rule (S.Set Proc) (S.Set Proc)
+data Proc = Alias (Maybe (Int, String)) Pointer
+          | Rule [Proc] [Proc]
+          | Molecule [Proc]
           deriving(Eq, Ord)
 
 -- lexer
@@ -37,20 +36,6 @@ languageDef =
 
 lexer = Token.makeTokenParser languageDef
 
-atomName :: Parser String
-atomName =
-  Token.lexeme lexer $ try $ 
-  do c <- lower
-     cs <- many (alphaNum <|> char '_')
-     return $ c : cs
-
-pointerName :: Parser String
-pointerName = 
-  Token.lexeme lexer $ try $
-  do c <- (upper <|> char '_')
-     cs <- many (alphaNum <|> char '_')
-     return $ c : cs
-
 parens      = Token.parens     lexer
 reserevedOP = Token.reservedOp lexer
 comma       = Token.comma      lexer
@@ -59,23 +44,39 @@ whiteSpace  = Token.whiteSpace lexer
 commaSep    = Token.commaSep   lexer
 arrow       = Token.lexeme lexer $ string "->"
 turnstile   = Token.lexeme lexer $ string ":-"
-star        = Token.lexeme lexer $ char '*'
+star        = Token.lexeme lexer $ char   '*'
+underscore  = Token.lexeme lexer $ char   '_'
+
+atomName :: Parser String
+atomName =
+  Token.lexeme lexer $ try $ 
+  do c <- lower
+     cs <- many (alphaNum <|> char '_')
+     return $ c : cs
+
+pointerName :: Parser (Int, String)
+pointerName = 
+  Token.lexeme lexer $ try $
+  do us <- many underscore 
+     c <- upper
+     cs <- many (alphaNum <|> char '_')
+     return (length us, c : cs)
 
 -- parser
-whileParser :: Parser (S.Set Proc)
-whileParser = liftM (S.fromList) $ whiteSpace >> parseBlock
+whileParser :: Parser [Proc]
+whileParser = whiteSpace >> parseBlock
   
 parseBlock :: Parser [Proc]
-parseBlock = liftM concat $ sepEndBy1 parseLine dot
+parseBlock = sepEndBy1 parseLine dot
              
-parseLine :: Parser [Proc]
+parseLine :: Parser Proc
 parseLine = do x <- parseList
-               (do y <- turnstile >> parseList
-                   return [Rule (S.fromList x) (S.fromList y)]
-                 ) <|> return x
-
+               ((do y <- (turnstile >> parseList)
+                    return $ Rule x y
+                ) <|> (return $ Molecule x))
+               
 parseList :: Parser [Proc]
-parseList = liftM concat $ sepBy1 parseProc comma
+parseList = sepBy1 parseProc comma
 
 parseAtomBody :: Parser (String, [Pointer])
 parseAtomBody = do name <- atomName
@@ -83,29 +84,33 @@ parseAtomBody = do name <- atomName
                    return (name, args)
 
 parsePointer :: Parser Pointer
-parsePointer = (liftM Pointer pointerName)
-               <|> return . uncurry Atom =<< parseAtomBody
+parsePointer = (liftM (uncurry Pointer) pointerName)
+               <|> liftM (uncurry Atom)  parseAtomBody
   
-parseProc :: Parser [Proc]
-parseProc = (do (name, args) <- parseAtomBody
-                return [FromLocal Nothing name args])
-            <|> (do parent <- pointerName
-                    (name, args) <- (arrow >> parseAtomBody)
-                    return [FromLocal (Just parent) name args])
-            <|> (do parent <- star >> pointerName
-                    (name, args) <- (arrow >> parseAtomBody)
-                    return [FromFreeTail parent name args])
+parseProc :: Parser Proc
+parseProc = (do from <- pointerName
+                to <- (arrow >> parsePointer)
+                return $ Alias (Just from) to)
+            <|> (liftM (Alias Nothing . uncurry Atom) parseAtomBody)
             <|> parens parseLine
 
-readExpr :: String -> Either ParseError (S.Set Proc)
+readExpr :: String -> Either ParseError [Proc]
 readExpr = parse whileParser "vertex"
 
 -- show
-showBlock :: S.Set Proc -> String
-showBlock = intercalate ". " . map showProc . S.toList
+showBlock :: [Proc] -> String
+showBlock = intercalate ". " . map showProc_
+  where showProc_ (Molecule molecule) = showProcSet molecule
+        showProc_ others              = showProc others
 
-showProcList :: [Proc] -> String
-showProcList = intercalate ", " . map showProc_
+showProc :: Proc -> String
+showProc (Alias (Just (i, p)) to) = showPointer (Pointer i p) ++ " -> " ++ showPointer to
+showProc (Alias Nothing to) = showPointer to
+showProc (Rule lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
+showProc (Molecule molecule) = "(" ++ showProcSet molecule ++ ")"
+
+showProcSet :: [Proc] -> String
+showProcSet = intercalate ", " . map showProc_
   where showProc_ r@(Rule _ _) = "(" ++ showProc r ++ ")"
         showProc_ others = showProc others
 
@@ -115,11 +120,6 @@ showPointerList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showPointer
 
 showPointer :: Pointer -> String
-showPointer (Pointer pointer) = pointer
+showPointer (Pointer i name) = replicate i '_' ++ name
 showPointer (Atom name args) = name ++ showPointerList args
 
-showProc :: Proc -> String
-showProc (FromLocal (Just parent) name args) = parent ++ " -> " ++ name ++ showPointerList args
-showProc (FromLocal Nothing name args) = name ++ showPointerList args
-showProc (FromFreeTail parent name args) = "*" ++ parent ++ " -> " ++ name ++ showPointerList args
-showProc (Rule lhs rhs) = showProcList (S.toList lhs) ++ " :- " ++ showProcList (S.toList rhs)
