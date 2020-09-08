@@ -5,7 +5,7 @@
 - `p = [a-z][a-zA-Z_]*`
 
 ```math
-P = X -> p(X_1, ..., X_n)
+P = X \mapsto -> p(X_1, ..., X_n)
   | P, P
   | P :- P
 ```
