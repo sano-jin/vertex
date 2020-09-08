@@ -14,14 +14,17 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 -- import qualified Data.Map.Strict as M
 -- import qualified Data.Set as S
 
-data Pointer = Pointer Int String
-             | Atom String [Pointer]
-             deriving(Eq, Ord)
+uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+uncurry3 f (a, b, c) = f a b c
 
-data Proc = Alias (Maybe (Int, String)) Pointer
+data Pointer = Pointer SourcePos Int String
+             | Atom String [Pointer]
+             deriving(Eq, Ord, Show)
+
+data Proc = Alias (Maybe (SourcePos, Int, String)) Pointer
           | Rule [Proc] [Proc]
           | Molecule [Proc]
-          deriving(Eq, Ord)
+          deriving(Eq, Ord, Show)
 
 -- lexer
 languageDef =
@@ -41,7 +44,8 @@ reserevedOP = Token.reservedOp lexer
 comma       = Token.comma      lexer
 dot         = Token.dot        lexer 
 whiteSpace  = Token.whiteSpace lexer 
-commaSep    = Token.commaSep   lexer
+commaSep    = Token.commaSep   lexer 
+commaSep1   = Token.commaSep1  lexer
 arrow       = Token.lexeme lexer $ string "->"
 turnstile   = Token.lexeme lexer $ string ":-"
 star        = Token.lexeme lexer $ char   '*'
@@ -49,22 +53,25 @@ underscore  = Token.lexeme lexer $ char   '_'
 
 atomName :: Parser String
 atomName =
-  Token.lexeme lexer $ try $ 
+  Token.lexeme lexer $
   do c <- lower
      cs <- many (alphaNum <|> char '_')
      return $ c : cs
 
-pointerName :: Parser (Int, String)
+pointerName :: Parser (SourcePos, Int, String)
 pointerName = 
-  Token.lexeme lexer $ try $
-  do us <- many underscore 
+  Token.lexeme lexer $
+  do pos <- getPosition
+     us <- many underscore 
      c <- upper
      cs <- many (alphaNum <|> char '_')
-     return (length us, c : cs)
+     return (pos, length us, c : cs)
 
 -- parser
 whileParser :: Parser [Proc]
-whileParser = whiteSpace >> parseBlock
+whileParser = do x <- (whiteSpace >> parseBlock)
+                 _ <- eof
+                 return x
   
 parseBlock :: Parser [Proc]
 parseBlock = sepEndBy1 parseLine dot
@@ -76,7 +83,7 @@ parseLine = do x <- parseList
                 ) <|> (return $ Molecule x))
                
 parseList :: Parser [Proc]
-parseList = sepBy1 parseProc comma
+parseList = commaSep1 parseProc
 
 parseAtomBody :: Parser (String, [Pointer])
 parseAtomBody = do name <- atomName
@@ -84,7 +91,7 @@ parseAtomBody = do name <- atomName
                    return (name, args)
 
 parsePointer :: Parser Pointer
-parsePointer = (liftM (uncurry Pointer) pointerName)
+parsePointer = (liftM (uncurry3 Pointer) pointerName)
                <|> liftM (uncurry Atom)  parseAtomBody
   
 parseProc :: Parser Proc
@@ -104,7 +111,7 @@ showBlock = intercalate ". " . map showProc_
         showProc_ others              = showProc others
 
 showProc :: Proc -> String
-showProc (Alias (Just (i, p)) to) = showPointer (Pointer i p) ++ " -> " ++ showPointer to
+showProc (Alias (Just (pos, i, p)) to) = showPointer (Pointer pos i p) ++ " -> " ++ showPointer to
 showProc (Alias Nothing to) = showPointer to
 showProc (Rule lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
 showProc (Molecule molecule) = "(" ++ showProcSet molecule ++ ")"
@@ -120,6 +127,6 @@ showPointerList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showPointer
 
 showPointer :: Pointer -> String
-showPointer (Pointer i name) = replicate i '_' ++ name
+showPointer (Pointer _ i name) = replicate i '_' ++ name
 showPointer (Atom name args) = name ++ showPointerList args
 
