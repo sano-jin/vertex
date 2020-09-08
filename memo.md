@@ -1,6 +1,9 @@
 # Memo
 
 ## Syntax
+- X = _*[A-Z][a-zA-Z_]*
+- p = [a-z][A-Z]*
+
 - P =
   - X -> p(X, ..., X)
   - X -> X
