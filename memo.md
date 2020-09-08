@@ -5,11 +5,18 @@
 - `p = [a-z][a-zA-Z_]*`
 
 ```
-P = X -> p(X, ..., X)
-  | X -> X
+P = X -> p(X1, ..., Xn)
   | P, P
   | P :- P
 ```
+which corresponds to
+
+```
+T = x
+  | T T
+  | \x.T
+```
+
 
 ## 記号
 - モジュールは`::`で示す
