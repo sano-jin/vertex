@@ -3,6 +3,7 @@ import System.Environment
 import Data.IORef
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
+import qualified Data.Set.Strict as S
 import qualified Parser (
   readExpr,
   showBlock,
@@ -38,7 +39,22 @@ extractValue (Right val) = val
 
 nullEnv :: IO Env
 nullEnv = newIORef M.empty
-  
+
+
+data Pointer = Pointer { indeg :: Int
+                       , index :: Int
+                       ,  name :: String
+                       } deriving (Show)
+
+data PointerVal = PointerVal SourcePos Int String
+                | AtomVal String [PointerVal] [Pointer] Int
+                deriving(Eq, Ord, Show)
+
+data ProcVal = AliasVal (Maybe (SourcePos, Int, String)) PointerVal 
+             | RuleVal ([ProcVal], [Pointer], [Pointer], Int) ([ProcVal], [Pointer], [Pointer])
+             | MoleculeVal ([ProcVal], [Pointer], [Pointer], Int)
+             deriving(Eq, Ord, Show)
+
 
 
 readExpr :: String -> String
