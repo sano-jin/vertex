@@ -1,7 +1,9 @@
 # Memo
 
 ## 記号
-- ポインタは`_` でアクセス制御（スコープ外からはアンダースコアを一つ外したように見える）e.g. De Bruisin Index
+### ポインタのアクセス制御
+- ポインタは`_` でアクセス制御（スコープ外からはアンダースコアを一つ外したように見える）
+- e.g. De Bruisin Index
   - `A -> a, A -> a` => `Error: Not functional`
   - `A -> a, (A -> a(_A, A))` == `A -> a, B -> a(A, B)`
   - `A -> a, (_A -> a)` == `A -> a, A -> a` => `Error: Not functional` 
