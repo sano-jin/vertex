@@ -2,7 +2,7 @@
 
 ## Syntax
 - `X = _*[A-Z][a-zA-Z_]*`
-- `p = [a-z][A-Z]*`
+- `p = [a-z][a-zA-Z_]*`
 
 ```
 P = X -> p(X, ..., X)
