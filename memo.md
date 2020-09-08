@@ -1,7 +1,7 @@
 # Memo
 
 ## Syntax
-- Process
+- P =
   - X -> p(X, ..., X)
   - X -> X
   - P, P
