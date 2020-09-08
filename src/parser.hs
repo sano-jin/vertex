@@ -1,8 +1,8 @@
 module Parser (
   readExpr,
   showBlock,
-  Pointer (..),
-  Proc (..),
+  PointerLit (..),
+  ProcLit (..),
   ParseError
   ) where
 import Data.List
@@ -17,13 +17,13 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (a, b, c) = f a b c
 
-data Pointer = Pointer SourcePos Int String
-             | Atom String [Pointer]
+data PointerLit = PointerLit SourcePos Int String
+             | AtomLit String [PointerLit]
              deriving(Eq, Ord, Show)
 
-data Proc = Alias (Maybe (SourcePos, Int, String)) Pointer
-          | Rule [Proc] [Proc]
-          | Molecule [Proc]
+data ProcLit = AliasLit (Maybe (SourcePos, Int, String)) PointerLit
+          | RuleLit [ProcLit] [ProcLit]
+          | MoleculeLit [ProcLit]
           deriving(Eq, Ord, Show)
 
 -- lexer
@@ -68,65 +68,66 @@ pointerName =
      return (pos, length us, c : cs)
 
 -- parser
-whileParser :: Parser [Proc]
+whileParser :: Parser [ProcLit]
 whileParser = do x <- (whiteSpace >> parseBlock)
                  _ <- eof
                  return x
   
-parseBlock :: Parser [Proc]
+parseBlock :: Parser [ProcLit]
 parseBlock = sepEndBy1 parseLine dot
              
-parseLine :: Parser Proc
+parseLine :: Parser ProcLit
 parseLine = do x <- parseList
                ((do y <- (turnstile >> parseList)
-                    return $ Rule x y
-                ) <|> (return $ Molecule x))
+                    return $ RuleLit x y
+                ) <|> (return $ MoleculeLit x))
                
-parseList :: Parser [Proc]
+parseList :: Parser [ProcLit]
 parseList = commaSep1 parseProc
 
-parseAtomBody :: Parser (String, [Pointer])
+parseAtomBody :: Parser (String, [PointerLit])
 parseAtomBody = do name <- atomName
                    args <- (parens $ commaSep parsePointer) <|> return []
                    return (name, args)
 
-parsePointer :: Parser Pointer
-parsePointer = (liftM (uncurry3 Pointer) pointerName)
-               <|> liftM (uncurry Atom)  parseAtomBody
+parsePointer :: Parser PointerLit
+parsePointer = (liftM (uncurry3 PointerLit) pointerName)
+               <|> liftM (uncurry AtomLit)  parseAtomBody
   
-parseProc :: Parser Proc
+parseProc :: Parser ProcLit
 parseProc = (do from <- pointerName
                 to <- (arrow >> parsePointer)
-                return $ Alias (Just from) to)
-            <|> (liftM (Alias Nothing . uncurry Atom) parseAtomBody)
+                return $ AliasLit (Just from) to)
+            <|> (liftM (AliasLit Nothing . uncurry AtomLit) parseAtomBody)
             <|> parens parseLine
 
-readExpr :: String -> Either ParseError [Proc]
+readExpr :: String -> Either ParseError [ProcLit]
 readExpr = parse whileParser "vertex"
 
 -- show
-showBlock :: [Proc] -> String
+showBlock :: [ProcLit] -> String
 showBlock = intercalate ". " . map showProc_
-  where showProc_ (Molecule molecule) = showProcSet molecule
+  where showProc_ (MoleculeLit molecule) = showProcSet molecule
         showProc_ others              = showProc others
 
-showProc :: Proc -> String
-showProc (Alias (Just (pos, i, p)) to) = showPointer (Pointer pos i p) ++ " -> " ++ showPointer to
-showProc (Alias Nothing to) = showPointer to
-showProc (Rule lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
-showProc (Molecule molecule) = "(" ++ showProcSet molecule ++ ")"
+showProc :: ProcLit -> String
+showProc (AliasLit (Just (pos, i, p)) to) =
+  showPointer (PointerLit pos i p) ++ " -> " ++ showPointer to
+showProc (AliasLit Nothing to) = showPointer to
+showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
+showProc (MoleculeLit molecule) = "(" ++ showProcSet molecule ++ ")"
 
-showProcSet :: [Proc] -> String
+showProcSet :: [ProcLit] -> String
 showProcSet = intercalate ", " . map showProc_
-  where showProc_ r@(Rule _ _) = "(" ++ showProc r ++ ")"
+  where showProc_ r@(RuleLit _ _) = "(" ++ showProc r ++ ")"
         showProc_ others = showProc others
 
-showPointerList :: [Pointer] -> String
+showPointerList :: [PointerLit] -> String
 showPointerList [] = ""
 showPointerList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showPointer
 
-showPointer :: Pointer -> String
-showPointer (Pointer _ i name) = replicate i '_' ++ name
-showPointer (Atom name args) = name ++ showPointerList args
+showPointer :: PointerLit -> String
+showPointer (PointerLit _ i name) = replicate i '_' ++ name
+showPointer (AtomLit name args) = name ++ showPointerList args
 

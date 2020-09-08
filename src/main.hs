@@ -6,12 +6,12 @@ import qualified Data.Map.Strict as M
 import qualified Parser (
   readExpr,
   showBlock,
-  Pointer (..),
-  Proc (..),
+  PointerLit (..),
+  ProcLit (..),
   ParseError
   )
 
-type Env = IORef (M.Map String (IORef (Int, Maybe Parser.Pointer)))
+type Env = IORef (M.Map String (IORef (Int, Maybe Parser.PointerLit)))
 
 data CompileError = IsNotSerial String
                   | IsNotFunctional String
@@ -35,9 +35,12 @@ trapError action = catchError action (return . show)
 extractValue :: ThrowsError a -> a
 extractValue (Right val) = val
 
+
 nullEnv :: IO Env
 nullEnv = newIORef M.empty
   
+
+
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of
     Left err -> "No match : " ++ show err
