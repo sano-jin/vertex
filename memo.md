@@ -18,6 +18,14 @@ T = x
   | (\x.T)
 ```
 
+### Operational semintics
+```
+(null, P) = P
+(P, Q) = (Q, P)
+(P, (Q, R)) = ((P, Q), R)
+P = P' => P, Q = P', Q
+
+```
 
 ## 記号
 - モジュールは`::`で示す
