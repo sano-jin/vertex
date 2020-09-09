@@ -3,13 +3,14 @@ import System.Environment
 import Data.IORef
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
-import qualified Data.Set.Strict as S
+import qualified Data.Set as S
 import qualified Parser (
   readExpr,
   showBlock,
   PointerLit (..),
   ProcLit (..),
-  ParseError
+  ParseError,
+  SourcePos
   )
 
 type Env = IORef (M.Map String (IORef (Int, Maybe Parser.PointerLit)))
@@ -40,22 +41,23 @@ extractValue (Right val) = val
 nullEnv :: IO Env
 nullEnv = newIORef M.empty
 
-
-data Pointer = Pointer { indeg :: Int
-                       , index :: Int
-                       ,  name :: String
-                       } deriving (Show)
-
-data PointerVal = PointerVal SourcePos Int String
-                | AtomVal String [PointerVal] [Pointer] Int
-                deriving(Eq, Ord, Show)
-
-data ProcVal = AliasVal (Maybe (SourcePos, Int, String)) PointerVal 
-             | RuleVal ([ProcVal], [Pointer], [Pointer], Int) ([ProcVal], [Pointer], [Pointer])
-             | MoleculeVal ([ProcVal], [Pointer], [Pointer], Int)
+data ProcVal = AliasVal Int (Maybe (Parser.SourcePos, Int, String)) PointerVal 
+             | RuleVal Molecule Molecule
+             | MoleculeVal Molecule
              deriving(Eq, Ord, Show)
 
+data PointerVal = PointerVal Parser.SourcePos Int String
+                | Path [Int]
+                | AtomVal String [PointerVal] (S.Set (Parser.SourcePos, Int, String)) Int
+                deriving(Eq, Ord, Show)
 
+data Molecule = Molecule [ProcVal] (M.Map (Int, String) [Int]) (S.Set (Parser.SourcePos, Int, String)) Int
+              deriving(Eq, Ord, Show)
+
+
+
+
+      
 
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of

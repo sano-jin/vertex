@@ -3,7 +3,8 @@ module Parser (
   showBlock,
   PointerLit (..),
   ProcLit (..),
-  ParseError
+  ParseError,
+  SourcePos
   ) where
 import Data.List
 import Control.Monad
@@ -18,13 +19,13 @@ uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 uncurry3 f (a, b, c) = f a b c
 
 data PointerLit = PointerLit SourcePos Int String
-             | AtomLit String [PointerLit]
-             deriving(Eq, Ord, Show)
+                | AtomLit String [PointerLit]
+                deriving(Eq, Ord, Show)
 
 data ProcLit = AliasLit (Maybe (SourcePos, Int, String)) PointerLit
-          | RuleLit [ProcLit] [ProcLit]
-          | MoleculeLit [ProcLit]
-          deriving(Eq, Ord, Show)
+             | RuleLit [ProcLit] [ProcLit]
+             | MoleculeLit [ProcLit]
+             deriving(Eq, Ord, Show)
 
 -- lexer
 languageDef =
