@@ -14,26 +14,52 @@ import Syntax
 
 type Addr = Int
 type Indeg = Int
-data Node = NAtom String [Addr]  -- NAtom SymbolAtomName [Pointers]
-          | NInd Addr            -- Alias to Addr
+data Node = NAtom String [Addr]    -- NAtom SymbolAtomName [Pointers]
+          | NInd Addr              -- Alias to Addr
 
 type Heap = [(Addr, Indeg, Node)]  -- [(Address, Indegree, Atom)]
 
-data PointerVal = PointerVal Addr                   -- Addr
-                | AtomVal String [PointerVal]       -- p(X1,...,Xm)
+data PointerVal = PointerVal Addr                     -- Addr
+                | AtomVal String [PointerVal]         -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
-data ProcVal = LocalAliasVal Int Addr PointerVal    -- \X.Addr -> p(X1,...,Xm)
-             | FreeAliasVal Int Addr PointerVal     -- X.Addr -> p(X1,...,Xm)
-             | RuleVal [ProcVal] [ProcVal]          -- P :- P
+data ProcVal = LocalAliasVal Addr PointerVal    -- \X.Addr -> p(X1,...,Xm)
+             | FreeAliasVal  Addr PointerVal    -- X.Addr -> p(X1,...,Xm)
+             | RuleVal [ProcVal] [ProcVal]            -- P :- P
              deriving(Eq, Ord, Show)
 
 type RuleSet = [(ProcVal, ProcVal)]
 
--- PointerName -> (Address, Indegree, hasHead, isLocal)
+
+type ThrowsError = Either CompileError
+type IOThrowsError = ExceptT CompileError IO
+instance Show CompileError where show = showError
+
+
+data CompileError = IsNotSerial String 
+                  | IsNotFunctional String 
+                  | Parser Parser.ParseError
+
+
+-- show
+showError :: CompileError -> String
+showError (IsNotSerial name ) =
+  "pointer '" ++ name ++ "' is not serial.\n"
+showError (IsNotFunctional name) =
+  "pointer '" ++ name ++ "' is not functional.\n"
+showError (Parser parseError) = "Parse error at " ++ show parseError
+
+trapError action = catchError action (return . show)
+
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
+
+
+-- PointerName -> (Indegree, hasHead)
 type HasHead = Bool
 type IsLocal = Bool
-type Env = [(String, (Addr, Indeg, HasHead, IsLocal))]
+type Env = [(String, (Indeg, HasHead))]
+
 
 -- seed -> (newAddr, newSeed)
 newAddr :: Addr -> (Addr, Addr)    
@@ -45,33 +71,32 @@ fst3 (a, _, _) = a
 fst4 :: (a, b, c, d) -> a
 fst4 (a, _, _, _) = a
 
-lookupEnv_ :: String -> Env -> Maybe Addr
+lookupEnv_ :: String -> Env -> Maybe Indeg
 lookupEnv_ pointerName env
-  = liftM fst4 $ lookup pointerName env
+  = liftM fst $ lookup pointerName env
 
 mapEnv ::
-  String -> ((Addr, Indeg, HasHead, IsLocal) -> (Addr, Indeg, HasHead, IsLocal)) -> Env -> Maybe Env
+  String -> ((Indeg, HasHead) -> ThrowsError (Indeg, HasHead)) -> Env -> ThrowsError (Maybe Env)
 mapEnv pointerName f (h@(key, attr):t)
-  = if pointerName == key then return $ (key, f attr):t
-    else liftM (h:) $ mapEnv pointerName f t
+  = if pointerName == key then
+      do
+        newAttr <- f attr
+        return $ (key, newAttr):t
+    else liftM2 (h:) $ mapEnv pointerName f t
 mapEnv _ _ [] = Nothing
   
 -- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
 -- -> (newHeap, newEnv, newRuleSet, newAddr)
-compileProcLit :: ProcLit -> Heap -> Env -> RuleSet -> Addr -> (Heap, Env, RuleSet, Addr)
-compileProcLit (AliasLit (Just pointerName) pointingTo) oldHeap oldEnv oldRuleSet oldAddrSeed
-  = case mapEnv
-         (\(addr, indeg, hasHead, isLocal) -> (addr, indeg, True, isLocal))
-         pointerName
-         oldEnv
-    of
-      Nothing -> let newEnv      = oldEnv ++ [(oldAddrSeed, 0, True, False)]
-                     newHeap     =
-                       let compilePointingTo pointingTo oldHeap
-                       (oldAddrSeed, 0, )
-        in
-                   (oldHeap, newEnv, oldRuleSet, newAddrSeed)
-      Just addr -> (oldHeap, oldEnv, oldRuleSet, oldAddrSeed)
+compileProcLit :: ProcLit -> Env -> Env -> RuleSet -> (Env, Env, RuleSet)
+compileProcLit (AliasLit (Just pointerName) pointingTo) localEnv freeEnv oldRuleSet
+  =
+{--|
+  let setHasHeadTrue (indeg, hasHead)
+          = if hasHead then throwError $ IsNotFunctional pointerName
+            else return $ (indeg True)
+  in
+|--}
+  (localEnv, freeEnv, oldRuleSet)
         
        
 readExpr :: String -> String
