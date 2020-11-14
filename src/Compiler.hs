@@ -74,20 +74,34 @@ fst4 (a, _, _, _) = a
 lookupEnv_ :: String -> Env -> Maybe Indeg
 lookupEnv_ pointerName env
   = liftM fst $ lookup pointerName env
-  
+
+updateAssocList :: Monad m => Eq key =>
+  key -> (value -> m value) -> [(key, value)] -> m [(key, value)]
+updateAssocList _ _ [] = return []
+updateAssocList key f ((k, v):t) =
+  if key == k then
+    do fv <- f v
+       return $ (k, fv):t
+  else liftM ((k, v) :) $ updateAssocList key f t
+
+mapSnd :: (b -> b) -> (a, b) -> (a, b)
+mapSnd f (a, b) = (a, f b)
+
+
+{--|
 -- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
 -- -> (newHeap, newEnv, newRuleSet, newAddr)
-compileProcLit :: ProcLit -> Env -> Env -> RuleSet -> (Env, Env, RuleSet)
+compileProcLit :: ProcLit -> Env -> Env -> RuleSet -> ThrowsError ((Env, Env), RuleSet)
 compileProcLit (AliasLit (Just pointerName) pointingTo) localEnv freeEnv oldRuleSet
-  =
-{--|
-  let setHasHeadTrue (indeg, hasHead)
-          = if hasHead then throwError $ IsNotFunctional pointerName
-            else return $ (indeg True)
-  in
-|--}
-  (localEnv, freeEnv, oldRuleSet)
-        
+  = let lookedUp True = throwError $ IsNotFunctional
+        lookedUp False =
+          let localEnv
+                = updateAssocList (mapSnd $ const True) localEnv
+          in
+            liftM ((,) oldRuleSet) $ compilePointingTo pointingTo localEnv freeEnv
+    in
+      liftM (lookedUp . snd) $ lookup pointerName localEnv
+    |--}  
        
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of
