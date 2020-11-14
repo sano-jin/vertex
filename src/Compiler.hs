@@ -87,8 +87,6 @@ updateAssocList key f ((k, v):t) =
 mapSnd :: (b -> b) -> (a, b) -> (a, b)
 mapSnd f (a, b) = (a, f b)
 
-
-{--|
 -- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
 -- -> (newHeap, newEnv, newRuleSet, newAddr)
 compileProcLit :: ProcLit -> Env -> Env -> RuleSet -> ThrowsError ((Env, Env), RuleSet)
@@ -98,10 +96,9 @@ compileProcLit (AliasLit (Just pointerName) pointingTo) localEnv freeEnv oldRule
           let localEnv
                 = updateAssocList (mapSnd $ const True) localEnv
           in
-            liftM ((,) oldRuleSet) $ compilePointingTo pointingTo localEnv freeEnv
+            liftM (flip (,) oldRuleSet) $ compilePointingTo pointingTo localEnv freeEnv
     in
       liftM (lookedUp . snd) $ lookup pointerName localEnv
-    |--}  
        
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of
