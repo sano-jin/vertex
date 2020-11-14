@@ -11,6 +11,9 @@ list =
     | process "," list
     | process
 
+creation =
+    | ( \PointerName "." ) * process    
+
 process =
     | atom		(* start from AtomName *)
     | redir		(* start from PointerName *)

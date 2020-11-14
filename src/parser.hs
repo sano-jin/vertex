@@ -1,8 +1,6 @@
 module Parser (
   readExpr,
   showBlock,
-  PointerLit (..),
-  ProcLit (..),
   ParseError,
   SourcePos
   ) where
@@ -12,20 +10,7 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
--- import qualified Data.Map.Strict as M
--- import qualified Data.Set as S
-
-uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = f a b c
-
-data PointerLit = PointerLit SourcePos Int String
-                | AtomLit String [PointerLit]
-                deriving(Eq, Ord, Show)
-
-data ProcLit = AliasLit (Maybe (SourcePos, Int, String)) PointerLit
-             | RuleLit [ProcLit] [ProcLit]
-             | MoleculeLit [ProcLit]
-             deriving(Eq, Ord, Show)
+import Syntax 
 
 -- lexer
 languageDef =
@@ -49,8 +34,7 @@ commaSep    = Token.commaSep   lexer
 commaSep1   = Token.commaSep1  lexer
 arrow       = Token.lexeme lexer $ string "->"
 turnstile   = Token.lexeme lexer $ string ":-"
-star        = Token.lexeme lexer $ char   '*'
-underscore  = Token.lexeme lexer $ char   '_'
+backslash   = Token.lexeme lexer $ char   '\\'
 
 atomName :: Parser String
 atomName =
@@ -58,15 +42,13 @@ atomName =
   do c <- lower
      cs <- many (alphaNum <|> char '_')
      return $ c : cs
-
-pointerName :: Parser (SourcePos, Int, String)
+     
+pointerName :: Parser String
 pointerName = 
   Token.lexeme lexer $
-  do pos <- getPosition
-     us <- many underscore 
-     c <- upper
+  do c <- upper
      cs <- many (alphaNum <|> char '_')
-     return (pos, length us, c : cs)
+     return $ c : cs
 
 -- parser
 whileParser :: Parser [ProcLit]
@@ -75,16 +57,21 @@ whileParser = do x <- (whiteSpace >> parseBlock)
                  return x
   
 parseBlock :: Parser [ProcLit]
-parseBlock = sepEndBy1 parseLine dot
+parseBlock = liftM concat $ sepEndBy1 parseLine dot
              
-parseLine :: Parser ProcLit
+parseLine :: Parser [ProcLit]
 parseLine = do x <- parseList
                ((do y <- (turnstile >> parseList)
-                    return $ RuleLit x y
-                ) <|> (return $ MoleculeLit x))
+                    return $ [RuleLit x y]
+                ) <|> (return x))
                
 parseList :: Parser [ProcLit]
-parseList = commaSep1 parseProc
+parseList = liftM concat $ commaSep1 parseCreates
+
+parseCreates :: Parser [ProcLit]
+parseCreates = do creates <- endBy (backslash >> pointerName) dot
+                  process <- parseProc
+                  return $ foldr (\x ps -> (:[]) $ CreationLit x ps) process creates 
 
 parseAtomBody :: Parser (String, [PointerLit])
 parseAtomBody = do name <- atomName
@@ -92,14 +79,14 @@ parseAtomBody = do name <- atomName
                    return (name, args)
 
 parsePointer :: Parser PointerLit
-parsePointer = (liftM (uncurry3 PointerLit) pointerName)
+parsePointer = (liftM PointerLit pointerName)
                <|> liftM (uncurry AtomLit)  parseAtomBody
   
-parseProc :: Parser ProcLit
+parseProc :: Parser [ProcLit]
 parseProc = (do from <- pointerName
                 to <- (arrow >> parsePointer)
-                return $ AliasLit (Just from) to)
-            <|> (liftM (AliasLit Nothing . uncurry AtomLit) parseAtomBody)
+                return $ (:[]) $ AliasLit (Just from) to)
+            <|> (liftM ((:[]) . AliasLit Nothing . uncurry AtomLit) parseAtomBody)
             <|> parens parseLine
 
 readExpr :: String -> Either ParseError [ProcLit]
@@ -107,17 +94,17 @@ readExpr = parse whileParser "vertex"
 
 -- show
 showBlock :: [ProcLit] -> String
-showBlock = intercalate ". " . map showProc_
-  where showProc_ (MoleculeLit molecule) = showProcSet molecule
-        showProc_ others              = showProc others
+showBlock = intercalate ". " . map showProc
 
 showProc :: ProcLit -> String
-showProc (AliasLit (Just (pos, i, p)) to) =
-  showPointer (PointerLit pos i p) ++ " -> " ++ showPointer to
+showProc (AliasLit (Just p) to) =
+  showPointer (PointerLit p) ++ " -> " ++ showPointer to
 showProc (AliasLit Nothing to) = showPointer to
 showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
-showProc (MoleculeLit molecule) = "(" ++ showProcSet molecule ++ ")"
-
+showProc (CreationLit pointer procs)
+  = "\\" ++ pointer ++ "." ++ if length procs == 1 then showProcSet procs
+                              else "(" ++ showProcSet procs ++ ")"                                
+                                  
 showProcSet :: [ProcLit] -> String
 showProcSet = intercalate ", " . map showProc_
   where showProc_ r@(RuleLit _ _) = "(" ++ showProc r ++ ")"
@@ -129,6 +116,6 @@ showPointerList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showPointer
 
 showPointer :: PointerLit -> String
-showPointer (PointerLit _ i name) = replicate i '_' ++ name
+showPointer (PointerLit name) = name
 showPointer (AtomLit name args) = name ++ showPointerList args
 
