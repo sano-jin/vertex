@@ -74,16 +74,6 @@ fst4 (a, _, _, _) = a
 lookupEnv_ :: String -> Env -> Maybe Indeg
 lookupEnv_ pointerName env
   = liftM fst $ lookup pointerName env
-
-mapEnv ::
-  String -> ((Indeg, HasHead) -> ThrowsError (Indeg, HasHead)) -> Env -> ThrowsError (Maybe Env)
-mapEnv pointerName f (h@(key, attr):t)
-  = if pointerName == key then
-      do
-        newAttr <- f attr
-        return $ (key, newAttr):t
-    else liftM2 (h:) $ mapEnv pointerName f t
-mapEnv _ _ [] = Nothing
   
 -- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
 -- -> (newHeap, newEnv, newRuleSet, newAddr)
