@@ -4,7 +4,6 @@ import Data.IORef
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import Data.List
 import qualified Parser (
   readExpr,
   showBlock,
@@ -15,22 +14,21 @@ import Syntax
 
 type Addr = Int
 type Indeg = Int
-data Node = NAtom String [Addr]         -- NAtom SymbolAtomName [Pointers]
-          | NInd Addr                   -- Alias to Addr
-          | NRule [ProcVal] [ProcVal]   -- Rule
+data Node = NAtom String [Addr]    -- NAtom SymbolAtomName [Pointers]
+          | NInd Addr              -- Alias to Addr
 
 type Heap = [(Addr, Indeg, Node)]  -- [(Address, Indegree, Atom)]
 
 
-data PointerVal = FreePointerVal String
-                | LocalPointerVal Indeg Addr     -- X
-                | AtomVal String [PointerLit]    -- p(X1,...,Xm)
+data PointerLit = FreePointerLit Indeg String
+                | LocalPointerLit Indeg String  -- X
+                | AtomLit String [PointerLit]       -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
 
-data ProcVal = LocalAliasVal Indeg Addr PointerVal   -- \X.X -> p(X1,...,Xm)
-             | FreeAliasVal String PointerVal        -- X -> p(X1,...,Xm)
-             | RuleVal [ProcVal] [ProcVal]           -- P :- P
+data ProcVal = LocalAliasVal Indeg (Maybe String) PointerLit   -- \X.X -> p(X1,...,Xm)
+             | FreeAliasVal  Indeg String PointerLit   -- X -> p(X1,...,Xm)
+             | RuleVal [ProcVal] [ProcVal]             -- P :- P
              deriving(Eq, Ord, Show)
 
 type RuleSet = [(ProcVal, ProcVal)]
@@ -63,13 +61,49 @@ extractValue (Right val) = val
 -- PointerName -> (Indegree, hasHead)
 type HasHead = Bool
 type IsLocal = Bool
-type EnvList = [(String, (Addr, Indeg, HasHead))]
+type EnvList = [(String, (Indeg, HasHead))]
 type EnvSet  = S.Set String
+
+
+-- seed -> (newAddr, newSeed)
+newAddr :: Addr -> (Addr, Addr)    
+newAddr oldAddr = (oldAddr, oldAddr + 1)
+
+fst3 :: (a, b, c) -> a
+fst3 (a, _, _) = a
+
+snd3 :: (a, b, c) -> b
+snd3 (_, b, _) = b
+
+thd3 :: (a, b, c) -> c
+thd3 (_, _, c) = c
+
+
+
+fst4 :: (a, b, c, d) -> a
+fst4 (a, _, _, _) = a
+
+fst5 :: (a, b, c, d, e) -> a
+fst5 (a, _, _, _, _) = a
+
+lookupEnv_ :: String -> EnvList -> Maybe Indeg
+lookupEnv_ pointerName env
+  = liftM fst $ lookup pointerName env
 
 lookupAssocListWithErr :: Eq key => key -> [(key, value)] -> value
 lookupAssocListWithErr key ((k, v):t)
   = if key == k then v
     else lookupAssocListWithErr key t
+
+
+updateAssocList :: Monad m => Eq key =>
+  key -> (value -> m value) -> [(key, value)] -> m [(key, value)]
+updateAssocList _ _ [] = return []
+updateAssocList key f ((k, v):t) =
+  if key == k then
+    do fv <- f v
+       return $ (k, fv):t
+  else liftM ((k, v) :) $ updateAssocList key f t
 
 mapSnd :: (b -> b) -> (a, b) -> (a, b)
 mapSnd f (a, b) = (a, f b)
@@ -79,57 +113,55 @@ mapSnd f (a, b) = (a, f b)
 data Envs = Envs { localEnv :: EnvList
                  , freeTailEnv :: EnvSet
                  , freeHeadEnv :: EnvSet
-                 , addrSeed :: Int
                  } deriving (Show)
 
 nullEnv = Envs { localEnv = []
-              , freeTailEnv = S.empty
-              , freeHeadEnv = S.empty
-              , addrSeed = 0
+              , freeTailEnv = M.empty
+              , freeHeadEnv = M.empty
               }
 
-incrAddrSeed envs = envs { addrSeed = addrSeed envs + 1 }
-
-mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
-mapAccumLM f a (b:bs) =
-  do (a, c) <- f a b
-     (a, cs) <- mapAccumLM f a bs
-     return (a, c:cs)
-  
-
-
 compilePointingToLit ::
-  PointerLit -> Envs -> (Envs, PointerVal)
+  PointerLit -> Envs -> (PointerVal, Envs)
 compilePointingToLit pointingTo envs
-  = (envs, FreePointerVal "X")
+  = envs
 
-compileProcLit :: Envs -> ProcLit -> ThrowsError (Envs, [ProcVal])
-compileProcLit envs (AliasLit (Just pointerName) pointingTo) 
+-- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
+-- -> (newHeap, newEnv, newRuleSet, newAddr)
+compileProcLit ::
+  ProcLit -> Envs -> RuleSet ->
+  ThrowsError (ProcVal, (Envs, RuleSet))
+compileProcLit (AliasLit (Just pointerName) pointingTo) envs oldRuleSet
   = case lookup pointerName $ localEnv envs of
       Nothing ->
-        if S.member pointerName $ freeTailEnv envs
+        if M.member pointerName $ freeTailEnv envs
         then throwError $ IsNotFunctional pointerName
         else
-          let (envs, pointingToVal)
-                = compilePointingToLit pointingTo
-                  $ envs { freeTailEnv = S.insert pointerName $ freeTailEnv envs }
+          let envs = compilePointingToLit pointingTo
+                     $ if M.member pointerName $ freeTailEnv envs then envs
+                       else
+                          envs { freeTailEnv = M.insert pointerName 0 $ freeTailEnv envs }
+              indeg = freeTailEnv envs M.! pointerName
           in
-            return $ (envs, [FreeAliasVal pointerName pointingToVal])
-      Just (_, _, True) -> throwError $ IsNotFunctional pointerName
-      Just (addr, _, False) ->
-        let (envs, pointingToVal) = compilePointingToLit pointingTo envs in
-          return (envs, [LocalAliasVal 0 addr pointingToVal])
-compileProcLit envs (AliasLit Nothing pointingTo) 
-  = let (envs, pointingToVal) = compilePointingToLit pointingTo envs in
-      return $ (incrAddrSeed envs, [LocalAliasVal 0 (addrSeed envs) pointingToVal])
+            return $ (LocalAliasVal indeg (Just pointerName) pointingTo, (envs, oldRuleSet))
+      Just (_, True) -> throwError $ IsNotFunctional pointerName
+      Just (_, False) ->
+        let envs = compilePointingToLit pointingTo envs
+            indeg = fst $ lookupAssocListWithErr pointerName $ localEnv envs
+        in
+          return $ (LocalAliasVal indeg (Just pointerName) pointingTo, (envs, oldRuleSet))
+compileProcLit (AliasLit Nothing pointingTo) envs oldRuleSet
+  = let envs = compilePointingToLit pointingTo envs in
+      return $ (LocalAliasVal 0 Nothing pointingTo, (envs, oldRuleSet))
 
-compileProcLit envs (RuleLit lhs rhs) 
-  = do (lhsEnv, lhsProc) <- mapAccumLM compileProcLit nullEnv lhs
-       (rhsEnv, rhsProc) <- mapAccumLM compileProcLit nullEnv rhs
-       return $ (envs, [RuleVal (concat lhsProc) (concat rhsProc)])
+      {--|
+compileProcLit (RuleLit lhs rhs) _ freeTailEnv freeHeadEnv oldRuleSet
+  = do (lhsProc, (lhsEnv, lhsRuleSet)) <- compileProcLit lhs nullEnv
+       (rhsProc, (rhsEnv, rhsRuleSet)) <- compileProcLit rhs nullEnv
+       if not $ null lhsRuleSet
+         then throwError $ IsNotFunctional pointerName 
+         else 
 
-
-       {--|
+           
   lhsProcEnv =  []
         rhsProcEnv = compileProcLit rhs nullEnv []
         
