@@ -74,6 +74,9 @@ lookupAssocListWithErr key ((k, v):t)
 mapSnd :: (b -> b) -> (a, b) -> (a, b)
 mapSnd f (a, b) = (a, f b)
 
+mapFst :: (a -> a) -> (a, b) -> (a, b)
+mapFst f (a, b) = (f a, b)
+
 -- type Envs = (EnvList, EnvSet, EnvSet)
 
 data Envs = Envs { localEnv :: EnvList
@@ -96,7 +99,8 @@ mapAccumLM f a (b:bs) =
      (a, cs) <- mapAccumLM f a bs
      return (a, c:cs)
   
-
+isRuleVal (RuleVal _ _) = True
+isRuleVal _             = False
 
 compilePointingToLit ::
   PointerLit -> Envs -> (Envs, PointerVal)
@@ -124,49 +128,22 @@ compileProcLit envs (AliasLit Nothing pointingTo)
       return $ (incrAddrSeed envs, [LocalAliasVal 0 (addrSeed envs) pointingToVal])
 
 compileProcLit envs (RuleLit lhs rhs) 
-  = do (lhsEnv, lhsProc) <- mapAccumLM compileProcLit nullEnv lhs
-       (rhsEnv, rhsProc) <- mapAccumLM compileProcLit nullEnv rhs
-       return $ (envs, [RuleVal (concat lhsProc) (concat rhsProc)])
-
-
-       {--|
-  lhsProcEnv =  []
-        rhsProcEnv = compileProcLit rhs nullEnv []
-        
-
-  case lookup pointerName localEnv of
-      Nothing ->
-        if member pointerName freeTailEnv
-        then throwError $ IsNotFunctional pointerName
-        else
-          let freeTailEnv
-                = insert pointerName 0 freeTailEnv
-          in 
-            compilePointingTo pointingTo localEnv freeTailEnv freeHeadEnv oldRuleSet
-      Just (_, True) -> throwError $ IsNotFunctional pointerName
-      Just (_, False) ->
-        compilePointingTo pointingTo localEnv freeTailEnv freeHeadEnv oldRuleSet
-
-|--}
-
-{--|
--- procLit -> oldHeap -> oldEnv -> oldRuleSet -> oldAddrSeed
--- -> (newHeap, newEnv, newRuleSet, newAddr)
-compileProcLit :: ProcLit -> Env -> Env -> RuleSet -> ThrowsError ((Env, Env), RuleSet)
-compileProcLit (AliasLit (Just pointerName) pointingTo) localEnv freeEnv oldRuleSet
-  = let lookedUp True = throwError $ IsNotFunctional
-        lookedUp False =
-          let localEnv
-                = updateAssocList (mapSnd $ const True) localEnv
-          in
-            liftM (flip (,) oldRuleSet) $ compilePointingTo pointingTo localEnv freeEnv
+  = do (lhsEnv, lhsProcs) <- mapAccumLM compileProcLit nullEnv lhs
+       if any isRuleVal $ concat lhsProcs
+         then throwError $ RuleOnLHS (RuleLit lhs rhs)
+         else
+           do (rhsEnv, rhsProcs) <- mapAccumLM compileProcLit nullEnv rhs
+              return $ (envs, [RuleVal (concat lhsProcs) (concat rhsProcs)])
+  
+compileProcLit envs (CreationLit pointerName procs)
+  = let envs =
+          incrAddrSeed $
+          envs { localEnv = (pointerName, (addrSeed envs, 0, False)) : localEnv envs }
     in
-      liftM (lookedUp . snd) $ lookup pointerName localEnv
-|--}
+      do (envs, procVals) <- mapAccumLM compileProcLit envs procs
+         return (envs { localEnv = drop 1 $ localEnv envs }, concat procVals)
+          
+         
 
 
-readExpr :: String -> String
-readExpr input = case Parser.readExpr input of
-    Left err -> "No match : " ++ show err
-    Right val -> "Found : " ++ Parser.showBlock val
 
