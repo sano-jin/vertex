@@ -1,6 +1,5 @@
 module Parser (
   readExpr,
-  showBlock,
   ParseError,
   SourcePos
   ) where

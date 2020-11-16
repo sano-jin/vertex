@@ -6,7 +6,6 @@ import Control.Monad.Except
 -- import qualified Data.Set as S
 import qualified Parser (
   readExpr,
-  showBlock,
   ParseError,
   SourcePos
   )
@@ -15,7 +14,7 @@ import Syntax
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of
     Left err -> "No match : " ++ show err
-    Right val -> "Found : " ++ Parser.showBlock val
+    Right val -> "Found : " ++ showBlock val
 
 
 

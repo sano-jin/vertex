@@ -1,4 +1,8 @@
-module Syntax where
+module Syntax (
+  showBlock,
+  PointerLit (..),
+  ProcLit (..)
+  ) where
 import Data.List
 
 data PointerLit = PointerLit String                 -- X

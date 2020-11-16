@@ -9,7 +9,6 @@ import Data.Either
 import Data.Bifunctor 
 import qualified Parser (
   readExpr,
-  showBlock,
   ParseError,
   SourcePos
   )
@@ -49,7 +48,29 @@ data CompileError = IsNotSerial String
                   | NotRedirectedPointers (S.Set String) ProcLit
                   | Parser Parser.ParseError
 
--- show
+--
+showSet :: S.Set String -> String
+showSet stringSet = "{" ++ intercalate ", " (S.toList stringSet) ++ "}"
+
+showProcVals :: [ProcVal] -> String
+showProcVals = intercalate ", " . map showProcVal
+
+showProcVal :: ProcVal -> String
+showProcVal (LocalAliasVal indeg addr pointerVal)
+  = "indeg : " ++ show indeg ++ " & #" ++ show addr ++ " -> " ++ showPointerVal pointerVal
+showProcVal (FreeAliasVal pointerName pointerVal)
+  = pointerName ++ " -> " ++ showPointerVal pointerVal
+showProcVal (RuleVal lhs rhs freeTailPointers)
+  = "(" ++ showProcVals lhs ++ " :- " ++ showProcVals rhs ++ ") with freeTailPointers "
+    ++ showSet freeTailPointers
+
+showPointerVal :: PointerVal -> String
+showPointerVal (FreePointerVal pointerName) = pointerName
+showPointerVal (LocalPointerVal addr) = "#" ++ show addr
+showPointerVal (AtomVal atomName pointers)
+  = atomName ++ "(" ++ intercalate ", " (map showPointerVal pointers) ++ ")"
+
+-- show errors
 showError :: CompileError -> String
 showError (IsNotSerial name )
   = "pointer '" ++ name ++ "' is not serial.\n"
@@ -58,10 +79,10 @@ showError (IsNotFunctional name)
 showError (RuleOnLHS rule)
   = "Rule on LHS in " ++ show rule
 showError (NewFreePointersOnRHS pointers rule)
-  = "New free pointers {" ++ intercalate ", " (S.toList pointers) ++ "}"
+  = "New free pointers " ++ showSet pointers
     ++ " appeard on RHS of " ++ show rule
 showError (NotRedirectedPointers pointers rule)
-  = "Not redirected free tail pointers {" ++ intercalate ", " (S.toList pointers) ++ "}"
+  = "Not redirected free tail pointers " ++ showSet pointers
     ++ " appeard on RHS of " ++ show rule
 showError (Parser parseError)
   = "Parse error at " ++ show parseError
