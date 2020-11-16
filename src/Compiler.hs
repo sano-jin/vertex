@@ -128,12 +128,13 @@ compileProcLit envs (AliasLit Nothing pointingTo)
       return $ (incrAddrSeed envs, [LocalAliasVal 0 (addrSeed envs) pointingToVal])
 
 compileProcLit envs (RuleLit lhs rhs) 
-  = do (lhsEnv, lhsProcs) <- mapAccumLM compileProcLit nullEnv lhs
-       if any isRuleVal $ concat lhsProcs
-         then throwError $ RuleOnLHS (RuleLit lhs rhs)
-         else
-           do (rhsEnv, rhsProcs) <- mapAccumLM compileProcLit nullEnv rhs
-              return $ (envs, [RuleVal (concat lhsProcs) (concat rhsProcs)])
+  = let compileProcLits = second (mapSnd concat) . mapAccumLM compileProcLit nullEnv in
+      do (lhsEnv, lhsProcs) <- compileProcLits lhs
+         if any isRuleVal lhsProcs
+           then throwError $ RuleOnLHS (RuleLit lhs rhs)
+           else
+             do (rhsEnv, rhsProcs) <- compileProcLits rhs
+                return $ (envs, [RuleVal lhsProcs rhsProcs])
   
 compileProcLit envs (CreationLit pointerName procs)
   = let envs =
