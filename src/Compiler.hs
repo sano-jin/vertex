@@ -5,6 +5,8 @@ import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
+import Data.Either
+import Data.Bifunctor 
 import qualified Parser (
   readExpr,
   showBlock,
@@ -71,12 +73,6 @@ lookupAssocListWithErr key ((k, v):t)
   = if key == k then v
     else lookupAssocListWithErr key t
 
-mapSnd :: (b -> b) -> (a, b) -> (a, b)
-mapSnd f (a, b) = (a, f b)
-
-mapFst :: (a -> a) -> (a, b) -> (a, b)
-mapFst f (a, b) = (f a, b)
-
 -- type Envs = (EnvList, EnvSet, EnvSet)
 
 data Envs = Envs { localEnv :: EnvList
@@ -85,7 +81,7 @@ data Envs = Envs { localEnv :: EnvList
                  , addrSeed :: Int
                  } deriving (Show)
 
-nullEnv = Envs { localEnv = []
+nullEnvs = Envs { localEnv = []
               , freeTailEnv = S.empty
               , freeHeadEnv = S.empty
               , addrSeed = 0
@@ -128,13 +124,11 @@ compileProcLit envs (AliasLit Nothing pointingTo)
       return $ (incrAddrSeed envs, [LocalAliasVal 0 (addrSeed envs) pointingToVal])
 
 compileProcLit envs (RuleLit lhs rhs) 
-  = let compileProcLits = second (mapSnd concat) . mapAccumLM compileProcLit nullEnv in
-      do (lhsEnv, lhsProcs) <- compileProcLits lhs
-         if any isRuleVal lhsProcs
-           then throwError $ RuleOnLHS (RuleLit lhs rhs)
-           else
-             do (rhsEnv, rhsProcs) <- compileProcLits rhs
-                return $ (envs, [RuleVal lhsProcs rhsProcs])
+  = do (lhsEnv, lhsProcs) <- compileProcLits nullEnvs lhs
+       if any isRuleVal lhsProcs
+         then throwError $ RuleOnLHS (RuleLit lhs rhs)
+         else do (rhsEnv, rhsProcs) <- compileProcLits nullEnvs rhs
+                 return $ (envs, [RuleVal lhsProcs rhsProcs])
   
 compileProcLit envs (CreationLit pointerName procs)
   = let envs =
@@ -143,8 +137,11 @@ compileProcLit envs (CreationLit pointerName procs)
     in
       do (envs, procVals) <- mapAccumLM compileProcLit envs procs
          return (envs { localEnv = drop 1 $ localEnv envs }, concat procVals)
-          
-         
+
+
+compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, [ProcVal])
+compileProcLits envs 
+  = (second (second concat) . mapAccumLM compileProcLit envs)
 
 
 
