@@ -47,14 +47,16 @@ data CompileError = IsNotSerial String
                   | RuleOnLHS ProcLit
                   | Parser Parser.ParseError
 
-
 -- show
 showError :: CompileError -> String
-showError (IsNotSerial name ) =
-  "pointer '" ++ name ++ "' is not serial.\n"
-showError (IsNotFunctional name) =
-  "pointer '" ++ name ++ "' is not functional.\n"
-showError (Parser parseError) = "Parse error at " ++ show parseError
+showError (IsNotSerial name )
+  = "pointer '" ++ name ++ "' is not serial.\n"
+showError (IsNotFunctional name)
+  = "pointer '" ++ name ++ "' is not functional.\n"
+showError (RuleOnLHS rule)
+  = "Rule on LHS in " ++ show rule
+showError (Parser parseError)
+  = "Parse error at " ++ show parseError
 
 trapError action = catchError action (return . show)
 
@@ -76,18 +78,45 @@ lookupAssocListWithErr key ((k, v):t)
 -- type Envs = (EnvList, EnvSet, EnvSet)
 
 data Envs = Envs { localEnv :: EnvList
+                 , localMapAddrIndeg :: M.Map Addr Indeg
                  , freeTailEnv :: EnvSet
                  , freeHeadEnv :: EnvSet
                  , addrSeed :: Int
                  } deriving (Show)
 
-nullEnvs = Envs { localEnv = []
-              , freeTailEnv = S.empty
-              , freeHeadEnv = S.empty
-              , addrSeed = 0
-              }
+updateLocalEnv :: (EnvList -> EnvList) -> Envs -> Envs
+updateLocalEnv f envs
+  = envs { localEnv = f $ localEnv envs }
 
-incrAddrSeed envs = envs { addrSeed = addrSeed envs + 1 }
+updateLocalMapAddrIndeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
+updateLocalMapAddrIndeg f envs
+  = envs { localMapAddrIndeg = f $ localMapAddrIndeg envs }
+
+updateFreeTailEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
+updateFreeTailEnv f envs
+  = envs { freeTailEnv = f $ freeTailEnv envs }
+
+updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
+updateFreeHeadEnv f envs
+  = envs { freeHeadEnv = f $ freeHeadEnv envs }
+
+updateAddrSeed :: (Int -> Int) -> Envs -> Envs
+updateAddrSeed f envs
+  = envs { addrSeed = f $ addrSeed envs }
+
+nullEnvs = Envs { localEnv = []
+                , localMapAddrIndeg = M.empty
+                , freeTailEnv = S.empty
+                , freeHeadEnv = S.empty
+                , addrSeed = 0
+                }
+
+incrAddrSeed :: Envs -> Envs
+incrAddrSeed = updateAddrSeed (+ 1)
+
+incrLocalIndeg :: Addr -> Envs -> Envs
+incrLocalIndeg addr
+  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) 
 
 mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
 mapAccumLM f a (b:bs) =
@@ -112,7 +141,7 @@ compileProcLit envs (AliasLit (Just pointerName) pointingTo)
         else
           let (envs, pointingToVal)
                 = compilePointingToLit pointingTo
-                  $ envs { freeTailEnv = S.insert pointerName $ freeTailEnv envs }
+                  $ updateFreeTailEnv (S.insert pointerName) envs
           in
             return $ (envs, [FreeAliasVal pointerName pointingToVal])
       Just (_, _, True) -> throwError $ IsNotFunctional pointerName
@@ -131,14 +160,19 @@ compileProcLit envs (RuleLit lhs rhs)
                  return $ (envs, [RuleVal lhsProcs rhsProcs])
   
 compileProcLit envs (CreationLit pointerName procs)
-  = let envs =
-          incrAddrSeed $
-          envs { localEnv = (pointerName, (addrSeed envs, 0, False)) : localEnv envs }
+  = let addr = addrSeed envs
+        envs =
+          incrAddrSeed
+          $ updateLocalMapAddrIndeg (M.insert addr 0)
+          $ updateLocalEnv ((pointerName, (addr, 0, False)) :) envs
     in
-      do (envs, procVals) <- mapAccumLM compileProcLit envs procs
-         return (envs { localEnv = drop 1 $ localEnv envs }, concat procVals)
+      do (envs, procVals) <- compileProcLits envs procs
+         return (updateLocalEnv (drop 1) envs, procVals)
 
-
+updateIndeg :: Envs -> ProcVal -> ProcVal
+updateIndeg envs (LocalAliasVal _ addr pointingTo)
+  = LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
+  
 compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, [ProcVal])
 compileProcLits envs 
   = (second (second concat) . mapAccumLM compileProcLit envs)
