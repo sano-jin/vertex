@@ -17,22 +17,22 @@ import Syntax
 
 type Addr = Int
 type Indeg = Int
-data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [Pointers]
-          | NInd Addr                                 -- Alias to Addr
-          | NRule [ProcVal] [ProcVal] (S.Set String)  -- Rule
+data Node = NAtom String [Addr]         -- NAtom SymbolAtomName [Pointers]
+          | NInd Addr                   -- Alias to Addr
+          | NRule [ProcVal] [ProcVal]   -- Rule
 
-type Heap = (Addr, [(Addr, (Indeg, Node))])  -- [(Address, Indegree, Atom)]
+type Heap = [(Addr, Indeg, Node)]  -- [(Address, Indegree, Atom)]
 
 
 data PointerVal = FreePointerVal String
-                | LocalPointerVal Addr           -- X
-                | AtomVal String [PointerVal]    -- p(X1,...,Xm)
+                | LocalPointerVal Addr     -- X
+                | AtomVal String [PointerLit]    -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
 
-data ProcVal = LocalAliasVal Indeg Addr PointerVal          -- \X.X -> p(X1,...,Xm)
-             | FreeAliasVal String PointerVal               -- X -> p(X1,...,Xm)
-             | RuleVal [ProcVal] [ProcVal] (S.Set String)   -- P :- P
+data ProcVal = LocalAliasVal Indeg Addr PointerVal   -- \X.X -> p(X1,...,Xm)
+             | FreeAliasVal String PointerVal        -- X -> p(X1,...,Xm)
+             | RuleVal [ProcVal] [ProcVal]           -- P :- P
              deriving(Eq, Ord, Show)
 
 type RuleSet = [(ProcVal, ProcVal)]
@@ -45,8 +45,6 @@ instance Show CompileError where show = showError
 data CompileError = IsNotSerial String
                   | IsNotFunctional String
                   | RuleOnLHS ProcLit
-                  | NewFreePointersOnRHS (S.Set String) ProcLit
-                  | NotRedirectedPointers (S.Set String) ProcLit
                   | Parser Parser.ParseError
 
 -- show
@@ -57,12 +55,6 @@ showError (IsNotFunctional name)
   = "pointer '" ++ name ++ "' is not functional.\n"
 showError (RuleOnLHS rule)
   = "Rule on LHS in " ++ show rule
-showError (NewFreePointersOnRHS pointers rule)
-  = "New free pointers {" ++ intercalate ", " (S.toList pointers) ++ "}"
-    ++ " appeard on RHS of " ++ show rule
-showError (NotRedirectedPointers pointers rule)
-  = "Not redirected free tail pointers {" ++ intercalate ", " (S.toList pointers) ++ "}"
-    ++ " appeard on RHS of " ++ show rule
 showError (Parser parseError)
   = "Parse error at " ++ show parseError
 
@@ -74,7 +66,8 @@ extractValue (Right val) = val
 
 -- PointerName -> (Indegree, hasHead)
 type HasHead = Bool
-type EnvList = [(String, (Addr, HasHead))]
+type IsLocal = Bool
+type EnvList = [(String, (Addr, Indeg, HasHead))]
 type EnvSet  = S.Set String
 
 lookupAssocListWithErr :: Eq key => key -> [(key, value)] -> value
@@ -83,11 +76,12 @@ lookupAssocListWithErr key ((k, v):t)
     else lookupAssocListWithErr key t
 lookupAssocListWithErr _ [] = error "empty list"
 
-updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
-updateAssocList f key ((h@(k, v)):t)
+updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> value
+updateAssocList f key (h@(k, v):t)
   = if key == k then (k, f v) : t
-    else h : updateAssocList f key t
-updateAssocList _ _ [] = []
+    else h @ updateAssocList f key t
+updateAssocListWithErr _ _ [] = []
+
 
 tup3 :: (a, b, c) -> c
 tup3 (_, _, c) = c
@@ -95,7 +89,7 @@ tup3 (_, _, c) = c
 -- type Envs = (EnvList, EnvSet, EnvSet)
 
 data Envs = Envs { localEnv :: EnvList
-                 , localMapAddrIndeg :: M.Map Addr Indeg 
+                 , localMapAddrIndeg :: M.Map Addr Indeg
                  , freeTailEnv :: EnvSet
                  , freeHeadEnv :: EnvSet
                  , addrSeed :: Int
@@ -122,7 +116,6 @@ updateAddrSeed f envs
   = envs { addrSeed = f $ addrSeed envs }
 
 nullEnvs = Envs { localEnv = []
-                , localMapAddrIndeg = M.empty
                 , freeTailEnv = S.empty
                 , freeHeadEnv = S.empty
                 , addrSeed = 0
@@ -132,8 +125,8 @@ incrAddrSeed :: Envs -> Envs
 incrAddrSeed = updateAddrSeed (+ 1)
 
 incrLocalIndeg :: Addr -> Envs -> Envs
-incrLocalIndeg addr envs
-  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) envs
+incrLocalIndeg addr
+  = 
 
 mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
 mapAccumLM f a (b:bs) =
@@ -141,17 +134,17 @@ mapAccumLM f a (b:bs) =
      (a, cs) <- mapAccumLM f a bs
      return (a, c:cs)
   
-isRuleVal (RuleVal _ _ _) = True
-isRuleVal _               = False
+isRuleVal (RuleVal _ _) = True
+isRuleVal _             = False
 
-compilePointingToLit :: Envs -> PointerLit -> (Envs, PointerVal)
-compilePointingToLit envs (PointerLit pointerName) 
-  = case lookup pointerName $ localEnv envs of
-      Nothing -> (envs, FreePointerVal pointerName)
-      Just (addr, _) -> (incrLocalIndeg addr envs, LocalPointerVal addr)
-compilePointingToLit envs (AtomLit atomName pointers) 
-  = second (AtomVal atomName) $ mapAccumL compilePointingToLit envs pointers 
- 
+compilePointingToLit :: PointerLit -> Envs -> (Envs, PointerVal)
+compilePointingToLit (PointerLit pointerName) envs
+  = case lookup $ localEnv envs of
+      Nothing -> (envs, FreePoitnerVal poitnerName)
+      Just (addr, _, _) -> (envs, 
+compilePointingToLit pointingTo envs
+  = (envs, FreePointerVal "X")
+
 compileProcLit :: Envs -> ProcLit -> ThrowsError (Envs, [ProcVal])
 compileProcLit envs (AliasLit (Just pointerName) pointingTo) 
   = case lookup pointerName $ localEnv envs of
@@ -160,72 +153,55 @@ compileProcLit envs (AliasLit (Just pointerName) pointingTo)
         then throwError $ IsNotFunctional pointerName
         else
           let (envs, pointingToVal)
-                = compilePointingToLit 
-                  (updateFreeTailEnv (S.insert pointerName) envs)
-                  pointingTo
+                = compilePointingToLit pointingTo
+                  $ updateFreeTailEnv (S.insert pointerName) envs
           in
             return $ (envs, [FreeAliasVal pointerName pointingToVal])
-      Just (_, True) -> throwError $ IsNotFunctional pointerName
-      Just (addr, False) ->
-        let (envs, pointingToVal) = compilePointingToLit envs pointingTo in
+      Just (_, _, True) -> throwError $ IsNotFunctional pointerName
+      Just (addr, _, False) ->
+        let (envs, pointingToVal) = compilePointingToLit pointingTo envs in
           return (envs, [LocalAliasVal 0 addr pointingToVal])
 compileProcLit envs (AliasLit Nothing pointingTo) 
-  = let (envs, pointingToVal) = compilePointingToLit envs pointingTo in
+  = let (envs, pointingToVal) = compilePointingToLit pointingTo envs in
       return $ (incrAddrSeed envs, [LocalAliasVal 0 (addrSeed envs) pointingToVal])
 
 compileProcLit envs (RuleLit lhs rhs) 
-  = do (lhsEnvs, lhsProcs) <- compileProcLits nullEnvs lhs
+  = do (lhsEnv, lhsProcs) <- compileProcLits nullEnvs lhs
        if any isRuleVal lhsProcs
-         then throwError $ RuleOnLHS $ RuleLit lhs rhs
-         else
-         do (rhsEnvs, rhsProcs) <- compileProcLits nullEnvs rhs
-            let freeTailPointersOnLHS    = freeTailEnv lhsEnvs
-                freeTailPointersOnRHS    = freeTailEnv rhsEnvs
-                freeHeadPointersOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailPointersOnLHS
-                freeHeadPointersOnRHS    = freeHeadEnv rhsEnvs S.\\ freeTailPointersOnRHS
-                newTailFreePointersOnRHS = freeTailPointersOnLHS S.\\ freeTailPointersOnRHS
-                newHeadFreePointersOnRHS = freeHeadPointersOnLHS S.\\ freeHeadPointersOnRHS
-                newFreePointersOnRHS     = S.union newTailFreePointersOnRHS newHeadFreePointersOnRHS
-                notRedirectedPointers    = freeTailPointersOnRHS S.\\ freeTailPointersOnLHS
-              in
-              if S.null newFreePointersOnRHS
-              then throwError $ NewFreePointersOnRHS newFreePointersOnRHS $ RuleLit lhs rhs
-              else if S.null notRedirectedPointers
-                then throwError $ NotRedirectedPointers notRedirectedPointers $ RuleLit lhs rhs
-                else return $ (envs, [RuleVal lhsProcs rhsProcs freeTailPointersOnLHS])
+         then throwError $ RuleOnLHS (RuleLit lhs rhs)
+         else do (rhsEnv, rhsProcs) <- compileProcLits nullEnvs rhs
+                 return $ (envs, [RuleVal lhsProcs rhsProcs])
   
 compileProcLit envs (CreationLit pointerName procs)
   = let addr = addrSeed envs
         envs =
           incrAddrSeed
           $ updateLocalMapAddrIndeg (M.insert addr 0)
-          $ updateLocalEnv ((pointerName, (addr, False)) :) envs
+          $ updateLocalEnv ((pointerName, (addr, 0, False)) :) envs
     in
       do (envs, procVals) <- compileProcLits envs procs
-         let (_, hasHead) = snd $ head $ localEnv envs in
-           if not hasHead && localMapAddrIndeg envs M.! addr /= 0  
+         if not $ tup3 $ lookupAssocListWithErr pointerName $ localEnv envs
            then throwError $ IsNotSerial pointerName
            else return (updateLocalEnv (drop 1) envs, procVals)
+
 
 setIndeg :: Envs -> ProcVal -> ProcVal
 setIndeg envs (LocalAliasVal _ addr pointingTo)
   = LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
-setIndeg envs (RuleVal lhs rhs freeTailPointers)
-  = RuleVal (setIndegs envs lhs) (setIndegs envs rhs) freeTailPointers
+setIndeg envs (RuleVal lhs rhs)
+  = RuleVal (setIndegs envs lhs) (setIndegs envs rhs)
 setIndeg envs procVals = procVals
 
 setIndegs :: Envs -> [ProcVal] -> [ProcVal]
 setIndegs envs procVals
   = map (setIndeg envs) procVals
-    
+  
+
+
+  
 compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, [ProcVal])
 compileProcLits envs 
-  = liftM (second concat) . mapAccumLM compileProcLit envs
+  = (second (second concat) . mapAccumLM compileProcLit envs)
 
-compileProcs :: Envs -> [ProcLit] -> ThrowsError (Addr, [ProcVal])
-compileProcs envs procLits
-  = do (envs, procVals) <- compileProcLits envs procLits
-       let procVals = setIndegs envs procVals in
-         return $ (addrSeed envs, procVals)
 
 
