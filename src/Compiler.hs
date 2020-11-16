@@ -25,7 +25,7 @@ type Heap = [(Addr, Indeg, Node)]  -- [(Address, Indegree, Atom)]
 
 
 data PointerVal = FreePointerVal String
-                | LocalPointerVal Indeg Addr     -- X
+                | LocalPointerVal Addr     -- X
                 | AtomVal String [PointerLit]    -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
@@ -42,7 +42,7 @@ type ThrowsError = Either CompileError
 type IOThrowsError = ExceptT CompileError IO
 instance Show CompileError where show = showError
 
-data CompileError = IsNotSerial String 
+data CompileError = IsNotSerial String
                   | IsNotFunctional String
                   | RuleOnLHS ProcLit
                   | Parser Parser.ParseError
@@ -74,6 +74,10 @@ lookupAssocListWithErr :: Eq key => key -> [(key, value)] -> value
 lookupAssocListWithErr key ((k, v):t)
   = if key == k then v
     else lookupAssocListWithErr key t
+lookupAssocListWithErr _ [] = error "empty list"
+
+tup3 :: (a, b, c) -> c
+tup3 (_, _, c) = c
 
 -- type Envs = (EnvList, EnvSet, EnvSet)
 
@@ -127,8 +131,11 @@ mapAccumLM f a (b:bs) =
 isRuleVal (RuleVal _ _) = True
 isRuleVal _             = False
 
-compilePointingToLit ::
-  PointerLit -> Envs -> (Envs, PointerVal)
+compilePointingToLit :: PointerLit -> Envs -> (Envs, PointerVal)
+compilePointingToLit (PointerLit pointerName) envs
+  = case lookup $ localEnv envs of
+      Nothing -> (envs, FreePoitnerVal poitnerName)
+      Just (addr, _, _) -> (envs, 
 compilePointingToLit pointingTo envs
   = (envs, FreePointerVal "X")
 
@@ -167,11 +174,24 @@ compileProcLit envs (CreationLit pointerName procs)
           $ updateLocalEnv ((pointerName, (addr, 0, False)) :) envs
     in
       do (envs, procVals) <- compileProcLits envs procs
-         return (updateLocalEnv (drop 1) envs, procVals)
+         if not $ tup3 $ lookupAssocListWithErr pointerName $ localEnv envs
+           then throwError $ IsNotSerial pointerName
+           else return (updateLocalEnv (drop 1) envs, procVals)
 
-updateIndeg :: Envs -> ProcVal -> ProcVal
-updateIndeg envs (LocalAliasVal _ addr pointingTo)
+
+setIndeg :: Envs -> ProcVal -> ProcVal
+setIndeg envs (LocalAliasVal _ addr pointingTo)
   = LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
+setIndeg envs (RuleVal lhs rhs)
+  = RuleVal (setIndegs envs lhs) (setIndegs envs rhs)
+setIndeg envs procVals = procVals
+
+setIndegs :: Envs -> [ProcVal] -> [ProcVal]
+setIndegs envs procVals
+  = map (setIndeg envs) procVals
+  
+
+
   
 compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, [ProcVal])
 compileProcLits envs 
