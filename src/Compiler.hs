@@ -45,6 +45,7 @@ data CompileError = IsNotSerial String
                   | FreePointersOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
 
+
 --
 showSet :: S.Set String -> String
 showSet stringSet = "{" ++ intercalate ", " (S.toList stringSet) ++ "}"
