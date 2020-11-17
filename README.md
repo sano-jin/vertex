@@ -1,6 +1,6 @@
 # Directed HyperFlatLMNtal
 
-Directed HyperFlatLMNtal is a derived calculus model of LMNtal.
+Directed HyperFlatLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
 
 - Focused on concurrency
 - Can easily deal with hypergraphs representing structures and pointers
