@@ -16,11 +16,11 @@ DHLMNtal has two kinds of identifiers.
   - In the concrete syntax, atom names are denoted by identifiers starting from small lettes (for now).
 
 ```
-P ::= 0                  %          (null)
-  | X -> p(X1, ..., Xm)  % (m >= 0) (atom)
-  | (P, P)               %          (molecule)
-  | \X.P                 %          (link creation)
-  | (P :- P)             %          (rule)
+P ::= 0                           (null)
+  | X -> p(X1, ..., Xm)  (m >= 0) (atom)
+  | (P, P)                        (molecule)
+  | \X.P                          (link creation)
+  | (P :- P)                      (rule)
 ```
 Fig.1. Syntax
 
