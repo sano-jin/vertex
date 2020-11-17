@@ -23,3 +23,4 @@ P ::= 0                  --          (null)
   | (P, P)               --          (molecule)
   | \X.P                 --          (link creation)
   | (P :- P)             --          (rule)
+```
