@@ -59,9 +59,9 @@ parseBlock :: Parser [ProcLit]
 parseBlock = liftM concat $ sepEndBy1 parseLine dot
              
 parseLine :: Parser [ProcLit]
-parseLine = do x <- parseList
-               ((do y <- (turnstile >> parseList)
-                    return $ [RuleLit x y]
+parseLine = do x <- parseList <|> return []
+               ((do y <- (turnstile >> (parseList <|> return []))
+                    return [RuleLit x y]
                 ) <|> (return x))
                
 parseList :: Parser [ProcLit]

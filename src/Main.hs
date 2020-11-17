@@ -10,13 +10,25 @@ import qualified Parser (
   SourcePos
   )
 import Syntax
+import Compiler
 
+{--|
 readExpr :: String -> String
 readExpr input = case Parser.readExpr input of
     Left err -> "No match : " ++ show err
-    Right val -> "Found : " ++ showBlock val
+    Right val -> "Parsed : " ++ showBlock val
+      ++ "\n"
+      ++ case compileProcs val of
+           Left err -> "Compile Error : " ++ show err
+           Right (addrSeed, procVals) ->
+             "Compiled : \n\t addrSeed = " ++ show addrSeed
+             ++ ", \n\t procVals = \n\t\t" ++ showProcVals procVals
+|--}
 
-
+readExpr :: String -> String
+readExpr input = case compile input of
+    Left err -> "Error : " ++ show err
+    Right procVals -> showProcVals procVals
 
 main :: IO()
 main = do

@@ -1,5 +1,6 @@
 module Syntax (
   showBlock,
+  showProc,
   PointerLit (..),
   ProcLit (..)
   ) where
