@@ -1,17 +1,16 @@
 module Parser (
   readExpr,
-  ParseError,
-  SourcePos
+  ParseError
   ) where
-import Data.List
 import Control.Monad
 import Text.ParserCombinators.Parsec
-import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
 import Syntax 
+import Data.Functor.Identity
 
 -- lexer
+languageDef :: GenLanguageDef String u Identity
 languageDef =
   emptyDef { Token.commentStart    = "/*"
            , Token.commentEnd      = "*/"
@@ -22,18 +21,29 @@ languageDef =
            , Token.reservedOpNames = []
            }                                     
 
+lexer :: Token.GenTokenParser String u Identity
 lexer = Token.makeTokenParser languageDef
 
+
+parens :: Parser a -> Parser a
 parens      = Token.parens     lexer
-reserevedOP = Token.reservedOp lexer
-comma       = Token.comma      lexer
+-- reserevedOP = Token.reservedOp lexer
+-- comma       = Token.comma      lexer
+
+dot, turnstile, arrow :: Parser String
 dot         = Token.dot        lexer 
+turnstile   = Token.lexeme lexer $ string ":-"
+arrow       = Token.lexeme lexer $ string "->"
+
+whiteSpace :: Parser ()
 whiteSpace  = Token.whiteSpace lexer 
+
+backslash :: Parser Char
+backslash   = Token.lexeme lexer $ char   '\\'
+
+commaSep, commaSep1 :: Parser a -> Parser [a]
 commaSep    = Token.commaSep   lexer 
 commaSep1   = Token.commaSep1  lexer
-arrow       = Token.lexeme lexer $ string "->"
-turnstile   = Token.lexeme lexer $ string ":-"
-backslash   = Token.lexeme lexer $ char   '\\'
 
 atomName :: Parser String
 atomName =
@@ -90,5 +100,3 @@ parseProc = (do from <- pointerName
 
 readExpr :: String -> Either ParseError [ProcLit]
 readExpr = parse whileParser "vertex"
-
-

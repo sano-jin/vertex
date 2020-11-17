@@ -1,16 +1,12 @@
 module Compiler where
-import System.Environment
-import Data.IORef
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
-import Data.Either
 import Data.Bifunctor 
 import qualified Parser (
   readExpr,
-  ParseError,
-  SourcePos
+  ParseError
   )
 import Syntax
 
@@ -46,6 +42,7 @@ data CompileError = IsNotSerial String
                   | RuleOnLHS ProcLit
                   | NewFreePointersOnRHS (S.Set String) ProcLit
                   | NotRedirectedPointers (S.Set String) ProcLit
+                  | FreePointersOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
 
 --
@@ -57,7 +54,7 @@ showProcVals = intercalate ", " . map showProcVal
 
 showProcVal :: ProcVal -> String
 showProcVal (LocalAliasVal indeg addr pointerVal)
-  = show indeg ++ " @ " ++ show addr ++ " -> " ++ showPointerVal pointerVal
+  = show indeg ++ " &" ++ show addr ++ " -> " ++ showPointerVal pointerVal
 showProcVal (FreeAliasVal pointerName pointerVal)
   = pointerName ++ " -> " ++ showPointerVal pointerVal
 showProcVal (RuleVal lhs rhs freeTailPointers)
@@ -66,7 +63,7 @@ showProcVal (RuleVal lhs rhs freeTailPointers)
 
 showPointerVal :: PointerVal -> String
 showPointerVal (FreePointerVal pointerName) = pointerName
-showPointerVal (LocalPointerVal addr) = "#" ++ show addr
+showPointerVal (LocalPointerVal addr) = "&" ++ show addr
 showPointerVal (AtomVal atomName pointers)
   = if null pointers then atomName
     else atomName ++ "(" ++ intercalate ", " (map showPointerVal pointers) ++ ")"
@@ -85,13 +82,18 @@ showError (NewFreePointersOnRHS pointers rule)
 showError (NotRedirectedPointers pointers rule)
   = "Not redirected free tail pointer(s) " ++ showSet pointers
     ++ " appeard on RHS of " ++ showProc rule
+showError (FreePointersOnTopLevel pointers)
+  = "Free pointer(s) " ++ showSet pointers
+    ++ " appeard on the top level process"
 showError (ParseError parseError)
   = "Parse error at " ++ show parseError
 
+trapError :: (MonadError a m, Show a) => m String -> m String
 trapError action = catchError action (return . show)
 
 extractValue :: ThrowsError a -> a
 extractValue (Right val) = val
+extractValue _ = error "cannot extract value"
 
 
 -- PointerName -> (Indegree, hasHead)
@@ -143,6 +145,7 @@ updateAddrSeed :: (Int -> Int) -> Envs -> Envs
 updateAddrSeed f envs
   = envs { addrSeed = f $ addrSeed envs }
 
+nullEnvs :: Envs
 nullEnvs = Envs { localEnv = []
                 , localMapAddrIndeg = M.empty
                 , freeTailEnv = S.empty
@@ -159,11 +162,12 @@ incrLocalIndeg addr envs
 
 mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
 mapAccumLM f a (b:bs) =
-  do (a, c) <- f a b
-     (a, cs) <- mapAccumLM f a bs
-     return (a, c:cs)
-mapAccumLM f a [] = return (a, [])
-  
+  do (a', c) <- f a b
+     (a'', cs) <- mapAccumLM f a' bs
+     return (a'', c:cs)
+mapAccumLM _ a [] = return (a, [])
+
+isRuleVal :: ProcVal -> Bool
 isRuleVal (RuleVal _ _ _) = True
 isRuleVal _               = False
 
@@ -266,7 +270,10 @@ compile input
       Left err -> throwError $ ParseError err
       Right procLits -> 
         do (envs, procVals) <- compileProcLits nullEnvs procLits
-           let procVals' = setIndegs envs procVals in
-             return procVals'
+           let freePointers = S.union (freeTailEnv envs) (freeHeadEnv envs)
+               procVals' = setIndegs envs procVals in
+             if not $ S.null freePointers
+             then throwError $ FreePointersOnTopLevel freePointers 
+             else return procVals'
 
 

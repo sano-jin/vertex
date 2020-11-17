@@ -3,12 +3,15 @@ test() {
   input="$1"
   echo \""$input"\"
   ./main "$input"
+  echo ""
 }
 
 test "a X"
 test "a a a X -> a"
 test "a , (X)"
 test "a(B, c(d, E))"
+test "A -> a()"
+test "A -> a(B, C), C -> g"
 test "A -> a :- b"
 test "(a :- b) :- c"
 test "A -> a, g :- b. f"
