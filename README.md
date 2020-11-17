@@ -15,7 +15,7 @@ DHLMNtal has two kinds of identifiers.
   - `p` denotes an atom name.
   - In the concrete syntax, atom names are denoted by identifiers starting from small lettes (for now).
 
-```
+```haskell
 P ::= 0                  --          (null)
   | X -> p(X1, ..., Xm)  -- (m >= 0) (atom)
   | (P, P)               --          (molecule)
