@@ -29,8 +29,8 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 
 ```bash
 cd src
-ghc Main.hs         % compile
-./Main "a. a :- b"  % run program
+ghc Main.hs         # compile
+./Main "a. a :- b"  # run program
 ```
 
 
