@@ -5,7 +5,7 @@ Directed HyperFlatLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
 - Focused on concurrency
 - Can easily deal with hypergraphs representing structures and pointers
 
-## Syntax
+## Language basics
 DHLMNtal has two kinds of identifiers.
 
 - Link name
@@ -27,11 +27,22 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 
 ## Usage
 
+### Requirement
+- Haskell ghc 
+
+### How to use
+
 ```bash
 cd src
-ghc Main.hs         # compile
+ghc Main.hs         # compile the implementation
 ./Main "a. a :- b"  # run program
 ```
+
+## Development
+
+### Test
+See [here](https://github.com/sano-jin/vertex/blob/master/test/README.md) to get description about testing this.
+
 
 
 
