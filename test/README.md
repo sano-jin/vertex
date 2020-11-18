@@ -1,12 +1,34 @@
-# Error test
-Files for checking the error-handling
+# Test
+Files/directories for testing
+
+## Usage 
+
+At the root directory of this project (the parent direcory),
 
 ```bash
-errors/
-　├ bin/
-　├ etc/
-　├ usr/
-　│　└ local/
-　│　　　└ bin/
-　└ lib/
+ghc src/Main.hs  # compile Main.hs
+test.sh
 ```
+
+## Directory structure
+
+
+```bash
+test/      
+　├ errors/              # files for testing error-handlings
+  │  ├ test1/
+　│　│　　├ input.txt    # test-code
+　│　│　　└ output.log   # expected output
+  │  │ ...
+　│　└ testN/...
+  │
+　├ normal/              # files for testing normal-cases
+  │  ├ test1/
+　│　│　　├ input.txt    # test-code
+　│　│　　└ output.log   # expected output
+  │  │ ...
+　│　└ testN/...
+  │
+　└ old/                 # old files
+```
+
