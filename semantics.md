@@ -1,4 +1,4 @@
-# Formal Semantics of Directed HyperFlatLMNtal 
+# Formal semantics of Directed HyperFlatLMNtal 
 
 ## Syntax
 
@@ -16,7 +16,7 @@ DHLMNtal has two kinds of identifiers.
 ### Processes
 
 ```
-P ::= 0                           (null)
+P ::= ()                           (null)
   | X -> p(X1, ..., Xm)  (m >= 0) (atom)
   | (P, P)                        (molecule)
   | \X.P                          (link creation)
@@ -32,7 +32,7 @@ An unary atom `X -> Y` is called an _indirection_ atom, which can be read as ali
 The set of the free link names in a process `P` is denoted as `fn(P)` and is defined inductively as Fig.2.
 
 ```
-fn(0)                   = {}
+fn(())                   = {}
 fn(X -> p(X1, ..., Xm)) = {X, X1, ..., Xm}
 fn((P, Q))              = fn(P) `union` fn(Q)
 fn(\X.P)                = fn(P) \ {X}
@@ -57,6 +57,52 @@ the _head_ of `X` must not appear more than once in `P`.
 #### Serial (left-total) Condition:
 Given an process `\X.P` where `X` in `fn(P)`, the _head_ of the `X` must exist in `P`.
 
+### Rules
+Given a rule `(P :- Q)`, `P` is called the left-hand side and `Q` is called the right-hand side of the rule.
+
+There are several conditions a rule `(P :- Q)` must satisfy.
+
+- If the _head_ of a link `X` occurs in `P`, the _head_ of the link `X` must also occur in `Q`.
+- fn(P) should be a super set of fn(Q).
+- Rule must appear in `P`
+
+## Operational Semantics
+
+We first define structural congruence `==` and then define the reduction relation `~>` on proceses.
+
+### Structural congruence
+
+We define the relation `==` on processes as the minimal equivalence relation satisfying the rules shown in Fig.3.
+
+Where `P[Y / X]` is a link substitution that replaces all free occurrences of `X` with `Y`.
+If a free occurrence of `X` occurs in a location where `Y` would not be free, alpha-conversion (E1) may be required.
+
+```
+| (E1)  | ((), P) == P                    |
+| (E2)  | (P, Q) == (Q, P)                |
+| (E3)  | (P, (Q, R)) == ((P, Q), R)      |
+| (E4)  | P == P'  =>  (P, Q) == (P', Q)  |
+| (E1)  | \X.P == \Y.P[Y / X]             |
+|       | where Y is not in fn(P)         |
+| (E7)  | \X.(X -> Y, P) == P[Y / X]      |
+| (E8)  | \X.() == ()                     |
+| (E9)  | \X.\Y.P == \Y.\X.P              |
+| (E10) | \X.(P, Q) == (\X.P, Q)          |
+|       | where X is not in fn(Q)         |
+```
+Fig.3. Structural congruence on processes}
+
+### Reduction relation
+
+We define the reduction relation `~>` on processes as the minimal relation satisfying the rules in Fig.4.
+
+```
+| (R1) | P ~> P'  =>  (P, Q) ~>  (P', Q)              |
+| (R2) | P ~> P'  =>  \X.P ~>  \X.P'                  |
+| (R3) | Q == P /\ P ~> P' /\ P' == Q'  =>  Q ~> Q'   |
+| (R4) | (P, (P :- Q)) ~> (Q, (P :- Q))               |
+```
+Fig.4. Reduction relation on processes
 
 
 
