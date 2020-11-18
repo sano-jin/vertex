@@ -23,8 +23,15 @@ P ::= 0                           (null)
   | (P :- P)                      (rule)
 ```
 
-Formal semantics are given [here](https://github.com/sano-jin/vertex/blob/master/semantics.md)
+See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
 
+## Usage
+
+```bash
+cd src
+ghc Main.hs         % compile
+./Main "a. a :- b"  % run program
+```
 
 
 
