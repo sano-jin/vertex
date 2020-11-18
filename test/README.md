@@ -3,12 +3,13 @@ Files/directories for testing
 
 ## Usage 
 
-At the root directory of this project (the parent direcory),
+Just execute the `test.sh`.
+It will compile the program and test it with the expected result.
 
 ```bash
-ghc src/Main.hs  # compile Main.hs
-test.sh
+./test.sh
 ```
+
 
 ## Directory structure
 
