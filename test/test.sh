@@ -52,5 +52,5 @@ compile
 if [ $isCompiled -eq 0 ]
 then
     testDIR "errors/"
-#    testDIR "normal/"
+    testDIR "normal/"
 fi
