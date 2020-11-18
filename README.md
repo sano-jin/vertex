@@ -42,4 +42,3 @@ Fig.2. Free names of a process
 
 
 
-
