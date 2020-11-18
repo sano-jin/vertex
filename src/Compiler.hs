@@ -12,12 +12,6 @@ import Syntax
 
 type Addr = Int
 type Indeg = Int
-data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [Pointers]
-          | NInd Addr                                 -- Alias to Addr
-          | NRule [ProcVal] [ProcVal] (S.Set String)  -- Rule
-
-type Heap = (Addr, [(Addr, (Indeg, Node))])  -- [(Address, Indegree, Atom)]
-
 
 data PointerVal = FreePointerVal String
                 | LocalPointerVal Addr           -- X
