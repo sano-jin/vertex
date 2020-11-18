@@ -14,21 +14,21 @@ test.sh
 
 
 ```bash
-test/      
-　├ errors/              # files for testing error-handlings
+test/
+  ├ errors/              # files for testing error-handlings
   │  ├ test1/
-　│　│　　├ input.txt    # test-code
-　│　│　　└ output.log   # expected output
+  │　│  ├ input.txt    # test-code
+  │　│  └ output.log   # expected output
   │  │ ...
-　│　└ testN/...
+  │　└ testN/...
   │
-　├ normal/              # files for testing normal-cases
+  ├ normal/              # files for testing normal-cases
   │  ├ test1/
-　│　│　　├ input.txt    # test-code
-　│　│　　└ output.log   # expected output
+  │  │  ├ input.txt    # test-code
+  │  │  └ output.log   # expected output
   │  │ ...
-　│　└ testN/...
+  │  └ testN/...
   │
-　└ old/                 # old files
+  └ old/                 # old files
 ```
 
