@@ -24,7 +24,7 @@ readExpr input = case Parser.readExpr input of
 readExpr :: String -> String
 readExpr input = case compile input of
     Left err -> "Error : " ++ show err
-    Right procVals -> showProcVals procVals
+    Right procs -> showProcs procs
 
 main :: IO()
 main = do
