@@ -13,7 +13,7 @@ import Syntax
 type Addr = Int
 type Indeg = Int
 
-data PointerVal = FreePointerVal String          -- X
+data PointerVal = FreePointerVal String
                 | LocalPointerVal Addr           -- X
                 | AtomVal String [PointerVal]    -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
@@ -24,7 +24,22 @@ data ProcVal = LocalAliasVal Indeg Addr PointerVal          -- \X.X -> p(X1,...,
              | RuleVal [ProcVal] [ProcVal] (S.Set String)   -- P :- P
              deriving(Eq, Ord, Show)
 
--- | some functions for showing processes
+-- type RuleSet = [(ProcVal, ProcVal)]
+
+type ThrowsError = Either CompileError
+-- type IOThrowsError = ExceptT CompileError IO
+instance Show CompileError where show = showError
+
+data CompileError = IsNotSerial String
+                  | IsNotFunctional String
+                  | RuleOnLHS ProcLit
+                  | NewFreePointersOnRHS (S.Set String) ProcLit
+                  | NotRedirectedPointers (S.Set String) ProcLit
+                  | FreePointersOnTopLevel (S.Set String)
+                  | ParseError Parser.ParseError
+
+
+--
 showSet :: S.Set String -> String
 showSet stringSet = "{" ++ intercalate ", " (S.toList stringSet) ++ "}"
 
@@ -47,32 +62,7 @@ showPointerVal (AtomVal atomName pointers)
   = if null pointers then atomName
     else atomName ++ "(" ++ intercalate ", " (map showPointerVal pointers) ++ ")"
 
-
--- | A rule is specified with ...
--- - left-hand-side atoms to match,
--- - right-hand-side atoms to generate,
--- - a set of names of free head pointers
--- - right-hand-side rules to generate.
-data Rule = Rule [ProcVal] [ProcVal] (S.Set String) [Rule]
-
--- | Processes are specified with atoms and rules
-type Procs = ([ProcVal], [Rule])
-
--- | a type for handling results and errors
-type ThrowsError = Either CompileError
--- type IOThrowsError = ExceptT CompileError IO
-instance Show CompileError where show = showError
-
--- | type for denoting compile errors
-data CompileError = IsNotSerial String
-                  | IsNotFunctional String
-                  | RuleOnLHS ProcLit
-                  | NewFreePointersOnRHS (S.Set String) ProcLit
-                  | NotRedirectedPointers (S.Set String) ProcLit
-                  | FreePointersOnTopLevel (S.Set String)
-                  | ParseError Parser.ParseError
-
--- | functions for showing errors
+-- show errors
 showError :: CompileError -> String
 showError (IsNotSerial name )
   = "pointer '" ++ name ++ "' is not serial.\n"
@@ -93,27 +83,36 @@ showError (ParseError parseError)
   = "Parse error at " ++ show parseError
 
 
+trapError :: (MonadError a m, Show a) => m String -> m String
+trapError action = catchError action (return . show)
+
+extractValue :: ThrowsError a -> a
+extractValue (Right val) = val
+extractValue _ = error "cannot extract value"
+
+
+-- PointerName -> (Indegree, hasHead)
 type HasHead = Bool
--- | A type for the environment of local pointers
 type EnvList = [(String, (Addr, HasHead))]
--- | A type for the environment of free pointers
 type EnvSet  = S.Set String
 
--- | An non-defensive version of List.lookup 
 lookupAssocListWithErr :: Eq key => key -> [(key, value)] -> value
 lookupAssocListWithErr key ((k, v):t)
   = if key == k then v
     else lookupAssocListWithErr key t
 lookupAssocListWithErr _ [] = error "empty list"
 
--- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
 updateAssocList f key ((h@(k, v)):t)
   = if key == k then (k, f v) : t
     else h : updateAssocList f key t
 updateAssocList _ _ [] = []
 
--- | A type for the Envirnment of pointes
+tup3 :: (a, b, c) -> c
+tup3 (_, _, c) = c
+
+-- type Envs = (EnvList, EnvSet, EnvSet)
+
 data Envs = Envs { localEnv :: EnvList
                  , localMapAddrIndeg :: M.Map Addr Indeg 
                  , freeTailEnv :: EnvSet
@@ -121,7 +120,6 @@ data Envs = Envs { localEnv :: EnvList
                  , addrSeed :: Int
                  } deriving (Show)
 
--- | Some helper functions for the pointer environment
 updateLocalEnv :: (EnvList -> EnvList) -> Envs -> Envs
 updateLocalEnv f envs
   = envs { localEnv = f $ localEnv envs }
@@ -147,7 +145,7 @@ nullEnvs = Envs { localEnv = []
                 , localMapAddrIndeg = M.empty
                 , freeTailEnv = S.empty
                 , freeHeadEnv = S.empty
-                , addrSeed = 0  -- | the number of the local pointers appeared in the process
+                , addrSeed = 0
                 }
 
 incrAddrSeed :: Envs -> Envs
@@ -157,7 +155,6 @@ incrLocalIndeg :: Addr -> Envs -> Envs
 incrLocalIndeg addr envs
   = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) envs
 
--- | A monadic version of List.mapAccumL
 mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
 mapAccumLM f a (b:bs) =
   do (a', c) <- f a b
@@ -165,13 +162,10 @@ mapAccumLM f a (b:bs) =
      return (a'', c:cs)
 mapAccumLM _ a [] = return (a, [])
 
--- | A helper function for checking the occurence of a rule on the left-hand-side of the rules
 isRuleVal :: ProcVal -> Bool
 isRuleVal (RuleVal _ _ _) = True
 isRuleVal _               = False
 
--- | Check if the pointers are the local pointer or not.
--- If it is a local pointer, then increse its indegree in the environment
 compilePointingToLit :: Envs -> PointerLit -> (Envs, PointerVal)
 compilePointingToLit envs (PointerLit pointerName) 
   = case lookup pointerName $ localEnv envs of
@@ -179,13 +173,7 @@ compilePointingToLit envs (PointerLit pointerName)
       Just (addr, _) -> (incrLocalIndeg addr envs, LocalPointerVal addr)
 compilePointingToLit envs (AtomLit atomName pointers) 
   = second (AtomVal atomName) $ mapAccumL compilePointingToLit envs pointers 
-
--- | Check if the incoming pointer is the local pointer or not.
--- Also, check the "functional condition",
--- which specifies that the head of the same link should not have appeared in the process
--- Notice the indegree of the local pointer are not set correctly for this time.
--- Here, initially, we just set it to be 0.
--- It will be correctly set after checking all the process appears inside of the "link creation"
+ 
 compileProcLit :: Envs -> ProcLit -> ThrowsError (Envs, [ProcVal])
 compileProcLit envs (AliasLit (Just pointerName) pointingTo) 
   = case lookup pointerName $ localEnv envs of
@@ -214,15 +202,6 @@ compileProcLit envs (AliasLit Nothing pointingTo)
         (envs'', pointingToVal) = compilePointingToLit envs' pointingTo in
       return $ (envs'', [LocalAliasVal 0 addr pointingToVal])
 
--- | A Rule `(P :- Q)` has several conditions.
--- - There should be no rules on `Q`,
---   - otherwise thrors the "RuleOnLHS" error.
--- - `fl(P)` must be a superset of `fl(Q)`,
---   - otherwise thrors the "NewFreePointersOnRHS" error.
--- - For any free head link `X` in P,
---   there must be a free head link `X` that has the same name in `Q`,
---   - otherwise thrors the "NotRedirectedPointers" error.
--- Also, this sets the indeg of all the local links appears in the processes
 compileProcLit envs (RuleLit lhs rhs) 
   = do (lhsEnvs, lhsProcs) <- compileProcLits nullEnvs lhs
        if any isRuleVal lhsProcs
@@ -245,12 +224,7 @@ compileProcLit envs (RuleLit lhs rhs)
               else if not $ S.null notRedirectedPointers
                 then throwError $ NotRedirectedPointers notRedirectedPointers $ RuleLit lhs rhs
                 else return $ (envs, [RuleVal lhsProcs' rhsProcs' freeTailPointersOnLHS])
-
--- | handles the link creation
--- firstly add the new local link to the environment,
--- check the child processes,
--- then check whether the _head_ of the link appears or not if the indeg is bigger than zero.
--- If there is no _head_, throws the "IsNotSerial" error.
+  
 compileProcLit envs (CreationLit pointerName procs)
   = let addr = addrSeed envs
         envs' =
@@ -264,7 +238,6 @@ compileProcLit envs (CreationLit pointerName procs)
            then throwError $ IsNotSerial pointerName
            else return (updateLocalEnv (drop 1) envs'', procVals)
 
--- | set indeg of the local links
 setIndeg :: Envs -> ProcVal -> ProcVal
 setIndeg envs (LocalAliasVal _ addr pointingTo)
   = LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
@@ -273,14 +246,19 @@ setIndeg _ procVals = procVals
 setIndegs :: Envs -> [ProcVal] -> [ProcVal]
 setIndegs envs procVals
   = map (setIndeg envs) procVals
-
-
--- | check the processes
+    
 compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, [ProcVal])
 compileProcLits envs 
   = liftM (second concat) . mapAccumLM compileProcLit envs
 
--- | check the top-level process
+{--|
+compileProcs :: [ProcLit] -> ThrowsError (Addr, [ProcVal])
+compileProcs procLits
+  = do (envs, procVals) <- compileProcLits nullEnvs procLits
+       let procVals' = setIndegs envs procVals in
+         return $ (addrSeed envs, procVals')
+|--}
+
 compile :: String -> ThrowsError [ProcVal]
 compile input
   = case Parser.readExpr input of
