@@ -52,8 +52,8 @@ atomName =
      cs <- many (alphaNum <|> char '_')
      return $ c : cs
      
-pointerName :: Parser String
-pointerName = 
+linkName :: Parser String
+linkName = 
   Token.lexeme lexer $
   do c <- upper
      cs <- many (alphaNum <|> char '_')
@@ -78,22 +78,22 @@ parseList :: Parser [ProcLit]
 parseList = liftM concat $ commaSep1 parseCreates
 
 parseCreates :: Parser [ProcLit]
-parseCreates = do creates <- endBy (backslash >> pointerName) dot
+parseCreates = do creates <- endBy (backslash >> linkName) dot
                   process <- parseProc
                   return $ foldr (\x ps -> (:[]) $ CreationLit x ps) process creates 
 
-parseAtomBody :: Parser (String, [PointerLit])
+parseAtomBody :: Parser (String, [LinkLit])
 parseAtomBody = do name <- atomName
-                   args <- (parens $ commaSep parsePointer) <|> return []
+                   args <- (parens $ commaSep parseLink) <|> return []
                    return (name, args)
 
-parsePointer :: Parser PointerLit
-parsePointer = (liftM PointerLit pointerName)
+parseLink :: Parser LinkLit
+parseLink = (liftM LinkLit linkName)
                <|> liftM (uncurry AtomLit)  parseAtomBody
   
 parseProc :: Parser [ProcLit]
-parseProc = (do from <- pointerName
-                to <- (arrow >> parsePointer)
+parseProc = (do from <- linkName
+                to <- (arrow >> parseLink)
                 return $ (:[]) $ AliasLit (Just from) to)
             <|> (liftM ((:[]) . AliasLit Nothing . uncurry AtomLit) parseAtomBody)
             <|> parens parseLine

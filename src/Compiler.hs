@@ -1,13 +1,17 @@
 module Compiler (
   Addr,
   Indeg,
-  PointerVal (..),
+  LinkVal (..),
   ProcVal (..),
+  Procs,
+  Rule,
   showProcs,
   showProcVals,
   showRules,
   compile,
-  ThrowsCompileError
+  ThrowsCompileError,
+  Envs,
+  updateLocalMapAddrIndeg
   ) where
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
@@ -23,14 +27,13 @@ import Syntax
 type Addr = Int
 type Indeg = Int
 
-data PointerVal = FreePointerVal String          -- X
-                | LocalPointerVal Addr           -- X
-                | AtomVal String [PointerVal]    -- p(X1,...,Xm)
+data LinkVal = FreeLinkVal String          -- X
+             | LocalLinkVal Addr           -- X
+             | AtomVal String [LinkVal]    -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
-
-data ProcVal = LocalAliasVal Indeg Addr PointerVal          -- \X.X -> p(X1,...,Xm)
-             | FreeAliasVal String PointerVal               -- X -> p(X1,...,Xm)
+data ProcVal = LocalAliasVal Indeg Addr LinkVal          -- \X.X -> p(X1,...,Xm)
+             | FreeAliasVal String LinkVal               -- X -> p(X1,...,Xm)
              deriving(Eq, Ord, Show)
 
 -- | some functions for showing processes
@@ -41,30 +44,30 @@ showProcVals :: [ProcVal] -> String
 showProcVals = intercalate ", " . map showProcVal
 
 showProcVal :: ProcVal -> String
-showProcVal (LocalAliasVal indeg addr pointerVal)
-  = show indeg ++ " &" ++ show addr ++ " -> " ++ showPointerVal pointerVal
-showProcVal (FreeAliasVal pointerName pointerVal)
-  = pointerName ++ " -> " ++ showPointerVal pointerVal
+showProcVal (LocalAliasVal indeg addr linkVal)
+  = show indeg ++ " &" ++ show addr ++ " -> " ++ showLinkVal linkVal
+showProcVal (FreeAliasVal linkName linkVal)
+  = linkName ++ " -> " ++ showLinkVal linkVal
 
-showPointerVal :: PointerVal -> String
-showPointerVal (FreePointerVal pointerName) = pointerName
-showPointerVal (LocalPointerVal addr) = "&" ++ show addr
-showPointerVal (AtomVal atomName pointers)
-  = if null pointers then atomName
-    else atomName ++ "(" ++ intercalate ", " (map showPointerVal pointers) ++ ")"
+showLinkVal :: LinkVal -> String
+showLinkVal (FreeLinkVal linkName) = linkName
+showLinkVal (LocalLinkVal addr) = "&" ++ show addr
+showLinkVal (AtomVal atomName links)
+  = if null links then atomName
+    else atomName ++ "(" ++ intercalate ", " (map showLinkVal links) ++ ")"
 
 
 -- | A rule is specified with ...
 -- - left-hand-side atoms to match,
 -- - right-hand-side atoms to generate,
--- - a set of names of free head pointers
+-- - a set of names of free head links
 -- - right-hand-side rules to generate.
 data Rule = Rule [ProcVal] [ProcVal] (S.Set String) [Rule]
 
 showRule :: Rule -> String
-showRule (Rule lhs rhs freeTailPointers rules)
+showRule (Rule lhs rhs freeTailLinks rules)
   = "(" ++ showProcVals lhs ++ " :- " ++ showProcVals rhs
-    ++ " ./*" ++ showSet freeTailPointers ++ "*/. "
+    ++ " ./*" ++ showSet freeTailLinks ++ "*/. "
     ++ showRules rules
     ++ ")"
 
@@ -88,36 +91,36 @@ instance Show CompileError where show = showCompileError
 data CompileError = IsNotSerial String
                   | IsNotFunctional String
                   | RuleOnLHS ProcLit
-                  | NewFreePointersOnRHS (S.Set String) ProcLit
-                  | NotRedirectedPointers (S.Set String) ProcLit
-                  | FreePointersOnTopLevel (S.Set String)
+                  | NewFreeLinksOnRHS (S.Set String) ProcLit
+                  | NotRedirectedLinks (S.Set String) ProcLit
+                  | FreeLinksOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
 
 -- | functions for showing errors
 showCompileError :: CompileError -> String
 showCompileError (IsNotSerial name )
-  = "pointer '" ++ name ++ "' is not serial.\n"
+  = "link '" ++ name ++ "' is not serial.\n"
 showCompileError (IsNotFunctional name)
-  = "pointer '" ++ name ++ "' is not functional.\n"
+  = "link '" ++ name ++ "' is not functional.\n"
 showCompileError (RuleOnLHS rule)
   = "Rule on LHS in " ++ showProc rule
-showCompileError (NewFreePointersOnRHS pointers rule)
-  = "New free pointer(s) " ++ showSet pointers
+showCompileError (NewFreeLinksOnRHS links rule)
+  = "New free link(s) " ++ showSet links
     ++ " appeard on RHS of " ++ showProc rule
-showCompileError (NotRedirectedPointers pointers rule)
-  = "Not redirected free tail pointer(s) " ++ showSet pointers
+showCompileError (NotRedirectedLinks links rule)
+  = "Not redirected free tail link(s) " ++ showSet links
     ++ " appeard on RHS of " ++ showProc rule
-showCompileError (FreePointersOnTopLevel pointers)
-  = "Free pointer(s) " ++ showSet pointers
+showCompileError (FreeLinksOnTopLevel links)
+  = "Free link(s) " ++ showSet links
     ++ " appeard on the top level process"
 showCompileError (ParseError parseError)
   = "Parse error at " ++ show parseError
 
 
 type HasHead = Bool
--- | A type for the environment of local pointers
+-- | A type for the environment of local links
 type EnvList = [(String, (Addr, HasHead))]
--- | A type for the environment of free pointers
+-- | A type for the environment of free links
 type EnvSet  = S.Set String
 
 -- | An non-defensive version of List.lookup 
@@ -139,7 +142,7 @@ updateAssocList _ _ [] = []
 -- - A map from the local link addresses to their indegrees
 -- - A set of free tail link names
 -- - A set of free head link names
--- - the number of the local pointers appeared in the process
+-- - the number of the local links appeared in the process
 data Envs = Envs { localEnv :: EnvList
                  , localMapAddrIndeg :: M.Map Addr Indeg 
                  , freeTailEnv :: EnvSet
@@ -147,7 +150,7 @@ data Envs = Envs { localEnv :: EnvList
                  , addrSeed :: Int
                  } deriving (Show)
 
--- | Some helper functions for the pointer environment
+-- | Some helper functions for the link environment
 updateLocalEnv :: (EnvList -> EnvList) -> Envs -> Envs
 updateLocalEnv f envs
   = envs { localEnv = f $ localEnv envs }
@@ -191,39 +194,39 @@ mapAccumLM f a (b:bs) =
      return (a'', c:cs)
 mapAccumLM _ a [] = return (a, [])
 
--- | Check if the pointers are the local pointer or not.
--- If it is a local pointer, then increse its indegree in the environment
-compilePointingToLit :: Envs -> PointerLit -> (Envs, PointerVal)
-compilePointingToLit envs (PointerLit pointerName) 
-  = case lookup pointerName $ localEnv envs of
-      Nothing -> (envs, FreePointerVal pointerName)
-      Just (addr, _) -> (incrLocalIndeg addr envs, LocalPointerVal addr)
-compilePointingToLit envs (AtomLit atomName pointers) 
-  = second (AtomVal atomName) $ mapAccumL compilePointingToLit envs pointers 
+-- | Check if the links are the local link or not.
+-- If it is a local link, then increse its indegree in the environment
+compilePointingToLit :: Envs -> LinkLit -> (Envs, LinkVal)
+compilePointingToLit envs (LinkLit linkName) 
+  = case lookup linkName $ localEnv envs of
+      Nothing -> (envs, FreeLinkVal linkName)
+      Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
+compilePointingToLit envs (AtomLit atomName links) 
+  = second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links 
 
--- | Check if the incoming pointer is the local pointer or not.
+-- | Check if the incoming link is the local link or not.
 -- Also, check the "functional condition",
 -- which specifies that the head of the same link should not have appeared in the process
--- Notice the indegree of the local pointer are not set correctly for this time.
+-- Notice the indegree of the local link are not set correctly for this time.
 -- Here, initially, we just set it to be 0.
 -- It will be correctly set after checking all the process appears on left/right hand-side of the rules or at the top-level process.
 compileProcLit :: Envs -> ProcLit -> ThrowsCompileError (Envs, Procs)
-compileProcLit envs (AliasLit (Just pointerName) pointingTo) 
-  = case lookup pointerName $ localEnv envs of
+compileProcLit envs (AliasLit (Just linkName) pointingTo) 
+  = case lookup linkName $ localEnv envs of
       Nothing ->
-        if S.member pointerName $ freeTailEnv envs
-        then throwError $ IsNotFunctional pointerName
+        if S.member linkName $ freeTailEnv envs
+        then throwError $ IsNotFunctional linkName
         else
           let (envs', pointingToVal)
                 = compilePointingToLit 
-                  (updateFreeTailEnv (S.insert pointerName) envs)
+                  (updateFreeTailEnv (S.insert linkName) envs)
                   pointingTo
           in
-            return $ (envs', ([FreeAliasVal pointerName pointingToVal], []))
-      Just (_, True) -> throwError $ IsNotFunctional pointerName
+            return $ (envs', ([FreeAliasVal linkName pointingToVal], []))
+      Just (_, True) -> throwError $ IsNotFunctional linkName
       Just (addr, False) ->
         let
-          envs' = updateLocalEnv (updateAssocList (second $ const True) pointerName) envs
+          envs' = updateLocalEnv (updateAssocList (second $ const True) linkName) envs
           (envs'', pointingToVal) = compilePointingToLit envs' pointingTo
         in
           return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
@@ -239,10 +242,10 @@ compileProcLit envs (AliasLit Nothing pointingTo)
 -- - There should be no rules on `Q`,
 --   - otherwise thrors the "RuleOnLHS" error.
 -- - `fl(P)` must be a superset of `fl(Q)`,
---   - otherwise thrors the "NewFreePointersOnRHS" error.
+--   - otherwise thrors the "NewFreeLinksOnRHS" error.
 -- - For any free tail link `X` in P,
 --   there must be a free tail link `X` that has the same name in `Q`,
---   - otherwise thrors the "NotRedirectedPointers" error.
+--   - otherwise thrors the "NotRedirectedLinks" error.
 -- Also, this sets the indeg of all the local links appears in the processes on the left/right hand-sides
 compileProcLit envs (RuleLit lhs rhs) 
   = do (lhsEnvs, (lhsProcs, lhsRules)) <- compileProcLits nullEnvs lhs
@@ -252,20 +255,20 @@ compileProcLit envs (RuleLit lhs rhs)
          do (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
             let lhsProcs'                = setIndegs lhsEnvs lhsProcs
                 rhsProcs'                = setIndegs rhsEnvs rhsProcs
-                freeTailPointersOnLHS    = freeTailEnv lhsEnvs
-                freeTailPointersOnRHS    = freeTailEnv rhsEnvs
-                freeHeadPointersOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailPointersOnLHS
-                freeHeadPointersOnRHS    = freeHeadEnv rhsEnvs S.\\ freeTailPointersOnRHS
-                newTailFreePointersOnRHS = freeTailPointersOnRHS S.\\ freeTailPointersOnLHS
-                newHeadFreePointersOnRHS = freeHeadPointersOnRHS S.\\ freeHeadPointersOnLHS
-                newFreePointersOnRHS     = S.union newTailFreePointersOnRHS newHeadFreePointersOnRHS
-                notRedirectedPointers    = freeTailPointersOnLHS S.\\ freeTailPointersOnRHS
+                freeTailLinksOnLHS    = freeTailEnv lhsEnvs
+                freeTailLinksOnRHS    = freeTailEnv rhsEnvs
+                freeHeadLinksOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailLinksOnLHS
+                freeHeadLinksOnRHS    = freeHeadEnv rhsEnvs S.\\ freeTailLinksOnRHS
+                newTailFreeLinksOnRHS = freeTailLinksOnRHS S.\\ freeTailLinksOnLHS
+                newHeadFreeLinksOnRHS = freeHeadLinksOnRHS S.\\ freeHeadLinksOnLHS
+                newFreeLinksOnRHS     = S.union newTailFreeLinksOnRHS newHeadFreeLinksOnRHS
+                notRedirectedLinks    = freeTailLinksOnLHS S.\\ freeTailLinksOnRHS
               in
-              if not $ S.null newFreePointersOnRHS
-              then throwError $ NewFreePointersOnRHS newFreePointersOnRHS $ RuleLit lhs rhs
-              else if not $ S.null notRedirectedPointers
-                then throwError $ NotRedirectedPointers notRedirectedPointers $ RuleLit lhs rhs
-                else return $ (envs, ([], [Rule lhsProcs' rhsProcs' freeTailPointersOnLHS rhsRules]))
+              if not $ S.null newFreeLinksOnRHS
+              then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS $ RuleLit lhs rhs
+              else if not $ S.null notRedirectedLinks
+                then throwError $ NotRedirectedLinks notRedirectedLinks $ RuleLit lhs rhs
+                else return $ (envs, ([], [Rule lhsProcs' rhsProcs' freeTailLinksOnLHS rhsRules]))
 
 -- | handles the link creation
 -- firstly add the new local link to the environment,
@@ -273,17 +276,17 @@ compileProcLit envs (RuleLit lhs rhs)
 -- then check whether the _head_ of the link appears or not if the indeg is bigger than zero.
 -- If there is no _head_, throws the "IsNotSerial" error.
 -- Drops the newly created link from the environment before returning the result
-compileProcLit envs (CreationLit pointerName procs)
+compileProcLit envs (CreationLit linkName procs)
   = let addr = addrSeed envs
         envs' =
           incrAddrSeed
           $ updateLocalMapAddrIndeg (M.insert addr 0)
-          $ updateLocalEnv ((pointerName, (addr, False)) :) envs
+          $ updateLocalEnv ((linkName, (addr, False)) :) envs
     in
       do (envs'', procsAndRules) <- compileProcLits envs' procs
          let (_, hasHead) = snd $ head $ localEnv envs'' in
            if not hasHead && localMapAddrIndeg envs'' M.! addr /= 0  
-           then throwError $ IsNotSerial pointerName
+           then throwError $ IsNotSerial linkName
            else return (updateLocalEnv (drop 1) envs'', procsAndRules)
 
 -- | set indeg of the local links
@@ -311,10 +314,10 @@ compile input
       Left err -> throwError $ ParseError err
       Right procLits -> 
         do (envs, (procVals, rules)) <- compileProcLits nullEnvs procLits
-           let freePointers = S.union (freeTailEnv envs) (freeHeadEnv envs)
+           let freeLinks = S.union (freeTailEnv envs) (freeHeadEnv envs)
                procVals' = setIndegs envs procVals in
-             if not $ S.null freePointers
-             then throwError $ FreePointersOnTopLevel freePointers 
+             if not $ S.null freeLinks
+             then throwError $ FreeLinksOnTopLevel freeLinks 
              else return (procVals', rules)
 
 

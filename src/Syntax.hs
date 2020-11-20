@@ -13,22 +13,22 @@ commentary with @some markup@.
 module Syntax (
   showBlock,
   showProc,
-  PointerLit (..),
+  LinkLit (..),
   ProcLit (..)
   ) where
 import Data.List
 
 -- | Links are denoted as the variable starting from the capital lettes
 -- or an embedded atom if the indegree of the pointing atom is 1
-data PointerLit = PointerLit String                 -- X
-                | AtomLit String [PointerLit]       -- p(X1,...,Xm)
+data LinkLit = LinkLit String                 -- X
+                | AtomLit String [LinkLit]       -- p(X1,...,Xm)
                 deriving(Eq, Ord, Show)
 
 -- | A process can be
 -- an Atom (aliasing from link)
 -- a rule
 -- or a link creation.
-data ProcLit = AliasLit (Maybe String) PointerLit   -- X -> p(X1,...,Xm)
+data ProcLit = AliasLit (Maybe String) LinkLit   -- X -> p(X1,...,Xm)
              | RuleLit [ProcLit] [ProcLit]          -- P :- P
              | CreationLit String [ProcLit]         -- \X.(P1,..,Pn)
              deriving(Eq, Ord, Show)
@@ -40,11 +40,11 @@ showBlock = intercalate ". " . map showProc
 -- | Show the procLit
 showProc :: ProcLit -> String
 showProc (AliasLit (Just p) to) =
-  showPointer (PointerLit p) ++ " -> " ++ showPointer to
-showProc (AliasLit Nothing to) = showPointer to
+  showLink (LinkLit p) ++ " -> " ++ showLink to
+showProc (AliasLit Nothing to) = showLink to
 showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
-showProc (CreationLit pointer procs)
-  = "\\" ++ pointer ++ "." ++ if length procs == 1 then showProcSet procs
+showProc (CreationLit link procs)
+  = "\\" ++ link ++ "." ++ if length procs == 1 then showProcSet procs
                               else "(" ++ showProcSet procs ++ ")"                                
 
 -- | Show the processes on the left/right hand-side of the rules                                   
@@ -54,13 +54,13 @@ showProcSet = intercalate ", " . map showProc_
         showProc_ others = showProc others
 
 -- | Show the list of links of the atom
-showPointerList :: [PointerLit] -> String
-showPointerList [] = ""
-showPointerList args = "(" ++ unwordsList args ++ ")"
-  where unwordsList = intercalate ", " . map showPointer
+showLinkList :: [LinkLit] -> String
+showLinkList [] = ""
+showLinkList args = "(" ++ unwordsList args ++ ")"
+  where unwordsList = intercalate ", " . map showLink
 
 -- | Show the given link or the embedded atom
-showPointer :: PointerLit -> String
-showPointer (PointerLit name) = name
-showPointer (AtomLit name args) = name ++ showPointerList args
+showLink :: LinkLit -> String
+showLink (LinkLit name) = name
+showLink (AtomLit name args) = name ++ showLinkList args
 
