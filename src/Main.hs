@@ -1,11 +1,11 @@
 module Main where
 import System.Environment
-import Data.IORef
-import Control.Monad.Except
+-- import Data.IORef
+-- import Control.Monad.Except
 -- import qualified Data.Map.Strict as M
 -- import qualified Data.Set as S
-import qualified Parser
-import Syntax
+-- import qualified Parser
+-- import Syntax
 import Compiler
 
 {--|

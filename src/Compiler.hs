@@ -1,10 +1,19 @@
-module Compiler where
+module Compiler (
+  Addr,
+  Indeg,
+  PointerVal (..),
+  ProcVal (..),
+  showProcs,
+  showProcVals,
+  showRules,
+  compile,
+  ThrowsCompileError
+  ) where
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
--- import Data.Bifunctor 
-import Data.Tuple.Extra hiding (both)
+import Data.Tuple.Extra
 import qualified Parser (
   readExpr,
   ParseError
@@ -71,9 +80,9 @@ showProcs (procVals, rules)
       showProcVals procVals ++ dot ++ showRules rules
 
 -- | a type for handling results and errors
-type ThrowsError = Either CompileError
+type ThrowsCompileError = Either CompileError
 -- type IOThrowsError = ExceptT CompileError IO
-instance Show CompileError where show = showError
+instance Show CompileError where show = showCompileError
 
 -- | type for denoting compile errors
 data CompileError = IsNotSerial String
@@ -85,23 +94,23 @@ data CompileError = IsNotSerial String
                   | ParseError Parser.ParseError
 
 -- | functions for showing errors
-showError :: CompileError -> String
-showError (IsNotSerial name )
+showCompileError :: CompileError -> String
+showCompileError (IsNotSerial name )
   = "pointer '" ++ name ++ "' is not serial.\n"
-showError (IsNotFunctional name)
+showCompileError (IsNotFunctional name)
   = "pointer '" ++ name ++ "' is not functional.\n"
-showError (RuleOnLHS rule)
+showCompileError (RuleOnLHS rule)
   = "Rule on LHS in " ++ showProc rule
-showError (NewFreePointersOnRHS pointers rule)
+showCompileError (NewFreePointersOnRHS pointers rule)
   = "New free pointer(s) " ++ showSet pointers
     ++ " appeard on RHS of " ++ showProc rule
-showError (NotRedirectedPointers pointers rule)
+showCompileError (NotRedirectedPointers pointers rule)
   = "Not redirected free tail pointer(s) " ++ showSet pointers
     ++ " appeard on RHS of " ++ showProc rule
-showError (FreePointersOnTopLevel pointers)
+showCompileError (FreePointersOnTopLevel pointers)
   = "Free pointer(s) " ++ showSet pointers
     ++ " appeard on the top level process"
-showError (ParseError parseError)
+showCompileError (ParseError parseError)
   = "Parse error at " ++ show parseError
 
 
@@ -126,6 +135,11 @@ updateAssocList f key ((h@(k, v)):t)
 updateAssocList _ _ [] = []
 
 -- | A type for the Envirnment of pointes
+-- - A mapping (list of tuple) from the local link names to the tuples of the given address and the boolean denotes whether its head appeared or not
+-- - A map from the local link addresses to their indegrees
+-- - A set of free tail link names
+-- - A set of free head link names
+-- - the number of the local pointers appeared in the process
 data Envs = Envs { localEnv :: EnvList
                  , localMapAddrIndeg :: M.Map Addr Indeg 
                  , freeTailEnv :: EnvSet
@@ -159,7 +173,7 @@ nullEnvs = Envs { localEnv = []
                 , localMapAddrIndeg = M.empty
                 , freeTailEnv = S.empty
                 , freeHeadEnv = S.empty
-                , addrSeed = 0  -- | the number of the local pointers appeared in the process
+                , addrSeed = 0  
                 }
 
 incrAddrSeed :: Envs -> Envs
@@ -193,7 +207,7 @@ compilePointingToLit envs (AtomLit atomName pointers)
 -- Notice the indegree of the local pointer are not set correctly for this time.
 -- Here, initially, we just set it to be 0.
 -- It will be correctly set after checking all the process appears on left/right hand-side of the rules or at the top-level process.
-compileProcLit :: Envs -> ProcLit -> ThrowsError (Envs, Procs)
+compileProcLit :: Envs -> ProcLit -> ThrowsCompileError (Envs, Procs)
 compileProcLit envs (AliasLit (Just pointerName) pointingTo) 
   = case lookup pointerName $ localEnv envs of
       Nothing ->
@@ -286,12 +300,12 @@ zipConcatBoth :: [([a], [b])] -> ([a], [b])
 zipConcatBoth = first concat . second concat . unzip
 
 -- | check the processes
-compileProcLits :: Envs -> [ProcLit] -> ThrowsError (Envs, Procs)
+compileProcLits :: Envs -> [ProcLit] -> ThrowsCompileError (Envs, Procs)
 compileProcLits envs 
   = liftM (second zipConcatBoth) . mapAccumLM compileProcLit envs
 
 -- | check the top-level process
-compile :: String -> ThrowsError Procs
+compile :: String -> ThrowsCompileError Procs
 compile input
   = case Parser.readExpr input of
       Left err -> throwError $ ParseError err
