@@ -7,6 +7,7 @@ import Data.Tuple.Extra
 import Syntax
 import Compiler
 
+-- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
 substituteAddr fromAddr toAddr addr 
   = if addr == fromAddr then toAddr
@@ -42,11 +43,7 @@ normalizeLocal2LocalIndirection procVals
            $ filter (/= local2localAlias) procVals
       _ -> error "should not reach here"
 
-
-
-
-
-
+-- | Normalize the indirection from local link to free link
 normalizeLocal2FreeLinkVal :: Addr -> String -> LinkVal -> LinkVal
 normalizeLocal2FreeLinkVal fromAddr toLinkName (LocalLinkVal addr)
   = if fromAddr == addr
@@ -80,8 +77,7 @@ normalizeLocal2FreeIndirection procVals
       _ -> error "should not reach here"
 
 
-
-
+-- | Normalize the indirection from free link to local link
 isFree2LocalIndirection :: ProcVal -> Bool
 isFree2LocalIndirection (FreeAliasVal _ (LocalLinkVal _)) = True
 isFree2LocalIndirection _                                    = False
