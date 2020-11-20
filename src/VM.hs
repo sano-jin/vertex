@@ -37,4 +37,5 @@ matchProcVal (FreeAliasVal pointerName pointerVal) envs heap
   = Just (envs, heap)
 
 matchRule :: Rule -> Heap -> Maybe (Envs, Heap)
-matchRule rule heap = Just (nullEnvs, heap)
+matchRule (Rule lhs rhs freeTailLinks rhsRules) heap
+  = Just (nullEnvs, heap)

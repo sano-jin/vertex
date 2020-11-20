@@ -4,7 +4,7 @@ module Compiler (
   LinkVal (..),
   ProcVal (..),
   Procs,
-  Rule,
+  Rule (..),
   showProcs,
   showProcVals,
   showRules,
@@ -316,8 +316,9 @@ compile input
         do (envs, (procVals, rules)) <- compileProcLits nullEnvs procLits
            let freeLinks = S.union (freeTailEnv envs) (freeHeadEnv envs)
                procVals' = setIndegs envs procVals in
-             if not $ S.null freeLinks
-             then throwError $ FreeLinksOnTopLevel freeLinks 
-             else return (procVals', rules)
+             -- if not $ S.null freeLinks
+             -- then throwError $ FreeLinksOnTopLevel freeLinks 
+             -- else
+             return (procVals', rules)
 
 

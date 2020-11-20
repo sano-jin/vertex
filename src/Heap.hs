@@ -13,8 +13,6 @@ data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [P
 -- | Heap is the map from addresses to the tuples of the indegree and the node
 type Heap = M.Map Addr (Indeg, Node)
 
-
-
 -- | Some functions for normalizing the heap
 substituteAddr :: Addr -> Addr -> Addr -> Addr
 substituteAddr fromAddr toAddr addr 
@@ -32,7 +30,7 @@ normalizeNode fromAddr toAddr (NInd addr)
 normalizeAddrNode :: (Addr, Indeg) -> Addr -> Addr -> (Indeg, Node) -> (Indeg, Node)
 normalizeAddrNode (fromAddr, fromIndeg) toAddr addr (indeg, node)
   = let indeg' = 
-          if toAddr == addr then indeg + fromIndeg
+          if toAddr == addr then indeg + fromIndeg - 1
           else indeg
     in
       (indeg', normalizeNode fromAddr toAddr node)

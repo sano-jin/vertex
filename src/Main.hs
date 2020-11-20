@@ -7,6 +7,8 @@ import System.Environment
 -- import qualified Parser
 -- import Syntax
 import Compiler
+import Normalize
+import Data.Tuple.Extra
 
 {--|
 readExpr :: String -> String
@@ -24,7 +26,12 @@ readExpr input = case Parser.readExpr input of
 readExpr :: String -> String
 readExpr input = case compile input of
     Left err -> "Error : " ++ show err
-    Right procs -> showProcs procs
+    Right procs ->
+      showProcs
+      $ first normalizeFree2LocalIndirection
+      $ first normalizeLocal2FreeIndirection
+      $ first normalizeLocal2LocalIndirection
+      $ procs
 
 main :: IO()
 main = do
