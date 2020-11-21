@@ -78,9 +78,11 @@ parseList :: Parser [ProcLit]
 parseList = liftM concat $ commaSep1 parseCreates
 
 parseCreates :: Parser [ProcLit]
-parseCreates = do creates <- endBy (backslash >> linkName) dot
+parseCreates = do creates <- endBy (backslash >> sepBy1 linkName whiteSpace) dot
                   process <- parseProc
-                  return $ foldr (\x ps -> (:[]) $ CreationLit x ps) process creates 
+                  return
+                    $ foldr (\x ps -> [CreationLit x ps]) process
+                    $ concat creates 
 
 parseAtomBody :: Parser (String, [LinkLit])
 parseAtomBody = do name <- atomName
@@ -89,7 +91,7 @@ parseAtomBody = do name <- atomName
 
 parseLink :: Parser LinkLit
 parseLink = (liftM LinkLit linkName)
-               <|> liftM (uncurry AtomLit)  parseAtomBody
+               <|> liftM (uncurry AtomLit) parseAtomBody
   
 parseProc :: Parser [ProcLit]
 parseProc = (do from <- linkName

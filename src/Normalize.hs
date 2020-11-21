@@ -1,10 +1,10 @@
 module Normalize where
 import Control.Monad.Except
-import qualified Data.Map.Strict as M
+-- import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
-import Data.Tuple.Extra
-import Syntax
+-- import Data.Tuple.Extra
+-- import Syntax
 import Compiler 
 
 
@@ -102,7 +102,7 @@ filterMap _ [] = []
 
 
 getLocalEffectiveAddr :: ProcVal -> Maybe Addr
-getLocalEffectiveAddr (LocalAliasVal _ addr pointingTo)
+getLocalEffectiveAddr (LocalAliasVal _ addr _)
   = Just addr
 getLocalEffectiveAddr _ = Nothing  
 

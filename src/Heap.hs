@@ -1,10 +1,11 @@
 module Heap where
-import Control.Monad.Except
+-- import Control.Monad.Except
 import qualified Data.Map.Strict as M
 -- import qualified Data.Set as S
-import Data.List
-import Data.Bifunctor 
+-- import Data.List
+-- import Data.Bifunctor 
 import Compiler 
+
 
 
 data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [Pointers]
@@ -38,7 +39,7 @@ normalizeAddrNode (fromAddr, fromIndeg) toAddr addr (indeg, node)
 normalizeIfInd :: Addr -> (Indeg, Node) -> Heap -> Maybe Heap
 normalizeIfInd fromAddr (indeg, NInd toAddr) oldHeap
   = Just $ M.mapWithKey (normalizeAddrNode (fromAddr, indeg) toAddr) oldHeap
-normalizeIfInd _ (_, _) heap
+normalizeIfInd _ _ _
   = Nothing
 
 isNInd :: Node -> Bool
@@ -63,3 +64,4 @@ normalizeHeap heap
            $ M.mapWithKey (normalizeAddrNode (fromAddr, indeg) toAddr)
            $ M.delete fromAddr heap
       Nothing -> heap
+      _ -> error "should not reach here"

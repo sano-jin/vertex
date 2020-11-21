@@ -8,7 +8,8 @@ import System.Environment
 -- import Syntax
 import Compiler
 import Normalize
-import Data.Tuple.Extra
+-- import Data.Tuple.Extra
+
 
 {--|
 readExpr :: String -> String

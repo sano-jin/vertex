@@ -11,7 +11,7 @@ isCompiled=0
 
 compile() {
     cd ../src
-    ghc Main.hs
+    ghc Main.hs -Wall
     isCompiled=$?
     cd ../test
 }	
@@ -51,6 +51,6 @@ testDIR() {
 compile
 if [ $isCompiled -eq 0 ]
 then
-    testDIR "errors/"
     testDIR "normal/"
+    testDIR "errors/"
 fi

@@ -2,8 +2,10 @@
 i=0
 
 test() {
-    input="$1"
-    DIR="test${i}"
+input="$2"
+    testName="$1"
+    id=`printf %02d $i`
+    DIR="test-${id}-${testName}"
     mkdir $DIR
     echo "$input" > "${DIR}/input.txt"
     echo $DIR
@@ -14,13 +16,13 @@ test() {
     echo $i
 }
 
-test "a X"
-test "a a a X -> a"
-test "a , (X)"
-test "a(B, c(d, E))"
-test "A -> a()"
-test "A -> a(B, C), C -> g"
-test "A -> a :- b"
-test "(a :- b) :- c"
-test "A -> a, g :- b. f"
-test "\X.\Y.(a(X), c(d(X))) :- b, c . d."
+test not_parened_link "a X"
+test no_comma_separated_atom "a a a X -> a"
+test no_atom_name "a , (X)"
+test freelinks_on_top_level "a(B, c(d, E))"
+test free_link_on_top_level "A -> a()"
+test freelinks_on_top_level "A -> a(B, C), C -> g"
+test not_redirected "A -> a :- b"
+test rule_on_lhs "(a :- b) :- c"
+test not_redirected "A -> a, g :- b. f"
+test not_serial_in_rule "\X.\Y.(a(X), c(d(X))) :- b, c . d."

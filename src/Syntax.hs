@@ -18,6 +18,7 @@ module Syntax (
   ) where
 import Data.List
 
+
 -- | Links are denoted as the variable starting from the capital lettes
 -- or an embedded atom if the indegree of the pointing atom is 1
 data LinkLit = LinkLit String                 -- X

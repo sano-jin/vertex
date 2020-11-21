@@ -3,6 +3,7 @@ test() {
   input="$1"
   echo \""$input"\"
   ./main "$input"
+  echo ""
 }
 
 test "a"
@@ -15,6 +16,7 @@ test "a(B, c()), d"
 test "a(B, c(d, E))"
 test "\A.A -> a()"
 test "\A.\C.(A -> a(B, C), C -> g)"
+test "\A C.(A -> a(C), C -> c)"
 test "a :- . b"
 test ":- a. b"
 test "a :- (b :- c)"

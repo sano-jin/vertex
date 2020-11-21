@@ -25,6 +25,7 @@ import qualified Parser (
   )
 import Syntax
 
+
 type Addr = Int
 type Indeg = Int
 
@@ -129,13 +130,6 @@ type EnvList = [(String, (Addr, HasHead))]
 -- | A type for the environment of free links
 type EnvSet  = S.Set String
 
--- | An non-defensive version of List.lookup 
-lookupAssocListWithErr :: Eq key => key -> [(key, value)] -> value
-lookupAssocListWithErr key ((k, v):t)
-  = if key == k then v
-    else lookupAssocListWithErr key t
-lookupAssocListWithErr _ [] = error "empty list"
-
 -- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
 updateAssocList f key ((h@(k, v)):t)
@@ -169,9 +163,11 @@ updateFreeTailEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
 updateFreeTailEnv f envs
   = envs { freeTailEnv = f $ freeTailEnv envs }
 
+{--|
 updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
 updateFreeHeadEnv f envs
   = envs { freeHeadEnv = f $ freeHeadEnv envs }
+|--}
 
 updateAddrSeed :: (Int -> Int) -> Envs -> Envs
 updateAddrSeed f envs
@@ -320,7 +316,7 @@ compile input
       Left err -> throwError $ ParseError err
       Right procLits -> 
         do (envs, (procVals, rules)) <- compileProcLits nullEnvs procLits
-           let freeLinks = S.union (freeTailEnv envs) (freeHeadEnv envs)
+           let -- freeLinks = S.union (freeTailEnv envs) (freeHeadEnv envs)
                procVals' = setIndegs envs procVals in
              -- if not $ S.null freeLinks
              -- then throwError $ FreeLinksOnTopLevel freeLinks 

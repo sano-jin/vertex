@@ -8,7 +8,7 @@ import Compiler hiding (Envs)
 import Heap
 
 -- | State is consists of triple
--- - The muximum address of the heap,
+-- - The muximum address of the addresses in the heap,
 -- - the heap,
 -- - the rules.
 type State = (Addr, Heap, [Rule]) 
@@ -27,7 +27,6 @@ instance Show RuntimeError where show = showRTError
 
 data RuntimeError = DanglingPointer String
 
-
 showRTError (DanglingPointer err) = err
 
 matchProcVal :: ProcVal -> Envs -> Heap -> Maybe (Envs, Heap)
@@ -39,3 +38,4 @@ matchProcVal (FreeAliasVal pointerName pointerVal) envs heap
 matchRule :: Rule -> Heap -> Maybe (Envs, Heap)
 matchRule (Rule lhs rhs freeTailLinks rhsRules) heap
   = Just (nullEnvs, heap)
+
