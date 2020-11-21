@@ -1,3 +1,6 @@
+-- Either of the following Safe Haskell pragmas would do
+-- {-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Safe #-}
 module Compiler (
   Addr,
   Indeg,
@@ -18,12 +21,16 @@ import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
-import Data.Tuple.Extra
+import safe Data.Tuple.Extra
 import qualified Parser (
   readExpr,
   ParseError
   )
-import Syntax
+import Syntax (
+  showProc,
+  LinkLit (..),
+  ProcLit (..)
+  )
 
 
 type Addr = Int
@@ -32,11 +39,11 @@ type Indeg = Int
 data LinkVal = FreeLinkVal String          -- X
              | LocalLinkVal Addr           -- X
              | AtomVal String [LinkVal]    -- p(X1,...,Xm)
-                deriving(Eq, Ord, Show)
+             deriving(Eq)
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal          -- \X.X -> p(X1,...,Xm)
              | FreeAliasVal String LinkVal               -- X -> p(X1,...,Xm)
-             deriving(Eq, Ord, Show)
+             deriving(Eq)
 
 -- | some functions for showing processes
 showSet :: S.Set String -> String
@@ -285,11 +292,11 @@ compileProcLit envs (CreationLit linkName procs)
           $ updateLocalMapAddrIndeg (M.insert addr 0)
           $ updateLocalEnv ((linkName, (addr, False)) :) envs
     in
-      do (envs'', procsAndRules) <- compileProcLits envs' procs
-         let (_, hasHead) = snd $ head $ localEnv envs'' in
-           if not hasHead && localMapAddrIndeg envs'' M.! addr /= 0  
+      do (_envs, procsAndRules) <- compileProcLits envs' procs
+         let (_, hasHead) = snd $ head $ localEnv _envs in
+           if not hasHead && localMapAddrIndeg _envs M.! addr /= 0  
            then throwError $ IsNotSerial linkName
-           else return (updateLocalEnv (drop 1) envs'', procsAndRules)
+           else return (updateLocalEnv (drop 1) _envs, procsAndRules)
 
 -- | set indeg of the local links
 setIndeg :: Envs -> ProcVal -> ProcVal

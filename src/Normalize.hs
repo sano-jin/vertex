@@ -1,10 +1,13 @@
-module Normalize where
+{-# LANGUAGE Safe #-}
+
+module Normalize (
+  normalize
+  ) where
 import Control.Monad.Except
 -- import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
 -- import Data.Tuple.Extra
--- import Syntax
 import Compiler 
 
 

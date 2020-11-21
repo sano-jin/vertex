@@ -7,7 +7,6 @@ import qualified Data.Map.Strict as M
 import Compiler 
 
 
-
 data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [Pointers]
           | NInd Addr                                 -- Alias to Addr
 

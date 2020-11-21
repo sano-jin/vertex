@@ -29,10 +29,12 @@ data RuntimeError = DanglingPointer String
 
 showRTError (DanglingPointer err) = err
 
-matchProcVal :: ProcVal -> Envs -> Heap -> Maybe (Envs, Heap)
-matchProcVal (LocalAliasVal indeg addr pointerVal) envs heap
+matchProcVal :: Envs -> Heap -> ProcVal -> Maybe (Envs, Heap)
+matchProcVal envs heap (LocalAliasVal indeg addr (AtomVal atomName links)) 
   = Just (envs, heap)
-matchProcVal (FreeAliasVal pointerName pointerVal) envs heap
+matchProcVal _ _ (LocalAliasVal _ _ _)
+  = error "not normalized"
+matchProcVal envs heap (FreeAliasVal pointerName pointerVal) 
   = Just (envs, heap)
 
 matchRule :: Rule -> Heap -> Maybe (Envs, Heap)

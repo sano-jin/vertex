@@ -1,3 +1,5 @@
+{-# LANGUAGE Safe #-}
+
 module Parser (
   readExpr,
   ParseError
@@ -6,7 +8,10 @@ import Control.Monad
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Syntax 
+import Syntax (
+  LinkLit (..),
+  ProcLit (..)
+  )
 import Data.Functor.Identity
 
 -- lexer
