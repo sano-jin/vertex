@@ -5,7 +5,8 @@ import qualified Data.Set as S
 import Data.List
 import Data.Tuple.Extra
 import Syntax
-import Compiler
+import Compiler 
+
 
 -- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
@@ -76,7 +77,6 @@ normalizeLocal2FreeIndirection procVals
            $ filter (/= local2freeAlias) procVals
       _ -> error "should not reach here"
 
-
 -- | Normalize the indirection from free link to local link
 isFree2LocalIndirection :: ProcVal -> Bool
 isFree2LocalIndirection (FreeAliasVal _ (LocalLinkVal _)) = True
@@ -93,3 +93,86 @@ normalizeFree2LocalIndirection procVals
       _ -> error "should not reach here"
 
 
+filterMap :: (a -> Maybe b) -> [a] -> [b]
+filterMap f (h:t)
+  = case f h of
+      Just h' -> h' : filterMap f t
+      Nothing -> filterMap f t
+filterMap _ [] = []
+
+
+getLocalEffectiveAddr :: ProcVal -> Maybe Addr
+getLocalEffectiveAddr (LocalAliasVal _ addr pointingTo)
+  = Just addr
+getLocalEffectiveAddr _ = Nothing  
+
+collectLocalEffectiveAddrs :: [ProcVal] -> S.Set Addr
+collectLocalEffectiveAddrs procVals
+  = S.fromList
+    $ filterMap getLocalEffectiveAddr procVals
+
+collectNotSerialAddrOfLinkVal :: S.Set Addr -> LinkVal -> S.Set Addr
+collectNotSerialAddrOfLinkVal effectiveLocalAddrs (LocalLinkVal addr)
+  = if S.member addr effectiveLocalAddrs then S.empty
+    else S.singleton addr
+collectNotSerialAddrOfLinkVal effectiveLocalAddrs (AtomVal _ links)
+  = S.unions
+    $ map (collectNotSerialAddrOfLinkVal effectiveLocalAddrs) links
+collectNotSerialAddrOfLinkVal _ _ = S.empty
+
+
+collectNotSerialAddrOfProcVal :: S.Set Addr -> ProcVal -> Maybe (S.Set Addr, ProcVal)
+collectNotSerialAddrOfProcVal effectiveLocalAddrs localAliasVal@(LocalAliasVal _ _ pointingTo)
+  = let notSerialAddrs
+          = collectNotSerialAddrOfLinkVal effectiveLocalAddrs pointingTo
+    in
+      if S.null notSerialAddrs then Nothing
+      else Just (notSerialAddrs, localAliasVal)
+      
+collectNotSerialAddrOfProcVal effectiveLocalAddrs freeAliasVal@(FreeAliasVal _ pointingTo)
+  = let notSerialAddrs
+          = collectNotSerialAddrOfLinkVal effectiveLocalAddrs pointingTo
+    in
+      if S.null notSerialAddrs then Nothing
+      else Just (notSerialAddrs, freeAliasVal)
+    
+
+collectNotSerialAddrsOfProcVals :: [ProcVal] -> [(S.Set Addr, ProcVal)]
+collectNotSerialAddrsOfProcVals procVals
+  = let effectiveLocalAddrs
+          = collectLocalEffectiveAddrs procVals
+    in
+      filterMap (collectNotSerialAddrOfProcVal effectiveLocalAddrs) procVals
+
+normalizeProcVals :: [ProcVal] -> ThrowsCompileError [ProcVal]
+normalizeProcVals procVals
+  = let procVals' = 
+          normalizeFree2LocalIndirection
+          $ normalizeLocal2FreeIndirection
+          $ normalizeLocal2LocalIndirection
+          $ procVals
+        notSerials
+          = collectNotSerialAddrsOfProcVals procVals'
+    in
+      if null notSerials then return procVals'
+      else throwError $ IsNotSerialAfterNormalization notSerials
+
+mapEitherList :: (a -> Either b c) -> [a] -> Either b [c]
+mapEitherList f (h:t)
+  = case f h of
+      Left b -> Left b
+      Right c -> liftM (c:) $ mapEitherList f t
+mapEitherList _ [] = return []
+
+normalizeRule :: Rule -> ThrowsCompileError Rule
+normalizeRule (Rule lhs rhs linkNames rhsRules)
+  = do lhs' <- normalizeProcVals lhs
+       rhs' <- normalizeProcVals rhs
+       rhsRules' <- mapEitherList normalizeRule rhsRules
+       return $ Rule lhs' rhs' linkNames rhsRules'
+      
+normalize :: Procs -> ThrowsCompileError Procs  
+normalize (procVals, rules)
+  = do procVals' <- normalizeProcVals procVals
+       rules' <- mapEitherList normalizeRule rules
+       return (procVals', rules')

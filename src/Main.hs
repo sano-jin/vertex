@@ -24,14 +24,10 @@ readExpr input = case Parser.readExpr input of
 |--}
 
 readExpr :: String -> String
-readExpr input = case compile input of
+readExpr input = case normalize =<< compile input of
     Left err -> "Error : " ++ show err
     Right procs ->
-      showProcs
-      $ first normalizeFree2LocalIndirection
-      $ first normalizeLocal2FreeIndirection
-      $ first normalizeLocal2LocalIndirection
-      $ procs
+      showProcs procs
 
 main :: IO()
 main = do

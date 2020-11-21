@@ -10,6 +10,7 @@ module Compiler (
   showRules,
   compile,
   ThrowsCompileError,
+  CompileError (IsNotSerialAfterNormalization),
   Envs,
   updateLocalMapAddrIndeg
   ) where
@@ -95,13 +96,14 @@ data CompileError = IsNotSerial String
                   | NotRedirectedLinks (S.Set String) ProcLit
                   | FreeLinksOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
+                  | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
 
 -- | functions for showing errors
 showCompileError :: CompileError -> String
 showCompileError (IsNotSerial name )
-  = "link '" ++ name ++ "' is not serial.\n"
+  = "link '" ++ name ++ "' is not serial"
 showCompileError (IsNotFunctional name)
-  = "link '" ++ name ++ "' is not functional.\n"
+  = "link '" ++ name ++ "' is not functional"
 showCompileError (RuleOnLHS rule)
   = "Rule on LHS in " ++ showProc rule
 showCompileError (NewFreeLinksOnRHS links rule)
@@ -115,7 +117,11 @@ showCompileError (FreeLinksOnTopLevel links)
     ++ " appeard on the top level process"
 showCompileError (ParseError parseError)
   = "Parse error at " ++ show parseError
-
+showCompileError (IsNotSerialAfterNormalization errors)
+  = intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
+    where showIsNotSerialAfterNormalizationError (addrs, procVal)
+            = "link '" ++ showSet (S.map show addrs)
+              ++ "' in '" ++ showProcVal procVal ++ "' is not serial"
 
 type HasHead = Bool
 -- | A type for the environment of local links
