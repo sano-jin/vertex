@@ -120,7 +120,7 @@ showCompileError (ParseError parseError)
 showCompileError (IsNotSerialAfterNormalization errors)
   = intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
     where showIsNotSerialAfterNormalizationError (addrs, procVal)
-            = "link '" ++ showSet (S.map show addrs)
+            = "local link(s) '" ++ showSet (S.map show addrs)
               ++ "' in '" ++ showProcVal procVal ++ "' is not serial"
 
 type HasHead = Bool
