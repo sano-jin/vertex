@@ -1,4 +1,3 @@
--- Either of the following Safe Haskell pragmas would do
 -- {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE Safe #-}
 module Compiler.Compiler (
