@@ -1,7 +1,9 @@
 {-# LANGUAGE Safe #-}
 
 module Util (
-  mapEitherList
+  mapEitherList,
+  monadicMapAccumL,
+  monadicFoldl
   ) where
 import Control.Monad.Except
 
@@ -26,3 +28,16 @@ mapMaybeList f (h:t)
   = liftM2 (:) (f h) $ mapMaybeList f t
 mapMaybeList _ [] = return []
 
+
+-- | A monadic version of List.mapAccumL
+monadicMapAccumL :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
+monadicMapAccumL f a (b:bs) =
+  do (a', c) <- f a b
+     (a'', cs) <- monadicMapAccumL f a' bs
+     return (a'', c:cs)
+monadicMapAccumL _ a [] = return (a, [])
+
+monadicFoldl :: Monad m => (a -> b -> m a) -> a -> [b] -> m a
+monadicFoldl f acc (h:t)
+  = flip (monadicFoldl f) t =<< f acc h
+monadicFoldl _ acc [] = return acc

@@ -32,6 +32,9 @@ import Syntax (
   LinkLit (..),
   ProcLit (..)
   )
+import Util (
+  monadicMapAccumL
+  )
 
 
 type Addr = Int
@@ -197,14 +200,6 @@ incrLocalIndeg :: Addr -> Envs -> Envs
 incrLocalIndeg addr envs
   = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) envs
 
--- | A monadic version of List.mapAccumL
-mapAccumLM :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
-mapAccumLM f a (b:bs) =
-  do (a', c) <- f a b
-     (a'', cs) <- mapAccumLM f a' bs
-     return (a'', c:cs)
-mapAccumLM _ a [] = return (a, [])
-
 -- | Check if the links are the local link or not.
 -- If it is a local link, then increse its indegree in the environment
 compilePointingToLit :: Envs -> LinkLit -> (Envs, LinkVal)
@@ -316,7 +311,7 @@ zipConcatBoth = first concat . second concat . unzip
 -- | check the processes
 compileProcLits :: Envs -> [ProcLit] -> ThrowsCompileError (Envs, Procs)
 compileProcLits envs 
-  = liftM (second zipConcatBoth) . mapAccumLM compileProcLit envs
+  = liftM (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
 
 -- | check the top-level process
 compile :: String -> ThrowsCompileError Procs
