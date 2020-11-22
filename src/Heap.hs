@@ -49,11 +49,6 @@ normalizeAddrNode (fromAddr, fromIndeg) toAddr addr (indeg, node)
           else indeg
     in
       (indeg', normalizeNode fromAddr toAddr node)
-
-mapWithKey :: (k -> a -> b) -> [(k, a)] -> [(k, b)]
-mapWithKey f ((k, a):t)
-  = (k, f k a) : mapWithKey f t
-mapWithKey _ [] = []
   
 normalizeIfInd :: Addr -> (Indeg, Node) -> Heap -> Maybe Heap
 normalizeIfInd fromAddr (indeg, NInd toAddr) oldHeap
@@ -64,11 +59,6 @@ normalizeIfInd _ _ _
 isNInd :: Node -> Bool
 isNInd (NInd _) = True
 isNInd _        = False
-
-delete :: Eq key => key -> AssocList key val -> AssocList key val
-delete key ((k, v):t) =
-  if key == k then delete key t
-  else (k, v) : delete key t
 
 normalizeHeap :: Heap -> Heap
 normalizeHeap heap
@@ -91,68 +81,42 @@ m_lookupVal f mapA2B
       lookupVal' list
 
 
-lookupVal :: Ord key => (val -> Bool) -> AssocList key val -> Maybe (key, val)
-lookupVal f list
-  = let lookupVal' ((key, val):t)
-          = if f val then Just (key, val)
-            else lookupVal' t
-        lookupVal' [] = Nothing
-    in
-      lookupVal' list
-
-isTheLookingLocalAtom :: Indeg -> AtomName -> Arity -> (Indeg, Node) -> Bool
-isTheLookingLocalAtom indeg atomName arity (indegOfNode, NAtom atomNameOfNode links)
-  = indeg == indegOfNode
-    && atomName == atomNameOfNode
-    && arity == length links
-isTheLookingLocalAtom _ _ _ _ = False
+checkEmbeddedLinkVal :: Heap -> Maybe Indeg -> Envs -> (LinkVal, Addr) -> Maybe Envs
+checkEmbeddedLinkVal heap indeg envs (linkVal@(AtomVal _ _), addr')
+  = if S.member addr' $ matchedLocalAddrs envs
+    then Nothing
+         -- ^ non-injective matching of atoms
+    else checkLinkVal heap indeg envs (linkVal, addr')
+checkEmbeddedLinkVal heap indeg envs (linkVal, addr')
+  = checkLinkVal heap indeg envs (linkVal, addr')
 
 
-
-
-lookupLocalAtom :: Indeg -> AtomName -> Arity -> Heap -> Maybe (Addr, (Indeg, Node))
-lookupLocalAtom indeg atomName arity heap
-  = m_lookupVal (isTheLookingLocalAtom indeg atomName arity) heap
-
-{--|
-checkLocalAtom :: Indeg -> AtomName -> Arity -> Heap -> Addr -> Maybe (Addr, (Indeg, Node))
-checkLocalAtom indeg atomName arity heap addr 
-  = case M.lookup addr heap of
-      Just tupIndegNode@(indegOfNode, (NAtom atomNameOfNode links))
-        -> if isTheLookingLocalAtom indeg atomName arity tupIndegNode
-           then Just (addr, tupIndegNode)
+checkLinkVal :: Heap -> (Maybe Indeg) -> Envs -> (LinkVal, Addr) -> Maybe Envs
+checkLinkVal heap maybeIndeg envs (AtomVal atomName links, addr')
+  = case M.lookup addr' heap of
+      Just tupIndegNode@(indeg', (NAtom atomName' links'))
+        -> if (maybeIndeg == Just indeg' || maybeIndeg == Nothing)
+              && atomName == atomName'
+              && length links == length links'
+           then
+             let envs' = addMatchedLocalAddrs addr' envs
+                 zippedLinks = zip links links' in
+               monadicFoldl (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
            else Nothing
       Just _ -> error "indirection traversing is not implemented yet"
       Nothing -> error "not serial"
-|--}
-
-
-checkLinkVal :: Heap -> Envs -> (LinkVal, Addr) -> Maybe Envs
-checkLinkVal heap envs (AtomVal atomName links, addr')
-  = if S.member addr' $ matchedLocalAddrs envs then Nothing
-                                      -- ^ non-injective matching of atoms
-    else
-      case M.lookup addr' heap of
-        Just tupIndegNode@(1, (NAtom atomName' links'))
-          -> if atomName == atomName'
-                && length links == length links'
-             then
-               let envs' = addMatchedLocalAddrs addr' envs
-                   zippedLinks = zip links links' in
-                 monadicFoldl (checkLinkVal heap) envs' zippedLinks
-             else Nothing
-        Just (_, (NAtom _ _)) -> Nothing
-        Just _ -> error "indirection traversing is not implemented yet"
-        Nothing -> error "not serial"
-checkLinkVal heap envs (LocalLinkVal addr, addr')
-  = if S.member addr' $ matchedLocalAddrs envs then Nothing
-                                                    -- ^ non-injective matching of local links
-    else Just
-         $ addLocalLink2Addr addr addr' envs
-checkLinkVal heap envs (FreeLinkVal freeLinkName, addr')
-  = if S.member addr' $ matchedLocalAddrs envs then Nothing
-                                       -- ^ free link cannot match with the addresses
-                                       -- that the local link has already matched.
+checkLinkVal _ _ envs (LocalLinkVal addr, addr')
+  = case M.lookup addr $ localLink2Addr envs of
+      Nothing -> Just $ addLocalLink2Addr addr addr' envs
+      Just addr''
+        -> if addr'' == addr' then Just envs
+           else Nothing
+                -- ^ non-injective matching of local links
+checkLinkVal heap _ envs (FreeLinkVal freeLinkName, addr')
+  = if S.member addr' $ matchedLocalAddrs envs
+    then Nothing
+       -- ^ free link cannot match with the addresses
+       -- that the local link has already matched.
     else
       case M.lookup freeLinkName $ freeLink2Addr envs of
         Nothing ->
@@ -180,8 +144,10 @@ getIndeg :: Addr -> Heap -> Indeg
 getIndeg addr heap
   = fst $ heap M.! addr
 
-data Envs = Envs { matchedLocalAddrs :: S.Set Addr
-                   -- ^ A set of the addresseses of the local links have matched
+data Envs = Envs { incommingLinks :: S.Set Addr
+                   -- ^ A set of the addresseses of the matched incoming links
+                 , matchedLocalAddrs :: S.Set Addr
+                   -- ^ A set of the addresseses of the matched local links
                    -- contains the addresses to the "embedded atom"s.
                  , localLink2Addr :: M.Map Addr Addr
                    -- ^ A map from local links to the matched addresses
@@ -195,6 +161,12 @@ data Envs = Envs { matchedLocalAddrs :: S.Set Addr
                  -- That is, matching free links will consume the indegrees in this map
                  -- Notice the indegrees should be kept as non-negative value
                  }
+            deriving (Show)
+
+updateIncommingLinks :: (S.Set Addr -> S.Set Addr) -> Envs -> Envs
+updateIncommingLinks f envs
+  = envs { incommingLinks = f $ incommingLinks envs}
+
 
 addMatchedLocalAddrs :: Addr -> Envs -> Envs
 addMatchedLocalAddrs addr envs
@@ -217,58 +189,45 @@ updateFreeLink2Addr :: (M.Map String Addr -> M.Map String Addr) -> Envs -> Envs
 updateFreeLink2Addr f envs
   = envs { freeLink2Addr = f $ freeLink2Addr envs}
 
+addFreeLink2Addr :: String -> Addr -> Envs -> Envs
+addFreeLink2Addr linkName addr envs
+  = updateFreeLink2Addr (M.insert linkName addr) envs
+
+
 updateFreeAddr2Indeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs
   = envs { freeAddr2Indeg = f $ freeAddr2Indeg envs}
 
 
 findAtom :: ProcVal -> AtomList -> Heap -> Envs -> Maybe Envs
-findAtom localAliasVal@(LocalAliasVal indeg addr (AtomVal atomName links)) ((addr', (indeg', NAtom atomName' links')):t) heap envs
-  = if indeg == indeg'
-       && atomName == atomName'
-       && length links == length links'
-    then
-      let envs' =
-            addLocalLink2Addr addr addr'
-            $ envs
-          zippedLinks = zip links links' in
-        monadicFoldl (checkLinkVal heap) envs' zippedLinks
-        <|> findAtom localAliasVal t heap envs
-    else findAtom localAliasVal t heap envs      
-findAtom (LocalAliasVal _ _ (AtomVal _ _)) [] _ _ = Nothing
-
-
-{--|
-checkLinkVal heap envs (FreeLinkVal freeLinkName, addr')
-  = if S.member addr' $ matchedLocalAddrs envs then Nothing
-                                       -- ^ free link cannot match with the addresses
-                                       -- that the local link has already matched.
+findAtom localAliasVal@(LocalAliasVal indeg addr atomVal@(AtomVal atomName links)) ((addr', _):t) heap envs
+  = if (S.member addr' $ incommingLinks envs) 
+       -- ^ Has already matched
+       || case M.lookup addr (localLink2Addr envs) of
+            Just matchedAddr -> matchedAddr /= addr'  
+            Nothing -> False
+    then Nothing
+         -- ^ non-injective matching of atoms
     else
-      case M.lookup freeLinkName $ freeLink2Addr envs of
-        Nothing ->
-          let indeg = getIndeg addr' heap
-              envs' =
-                updateFreeLink2Addr (M.insert freeLinkName addr')
-                $ updateFreeAddr2Indeg (M.insert addr' indeg)
-                $ envs
-          in Just envs'
-        Just addr''
-          -> if addr'' /= addr' then Nothing
-             else
-               let
-                 indegLeft = freeAddr2Indeg envs M.! addr'
-                 -- ^ The indegree that is left
-                 newIndeg = indegLeft - 1
-               in
-                 if newIndeg < 0 then Nothing
-                 else
-                   Just
-                   $ updateFreeAddr2Indeg (M.insert addr' newIndeg)
-                   $ envs
-
-
-
-
-findAtom (LocalAliasVal _ _ _) ((_, (NInd _)):_) _ = error "atomList should be normalized before"
-findAtom (LocalAliasVal _ _ _) _ _ = error "inidirection should be normalized before"
-|--}
+      let envs' =
+            updateIncommingLinks (S.insert addr')
+            $ addLocalLink2Addr addr addr' envs
+      in
+      checkLinkVal heap (Just indeg) envs' (atomVal, addr')  
+      <|> findAtom localAliasVal t heap envs
+findAtom (LocalAliasVal _ _ (AtomVal _ _)) [] _ _ = Nothing
+findAtom freeAliasVal@(FreeAliasVal linkName atomVal@(AtomVal atomName links)) ((addr', _):t) heap envs
+  = if (S.member addr' $ incommingLinks envs) 
+       -- ^ Has already matched
+       || case M.lookup linkName (freeLink2Addr envs) of
+            Just matchedAddr -> matchedAddr /= addr'  
+            Nothing -> False
+    then Nothing
+         -- ^ non-injective matching of atoms
+    else
+      let envs' =
+            updateIncommingLinks (S.insert addr')
+            $ addFreeLink2Addr linkName addr' envs
+      in
+      checkLinkVal heap Nothing envs' (atomVal, addr')  
+      <|> findAtom freeAliasVal t heap envs
