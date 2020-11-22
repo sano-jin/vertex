@@ -150,7 +150,8 @@ updateAssocList f key ((h@(k, v)):t)
 updateAssocList _ _ [] = []
 
 -- | A type for the Envirnment of pointes
--- - A mapping (list of tuple) from the local link names to the tuples of the given address and the boolean denotes whether its head appeared or not
+-- - A mapping (list of tuple) from the local link names
+-- to the tuples of the given address and the boolean denotes whether its head appeared or not
 -- - A map from the local link addresses to their indegrees
 -- - A set of free tail link names
 -- - A set of free head link names
