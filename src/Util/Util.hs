@@ -1,5 +1,4 @@
 {-# LANGUAGE Safe #-}
-
 module Util.Util (
   mapEitherList,
   monadicMapAccumL,
@@ -22,12 +21,12 @@ monadicMapList f (h:t)
   = liftM2 (:) (f h) $ monadicMapList f t
 monadicMapList _ [] = return []
 
-
+{--|
 mapMaybeList :: (a -> Maybe b) -> [a] -> Maybe [b]
 mapMaybeList f (h:t)
   = liftM2 (:) (f h) $ mapMaybeList f t
 mapMaybeList _ [] = return []
-
+|--}
 
 -- | A monadic version of List.mapAccumL
 monadicMapAccumL :: Monad m => (a -> b -> m (a, c)) -> a -> [b] -> m (a, [c])
