@@ -4,6 +4,7 @@
 module Compiler (
   Addr,
   Indeg,
+  AtomName,
   LinkVal (..),
   ProcVal (..),
   Procs,
@@ -35,14 +36,15 @@ import Syntax (
 
 type Addr = Int
 type Indeg = Int
+type AtomName = String
 
-data LinkVal = FreeLinkVal String          -- X
+data LinkVal = FreeLinkVal String    -- X
              | LocalLinkVal Addr           -- X
              | AtomVal String [LinkVal]    -- p(X1,...,Xm)
              deriving(Eq)
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal          -- \X.X -> p(X1,...,Xm)
-             | FreeAliasVal String LinkVal               -- X -> p(X1,...,Xm)
+             | FreeAliasVal AtomName LinkVal               -- X -> p(X1,...,Xm)
              deriving(Eq)
 
 -- | some functions for showing processes

@@ -9,7 +9,9 @@ import qualified Data.Set as S
 import Data.List
 -- import Data.Tuple.Extra
 import Compiler 
-
+import Util (
+  mapEitherList
+  )
 
 -- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
@@ -159,13 +161,6 @@ normalizeProcVals procVals
     in
       if null notSerials then return procVals'
       else throwError $ IsNotSerialAfterNormalization notSerials
-
-mapEitherList :: (a -> Either b c) -> [a] -> Either b [c]
-mapEitherList f (h:t)
-  = case f h of
-      Left b -> Left b
-      Right c -> liftM (c:) $ mapEitherList f t
-mapEitherList _ [] = return []
 
 normalizeRule :: Rule -> ThrowsCompileError Rule
 normalizeRule (Rule lhs rhs linkNames rhsRules)

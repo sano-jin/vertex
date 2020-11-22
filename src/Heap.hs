@@ -6,9 +6,13 @@ import qualified Data.Map.Strict as M
 -- import Data.Bifunctor 
 import Compiler 
 
+type Arity = Int
 
-data Node = NAtom String [Addr]                       -- NAtom SymbolAtomName [Pointers]
-          | NInd Addr                                 -- Alias to Addr
+data Node = NAtom AtomName [Addr]
+            -- ^ NAtom SymbolAtomName [Pointers]
+          | NInd Addr
+            -- ^ Alias to Addr
+          deriving(Eq)
 
 -- | Heap is the map from addresses to the tuples of the indegree and the node
 type Heap = M.Map Addr (Indeg, Node)
@@ -54,6 +58,28 @@ lookupVal f mapA2B
         lookupVal' [] = Nothing
     in
       lookupVal' list
+
+isTheLookingLocalAtom :: Indeg -> AtomName -> Arity -> (Indeg, Node) -> Bool
+isTheLookingLocalAtom indeg atomName arity (indegOfNode, NAtom atomNameOfNode links)
+  = indeg == indegOfNode
+    && atomName == atomNameOfNode
+    && arity == length links
+isTheLookingLocalAtom _ _ _ _ = False
+
+lookupLocalAtom :: Indeg -> AtomName -> Arity -> Heap -> Maybe (Addr, (Indeg, Node))
+lookupLocalAtom indeg atomName arity heap
+  = lookupVal (isTheLookingLocalAtom indeg atomName arity) heap
+
+checkLocalAtom :: Indeg -> AtomName -> Arity -> Heap -> Addr -> Maybe (Addr, (Indeg, Node))
+checkLocalAtom indeg atomName arity heap addr 
+  = case M.lookup addr heap of
+      Just tupIndegNode@(indegOfNode, (NAtom atomNameOfNode links))
+        -> if isTheLookingLocalAtom indeg atomName arity tupIndegNode
+           then Just (addr, tupIndegNode)
+           else Nothing
+      Just _ -> error "indirection traversing is not implemented yet"
+      Nothing -> error "not serial"
+      
 
 normalizeHeap :: Heap -> Heap
 normalizeHeap heap
