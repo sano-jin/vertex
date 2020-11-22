@@ -1,6 +1,6 @@
 {-# LANGUAGE Safe #-}
 
-module Normalize (
+module Compiler.Normalize (
   normalize
   ) where
 import Control.Monad.Except
@@ -8,7 +8,7 @@ import Control.Monad.Except
 import qualified Data.Set as S
 import Data.List
 -- import Data.Tuple.Extra
-import Compiler 
+import Compiler.Compiler 
 import Util (
   mapEitherList
   )

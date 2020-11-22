@@ -1,4 +1,3 @@
-
 module Main where
 import System.Environment
 -- import Data.IORef
@@ -7,8 +6,9 @@ import System.Environment
 -- import qualified Data.Set as S
 -- import qualified Parser
 -- import Syntax
-import Compiler
-import Normalize
+import Compiler.Compiler
+import Compiler.Normalize
+import Heap
 -- import Data.Tuple.Extra
 
 

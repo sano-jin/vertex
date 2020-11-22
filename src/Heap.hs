@@ -4,11 +4,11 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 -- import Data.List
 -- import Data.Bifunctor 
-import Data.Tuple.Extra
-import Compiler hiding (Envs)
+-- import Data.Tuple.Extra
+import Compiler.Compiler hiding (Envs)
 import Util (
-  mapEitherList,
-  monadicMapAccumL,
+--  mapEitherList,
+--  monadicMapAccumL,
   monadicFoldl
   )
 import GHC.Base
@@ -94,7 +94,7 @@ checkEmbeddedLinkVal heap indeg envs (linkVal, addr')
 checkLinkVal :: Heap -> (Maybe Indeg) -> Envs -> (LinkVal, Addr) -> Maybe Envs
 checkLinkVal heap maybeIndeg envs (AtomVal atomName links, addr')
   = case M.lookup addr' heap of
-      Just tupIndegNode@(indeg', (NAtom atomName' links'))
+      Just (indeg', (NAtom atomName' links'))
         -> if (maybeIndeg == Just indeg' || maybeIndeg == Nothing)
               && atomName == atomName'
               && length links == length links'
@@ -167,7 +167,6 @@ updateIncommingLinks :: (S.Set Addr -> S.Set Addr) -> Envs -> Envs
 updateIncommingLinks f envs
   = envs { incommingLinks = f $ incommingLinks envs}
 
-
 addMatchedLocalAddrs :: Addr -> Envs -> Envs
 addMatchedLocalAddrs addr envs
   = updateMatchedLocalAddrs (S.insert addr) envs
@@ -198,9 +197,8 @@ updateFreeAddr2Indeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs
   = envs { freeAddr2Indeg = f $ freeAddr2Indeg envs}
 
-
 findAtom :: ProcVal -> AtomList -> Heap -> Envs -> Maybe Envs
-findAtom localAliasVal@(LocalAliasVal indeg addr atomVal@(AtomVal atomName links)) ((addr', _):t) heap envs
+findAtom localAliasVal@(LocalAliasVal indeg addr atomVal@(AtomVal _ _)) ((addr', _):t) heap envs
   = if (S.member addr' $ incommingLinks envs) 
        -- ^ Has already matched
        || case M.lookup addr (localLink2Addr envs) of
@@ -216,7 +214,7 @@ findAtom localAliasVal@(LocalAliasVal indeg addr atomVal@(AtomVal atomName links
       checkLinkVal heap (Just indeg) envs' (atomVal, addr')  
       <|> findAtom localAliasVal t heap envs
 findAtom (LocalAliasVal _ _ (AtomVal _ _)) [] _ _ = Nothing
-findAtom freeAliasVal@(FreeAliasVal linkName atomVal@(AtomVal atomName links)) ((addr', _):t) heap envs
+findAtom freeAliasVal@(FreeAliasVal linkName atomVal@(AtomVal _ _)) ((addr', _):t) heap envs
   = if (S.member addr' $ incommingLinks envs) 
        -- ^ Has already matched
        || case M.lookup linkName (freeLink2Addr envs) of
@@ -231,3 +229,5 @@ findAtom freeAliasVal@(FreeAliasVal linkName atomVal@(AtomVal atomName links)) (
       in
       checkLinkVal heap Nothing envs' (atomVal, addr')  
       <|> findAtom freeAliasVal t heap envs
+findAtom (FreeAliasVal _ (AtomVal _ _)) [] _ _ = Nothing
+findAtom _ _ _ _ = error "not normalized"

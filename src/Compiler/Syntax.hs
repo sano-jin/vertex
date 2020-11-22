@@ -12,7 +12,7 @@ commentary with @some markup@.
 -}
 {-# LANGUAGE Safe #-}
 
-module Syntax (
+module Compiler.Syntax (
   showBlock,
   showProc,
   LinkLit (..),

@@ -1,7 +1,7 @@
 -- Either of the following Safe Haskell pragmas would do
 -- {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE Safe #-}
-module Compiler (
+module Compiler.Compiler (
   Addr,
   Indeg,
   AtomName,
@@ -23,11 +23,11 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
 import safe Data.Tuple.Extra
-import qualified Parser (
+import qualified Compiler.Parser as Parser (
   readExpr,
   ParseError
-  )
-import Syntax (
+  ) 
+import Compiler.Syntax (
   showProc,
   LinkLit (..),
   ProcLit (..)

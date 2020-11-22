@@ -1,6 +1,6 @@
 {-# LANGUAGE Safe #-}
 
-module Parser (
+module Compiler.Parser (
   readExpr,
   ParseError
   ) where
@@ -8,7 +8,7 @@ import Control.Monad
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
-import Syntax (
+import Compiler.Syntax (
   LinkLit (..),
   ProcLit (..)
   )
