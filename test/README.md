@@ -13,7 +13,7 @@ It will compile the program and test it with the expected result.
 
 ## Directory structure
 
-```bash
+```
 test/
  +- errors/               # files for testing error-handlings
  |   +- test0-.../        
