@@ -15,22 +15,22 @@ It will compile the program and test it with the expected result.
 
 ```bash
 test/
- +- errors/            # files for testing error-handlings
- |   +- test0-.../
- |   |   +- input.txt  # test-code
- |   |   +- output.log # expected output
- |   |   ...
- |   +- testN-.../...
- |
- +- normal/            # files for testing normal-cases
- |   +- test0-.../
- |   |   +- input.txt  # test-code
- |   |   +- output.log # expected output
- |   |   ...
- |   +-- testN-.../...
- |
- + ...
- +- old/               # old files
+ +- errors/               # files for testing error-handlings
+ |   +- test0-.../        
+ |   |   +- input.txt     # test-code
+ |   |   +- output.log    # expected output
+ |   |   ...	          
+ |   +- testN-.../...     
+ |		          
+ +- normal/               # files for testing normal-cases
+ |   +- test0-.../        
+ |   |   +- input.txt     # test-code
+ |   |   +- output.log    # expected output
+ |   |   ...	          
+ |   +-- testN-.../...    
+ |		          
+ + ...		          
+ +- old/                  # old files
 ```
 
 
