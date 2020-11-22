@@ -1,6 +1,6 @@
 {-# LANGUAGE Safe #-}
 
-module Util (
+module Util.Util (
   mapEitherList,
   monadicMapAccumL,
   monadicFoldl

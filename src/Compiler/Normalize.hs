@@ -9,7 +9,7 @@ import qualified Data.Set as S
 import Data.List
 -- import Data.Tuple.Extra
 import Compiler.Compiler 
-import Util (
+import Util.Util (
   mapEitherList
   )
 

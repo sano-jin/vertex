@@ -6,9 +6,14 @@ import System.Environment
 -- import qualified Data.Set as S
 -- import qualified Parser
 -- import Syntax
-import Compiler.Compiler
-import Compiler.Normalize
-import Heap
+import Compiler.Compiler (
+  compile,
+  showProcs
+  )
+import Compiler.Normalize (
+  normalize
+  )
+import VM.Heap
 -- import Data.Tuple.Extra
 
 

@@ -32,7 +32,7 @@ import Compiler.Syntax (
   LinkLit (..),
   ProcLit (..)
   )
-import Util (
+import Util.Util (
   monadicMapAccumL
   )
 
@@ -327,5 +327,4 @@ compile input
              -- then throwError $ FreeLinksOnTopLevel freeLinks 
              -- else
              return (procVals', rules)
-
 

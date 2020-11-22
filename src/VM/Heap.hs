@@ -1,4 +1,4 @@
-module Heap where
+module VM.Heap where
 -- import Control.Monad.Except
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
@@ -6,7 +6,7 @@ import qualified Data.Set as S
 -- import Data.Bifunctor 
 -- import Data.Tuple.Extra
 import Compiler.Compiler hiding (Envs)
-import Util (
+import Util.Util (
 --  mapEitherList,
 --  monadicMapAccumL,
   monadicFoldl
