@@ -1,4 +1,3 @@
--- {-# LANGUAGE Trustworthy #-}
 {-# LANGUAGE Safe #-}
 module Compiler.Compiler (
   Addr,
