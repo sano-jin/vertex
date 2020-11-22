@@ -37,7 +37,7 @@ monadicMapAccumL f a (b:bs) =
      return (a'', c:cs)
 monadicMapAccumL _ a [] = return (a, [])
 
-monadicFoldl :: Monad m => (a -> b -> m a) -> a -> [b] -> m a
+monadicFoldl :: Monad m => (acc -> b -> m acc) -> acc -> [b] -> m acc
 monadicFoldl f acc (h:t)
   = flip (monadicFoldl f) t =<< f acc h
 monadicFoldl _ acc [] = return acc

@@ -41,13 +41,18 @@ type Addr = Int
 type Indeg = Int
 type AtomName = String
 
-data LinkVal = FreeLinkVal String    -- X
-             | LocalLinkVal Addr           -- X
-             | AtomVal String [LinkVal]    -- p(X1,...,Xm)
+data LinkVal = FreeLinkVal String
+               -- ^ X
+             | LocalLinkVal Addr
+               -- ^ X
+             | AtomVal String [LinkVal]
+             -- ^ p(X1,...,Xm)
              deriving(Eq)
 
-data ProcVal = LocalAliasVal Indeg Addr LinkVal          -- \X.X -> p(X1,...,Xm)
-             | FreeAliasVal AtomName LinkVal               -- X -> p(X1,...,Xm)
+data ProcVal = LocalAliasVal Indeg Addr LinkVal
+               -- ^ \X.X -> p(X1,...,Xm)
+             | FreeAliasVal AtomName LinkVal
+               -- ^ X -> p(X1,...,Xm)
              deriving(Eq)
 
 -- | some functions for showing processes
@@ -150,17 +155,18 @@ updateAssocList f key ((h@(k, v)):t)
 updateAssocList _ _ [] = []
 
 -- | A type for the Envirnment of pointes
--- - A mapping (list of tuple) from the local link names
--- to the tuples of the given address and the boolean denotes whether its head appeared or not
--- - A map from the local link addresses to their indegrees
--- - A set of free tail link names
--- - A set of free head link names
--- - the number of the local links appeared in the process
 data Envs = Envs { localEnv :: EnvList
+                   -- ^ A mapping (list of tuple) from the local link names
+                   -- to the tuples of the given address
+                   -- and the boolean denotes whether its head appeared or not
                  , localMapAddrIndeg :: M.Map Addr Indeg 
+                   -- ^ A map from the local link addresses to their indegrees
                  , freeTailEnv :: EnvSet
+                   -- ^ A set of free tail link names
                  , freeHeadEnv :: EnvSet
+                   -- ^ A set of free head link names
                  , addrSeed :: Int
+                   -- ^ the number of the local links appeared in the process
                  } deriving (Show)
 
 -- | Some helper functions for the link environment
