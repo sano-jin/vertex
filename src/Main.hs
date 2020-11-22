@@ -14,6 +14,7 @@ import Compiler.Normalize (
   normalize
   )
 import VM.Heap
+import VM.VM
 -- import Data.Tuple.Extra
 
 

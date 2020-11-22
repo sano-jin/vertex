@@ -1,4 +1,5 @@
 {-# LANGUAGE Safe #-}
+
 module Compiler.Compiler (
   Addr,
   Indeg,
