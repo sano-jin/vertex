@@ -91,8 +91,8 @@ showRule (Rule lhs rhs freeTailLinks rules)
 showRules :: [Rule] -> String
 showRules = intercalate ", " . map showRule
 
--- | Processes are specified with atoms and rules
 type Procs = ([ProcVal], [Rule])
+-- ^ Processes are specified with atoms and rules
 
 showProcs :: Procs -> String
 showProcs (procVals, rules)
