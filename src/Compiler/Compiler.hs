@@ -74,12 +74,12 @@ showLinkVal (AtomVal atomName links)
     else atomName ++ "(" ++ intercalate ", " (map showLinkVal links) ++ ")"
 
 
--- | A rule is specified with ...
+data Rule = Rule [ProcVal] [ProcVal] (S.Set String) [Rule]
+-- ^ A rule is specified with ...
 -- - left-hand-side atoms to match,
 -- - right-hand-side atoms to generate,
 -- - a set of names of free head links
 -- - right-hand-side rules to generate.
-data Rule = Rule [ProcVal] [ProcVal] (S.Set String) [Rule]
 
 showRule :: Rule -> String
 showRule (Rule lhs rhs freeTailLinks rules)
@@ -99,8 +99,9 @@ showProcs (procVals, rules)
   = let dot = if null procVals || null rules then "" else ". " in
       showProcVals procVals ++ dot ++ showRules rules
 
--- | a type for handling results and errors
 type ThrowsCompileError = Either CompileError
+-- ^ a type for handling results and errors
+
 -- type IOThrowsError = ExceptT CompileError IO
 instance Show CompileError where show = showCompileError
 
@@ -140,10 +141,11 @@ showCompileError (IsNotSerialAfterNormalization errors)
               ++ "' in '" ++ showProcVal procVal ++ "' is not serial"
 
 type HasHead = Bool
--- | A type for the environment of local links
 type EnvList = [(String, (Addr, HasHead))]
--- | A type for the environment of free links
+-- ^ A type for the environment of local links
+
 type EnvSet  = S.Set String
+-- ^ A type for the environment of free links
 
 -- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
