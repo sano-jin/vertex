@@ -48,7 +48,7 @@ data LinkVal = FreeLinkVal String
              deriving(Eq)
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal
-               -- ^ \X.X -> p(X1,...,Xm)
+               -- ^ \X. ... X -> p(X1,...,Xm)
              | FreeAliasVal AtomName LinkVal
                -- ^ X -> p(X1,...,Xm)
              deriving(Eq)
