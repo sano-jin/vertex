@@ -39,9 +39,10 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 ### How to use
 
 ```bash
-cd src
-ghc Main.hs         # compile the implementation
-./Main "a. a :- b"  # run program
+clone https://github.com/sano-jin/vertex.git
+cd vertex
+stack build         
+stack exec vertec-exe "a. a :- b"  # run program
 ```
 
 ## Development
