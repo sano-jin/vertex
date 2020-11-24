@@ -36,12 +36,14 @@ readExpr :: String -> String
 readExpr input = case normalize =<< compile input of
     Left err -> "Error : " ++ show err
     Right (procVals, rules) ->
-      showProcs (procVals, rules) ++ "\n" ++
-      show (findAtoms procVals initTestHeap)
+      let initialHeap = initializeHeap procVals in
+        showProcs (procVals, rules) ++
+        "\n" ++ show initialHeap ++ "\n\n"
+        ++ showTransition (run $ State initialHeap rules)
 
 
-main :: IO()
+main :: IO ()
 main = do
   args <- getArgs
-  putStrLn $ show initTestHeap
+  -- putStrLn $ show initTestHeap
   putStrLn $ readExpr $ head args 

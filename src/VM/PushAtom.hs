@@ -95,13 +95,14 @@ pushProcVals envs localEnv oldHeap procVals
   where filterMaybe (Just h:t)  = h : filterMaybe t
         filterMaybe (Nothing:t) = filterMaybe t
           
-push :: Envs -> Heap -> [ProcVal] -> Heap
-push envs oldHeap procVals
+push :: Heap -> [ProcVal] -> Envs -> Heap
+push oldHeap procVals envs
   = let (newHeap, ascList)
-          = pushProcVals envs localEnv oldHeap procVals
+          = pushProcVals envs localEnv (deleteLocalAtoms envs oldHeap) procVals
         localEnv = M.fromList ascList
     in
       newHeap
+
 
 
       
