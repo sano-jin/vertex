@@ -1,16 +1,20 @@
-
-module VM.VM where
-import Control.Monad.Except
--- import qualified Data.Map.Strict as M
--- import qualified Data.Set as S
--- import Data.List
-import Data.Bifunctor 
+module VM.VM (
+  State (..),
+  run,
+  initializeHeap,
+  showTransition,
+  ) where
 import Compiler.Compiler hiding (Envs)
 import VM.Heap 
-import VM.FindAtom
-import VM.PushAtom
+import VM.FindAtom (
+  findAtoms
+  ) 
+import VM.PushAtom (
+  push
+  )
 import VM.Envs
 import GHC.Base
+
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple
@@ -34,13 +38,13 @@ execRule heap rule@(Rule lhs rhs _ rhsRules)
 applyTillFail :: (a -> Maybe b) -> [a] -> Maybe b
 applyTillFail f (h:t)
   = f h <|> applyTillFail f t
-applyTillFail f [] = Nothing
+applyTillFail _ [] = Nothing
 
 -- | runs the program and returns the next state
 run :: State -> Maybe (State, Rule)
 run (State heap rules)
   = do (newHeap, newlyCreatedRules, appliedRule) <- applyTillFail (execRule heap) rules
-       return (State newHeap (rules ++ newlyCreatedRules), appliedRule)
+       return (State (normalizeHeap newHeap) (rules ++ newlyCreatedRules), appliedRule)
 
 initializeHeap :: [ProcVal] -> Heap
 initializeHeap procVals

@@ -1,24 +1,13 @@
-module VM.PushAtom where
--- import Control.Monad.Except
+module VM.PushAtom (
+  push
+  ) where
 import qualified Data.Map.Strict as M
-import qualified Data.Set as S
 import Data.List
--- import Data.Bifunctor 
--- import Data.Tuple.Extra
 import Compiler.Compiler hiding (Envs)
-import Data.Maybe
-import Util.Util (
---  mapEitherList,
---  monadicMapAccumL,
-  monadicFoldl
-  )
-import GHC.Base
 import VM.Heap (
   Node (..),
   Heap,
   getIndeg,
-  toAtomList,
-  hLookup,
   hAlloc,
   hDelete,
   hReplace,
@@ -27,16 +16,8 @@ import VM.Heap (
   )
 import VM.Envs (
   Envs (..),
-  nullEnvs,
-  updateIncommingLinks,
-  addMatchedLocalAddrs,
-  -- updateMatchedLocalAddrs,
-  addLocalLink2Addr,
-  -- updateLocalLink2Addr,
-  updateFreeLink2Addr,
-  addFreeLink2Addr,
-  updateFreeAddr2Indeg  
   )
+
 
 type LocalEnv = M.Map Addr Addr
                  -- ^ A map from the addresses in the procVal and linkVal
@@ -47,18 +28,19 @@ deleteLocalAtoms envs heap
   = let localAddrs = matchedLocalAddrs envs in
       foldl (flip hDelete) heap localAddrs
 
+{--|
 -- | decrease the indegree where the free link was poinitng to.
 -- This should be called after the matching, before the rewriting (pushing) process.
 decrFreeLinkIndeg :: Envs -> Heap -> Heap
 decrFreeLinkIndeg envs heap
   = M.foldrWithKey setIndeg heap $ freeAddr2Indeg envs
-
+|--}
 
 pushLinkVal :: Envs -> LocalEnv -> Heap -> LinkVal -> (Heap, Addr)
-pushLinkVal envs localEnv heap (FreeLinkVal linkName) 
+pushLinkVal envs _ heap (FreeLinkVal linkName) 
   = let hAddr = freeLink2Addr envs M.! linkName in
       (incrIndeg hAddr heap, hAddr)
-pushLinkVal envs localEnv heap (LocalLinkVal addr)
+pushLinkVal _ localEnv heap (LocalLinkVal addr)
   = let hAddr = localEnv M.! addr in
       (heap, hAddr)
 pushLinkVal envs localEnv oldHeap (AtomVal atomName links) 
@@ -78,7 +60,7 @@ pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links
         indeg = freeAddr2Indeg envs M.! hAddr + getIndeg hAddr newHeap
     in 
       (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
-pushProcVal envs localEnv heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) 
+pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) 
   = let fromHAddr = freeLink2Addr envs M.! fromLinkName
         toHAddr = freeLink2Addr envs M.! toLinkName 
         indeg = freeAddr2Indeg envs M.! fromHAddr + getIndeg fromHAddr heap
@@ -94,6 +76,7 @@ pushProcVals envs localEnv oldHeap procVals
       (newHeap, filterMaybe hLinks)
   where filterMaybe (Just h:t)  = h : filterMaybe t
         filterMaybe (Nothing:t) = filterMaybe t
+        filterMaybe []          = []
           
 push :: Heap -> [ProcVal] -> Envs -> Heap
 push oldHeap procVals envs
@@ -102,10 +85,3 @@ push oldHeap procVals envs
         localEnv = M.fromList ascList
     in
       newHeap
-
-
-
-      
-
-
-
