@@ -1,14 +1,22 @@
-module VM.FindAtom where
+module VM.FindAtom (
+  findAtoms
+  ) where
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import Data.List
 import Data.Maybe
 import Compiler.Compiler hiding (Envs)
 import Util.Util (
   monadicFoldl
   )
 import GHC.Base
-import VM.Heap 
+import VM.Heap  (
+  Node (..),
+  Heap,
+  AtomList,
+  getIndeg,
+  toAtomList,
+  hLookup,
+  )
 import VM.Envs (
   Envs (..),
   nullEnvs,
@@ -170,20 +178,5 @@ findAtoms procVals heap
       findAtom (atomList, heap) atomList procVals nullEnvs 
 
 
-initTestHeap :: Heap
-initTestHeap =
-  let assocList
-        = [ (1, NAtom "a" [3, 1])   -- ^ 1
-          , (0, NAtom "b" [3]   )   -- ^ 2
-          , (2, NAtom "c" []    )   -- ^ 3
-          , (0, NAtom "d" []    )   -- ^ 4          
-          , (0, NAtom "e" [6, 6])   -- ^ 5
-          , (2, NAtom "f" []    )   -- ^ 6
-          , (0, NAtom "g" [8]   )   -- ^ 7
-          , (1, NAtom "h" []    )   -- ^ 8
-          , (1, NAtom "i" [9]    )  -- ^ 9
-          ]
-  in
-    fst $ mapAccumL hAlloc initialHeap assocList
  
     
