@@ -82,7 +82,7 @@ If a free occurrence of `X` occurs in a location where `Y` would not be free, al
 1. `(P, (Q, R)) == ((P, Q), R)`      
 1. `P == P'  =>  (P, Q) == (P', Q)`
 1. `\X.P == \Y.P[Y / X]`      
-   where Y is not in fn(P)         
+   where `Y` is not in `fn(P)`
 1. `\X.(X -> Y, P) == P[Y / X]`
 1. `\X.() == ()`
 1. `\X.\Y.P == \Y.\X.P`
@@ -95,12 +95,11 @@ Fig.3. Structural congruence on processes}
 
 We define the reduction relation `~>` on processes as the minimal relation satisfying the rules in Fig.4.
 
-```
-| (R1) | P ~> P'  =>  (P, Q) ~>  (P', Q)              |
-| (R2) | P ~> P'  =>  \X.P ~>  \X.P'                  |
-| (R3) | Q == P /\ P ~> P' /\ P' == Q'  =>  Q ~> Q'   |
-| (R4) | (P, (P :- Q)) ~> (Q, (P :- Q))               |
-```
+1. `P ~> P'  =>  (P, Q) ~>  (P', Q)`
+1. `P ~> P'  =>  \X.P ~>  \X.P'`            
+1. `Q == P` /\ P ~> P' /\ P' == Q'  =>  Q ~> Q'`
+1. `(P, (P :- Q)) ~> (Q, (P :- Q))`
+
 Fig.4. Reduction relation on processes
 
 
