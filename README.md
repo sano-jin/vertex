@@ -25,7 +25,6 @@ P (process) ::= ()                          (null)
             | (P :- P)                      (rule)
 ```
 
-
 Basicaly, the reduction (calculation step) proceeds as `(P, (P :- Q)) --> (Q, (P :- Q))`.
 
 That is, the rule will rewrite the process that matches to its left hand-side to its right hand-side.

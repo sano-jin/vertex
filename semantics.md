@@ -1,5 +1,7 @@
 # Formal semantics of Directed HyperFlatLMNtal 
 
+This page describes the formal semantics of DHLMNtal.
+
 ## Syntax
 
 ### Links and Atoms
@@ -101,6 +103,7 @@ We define the reduction relation `~>` on processes as the minimal relation satis
 1. `(P, (P :- Q)) ~> (Q, (P :- Q))`
 
 Fig.4. Reduction relation on processes
+
 
 
 
