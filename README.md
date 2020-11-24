@@ -15,16 +15,16 @@ DHLMNtal has two kinds of identifiers.
   - `p` denotes an atom name.
   - In the concrete syntax, atom names are denoted by identifiers starting from small lettes (for now).
 
-P is a process (= program).
+Here is a syntax. Notice `P` is a process (= program).
 
 ```
-P ::= ()                          (null)
-  | X -> p(X1, ..., Xm)  (m >= 0) (atom)
-  | (P, P)                        (molecule)
-  | \X.P                          (link creation)
-  | (P :- P)                      (rule)
+P (process) ::= ()                          (null)
+            | X -> p(X1, ..., Xm)  (m >= 0) (atom)
+            | (P, P)                        (molecule)
+            | \X.P                          (link creation)
+            | (P :- P)                      (rule)
 ```
-Syntax
+
 
 Basicaly, the reduction (calculation step) proceeds as `(P, (P :- Q)) --> (Q, (P :- Q))`.
 
