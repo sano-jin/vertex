@@ -97,7 +97,7 @@ We define the reduction relation `~>` on processes as the minimal relation satis
 
 1. `P ~> P'  =>  (P, Q) ~>  (P', Q)`
 1. `P ~> P'  =>  \X.P ~>  \X.P'`            
-1. `Q == P /\ P ~> P' /\ P' == Q'  =>  Q ~> Q'`
+1. `Q == P /\ P ~> P' /\ P' == Q'   =>   Q ~> Q'`
 1. `(P, (P :- Q)) ~> (Q, (P :- Q))`
 
 Fig.4. Reduction relation on processes
