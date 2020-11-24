@@ -77,19 +77,18 @@ We define the relation `==` on processes as the minimal equivalence relation sat
 Where `P[Y / X]` is a link substitution that replaces all free occurrences of `X` with `Y`.
 If a free occurrence of `X` occurs in a location where `Y` would not be free, alpha-conversion (E1) may be required.
 
-```
-| (E1)  | ((), P) == P                    |
-| (E2)  | (P, Q) == (Q, P)                |
-| (E3)  | (P, (Q, R)) == ((P, Q), R)      |
-| (E4)  | P == P'  =>  (P, Q) == (P', Q)  |
-| (E1)  | \X.P == \Y.P[Y / X]             |
-|       | where Y is not in fn(P)         |
-| (E7)  | \X.(X -> Y, P) == P[Y / X]      |
-| (E8)  | \X.() == ()                     |
-| (E9)  | \X.\Y.P == \Y.\X.P              |
-| (E10) | \X.(P, Q) == (\X.P, Q)          |
-|       | where X is not in fn(Q)         |
-```
+1. `((), P) == P`
+1. `(P, Q) == (Q, P)`      
+1. `(P, (Q, R)) == ((P, Q), R)`      
+1. `P == P'  =>  (P, Q) == (P', Q)`
+1. `\X.P == \Y.P[Y / X]`      
+   where Y is not in fn(P)         
+1. `\X.(X -> Y, P) == P[Y / X]`
+1. `\X.() == ()`
+1. `\X.\Y.P == \Y.\X.P`
+1. `\X.(P,Q) == (\X.P,Q)`
+   where `X` is not in `fn(Q)`
+
 Fig.3. Structural congruence on processes}
 
 ### Reduction relation
