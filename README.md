@@ -28,7 +28,7 @@ Syntax
 
 Basicaly, the reduction (calculation step) proceeds as `(P, (P :- Q)) --> (Q, (P :- Q))`.
 
-That is, the rule will rewrite the process that matches to its left hand-side to the process on the right hand-side.
+That is, the rule will rewrite the process that matches to its left hand-side to its right hand-side.
 
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
 
