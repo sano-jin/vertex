@@ -17,6 +17,7 @@ import VM.Heap
 import VM.VM
 -- import Data.Tuple.Extra
 import VM.FindAtom
+import VM.PushAtom
 
 {--|
 readExpr :: String -> String

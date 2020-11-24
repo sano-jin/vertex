@@ -10,6 +10,8 @@ module VM.Heap (
   hAlloc,
   hDelete,
   hReplace,
+  setIndeg,
+  incrIndeg,
   initTestHeap,
   -- ^ A heap for testing.
   -- Should be eliminated after testing.
@@ -18,7 +20,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
 import Compiler.Compiler hiding (Envs)
-
+import Data.Tuple.Extra
 
 data Node = NAtom AtomName [Addr]
             -- ^ NAtom SymbolAtomName [Link]
@@ -65,6 +67,17 @@ hLookup addr (Heap _ mapAddr2IndegNode)
 hDelete :: Addr -> Heap -> Heap
 hDelete addr (Heap freeAddrs mapAddr2IndegNode) 
   = Heap (addr:freeAddrs) (M.delete addr mapAddr2IndegNode)
+
+setIndeg :: Addr -> Indeg -> Heap -> Heap
+setIndeg addr indeg (Heap freeAddrs mapAddr2IndegNode) 
+ = Heap freeAddrs
+   $ M.adjust (first $ const indeg) addr mapAddr2IndegNode
+
+incrIndeg :: Addr -> Heap -> Heap
+incrIndeg addr (Heap freeAddrs mapAddr2IndegNode) 
+ = Heap freeAddrs
+   $ M.adjust (first (+ 1)) addr mapAddr2IndegNode
+
 
 -- | Memory allocation
 hAlloc :: Heap -> IndegNode -> (Heap, Addr)
