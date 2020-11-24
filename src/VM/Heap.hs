@@ -52,9 +52,9 @@ toAtomList (Heap _ mapAddr2IndegNode)
   = map fst $ M.toList mapAddr2IndegNode
 
 -- | lookup
-hLookup :: Addr -> Heap -> Maybe IndegNode
+hLookup :: Addr -> Heap -> IndegNode
 hLookup addr (Heap _ mapAddr2IndegNode) 
-  = M.lookup addr mapAddr2IndegNode
+  = mapAddr2IndegNode M.! addr
 
 -- | delete
 hDelete :: Addr -> Heap -> Heap
