@@ -48,7 +48,7 @@ ghc Main.hs         # compile the implementation
 ## Development
 
 ### Test
-See [here](https://github.com/sano-jin/vertex/blob/master/test/README.md) to get description about testing this.
+See [here](https://github.com/sano-jin/vertex/blob/master/test/README.md) to get description about testing.
 
 
 
