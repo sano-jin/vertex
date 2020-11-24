@@ -16,11 +16,11 @@ DHLMNtal has two kinds of identifiers.
 ### Processes
 
 ```
-P ::= ()                           (null)
-  | X -> p(X1, ..., Xm)  (m >= 0) (atom)
-  | (P, P)                        (molecule)
-  | \X.P                          (link creation)
-  | (P :- P)                      (rule)
+P (process) ::= ()                           (null)
+             | X -> p(X1, ..., Xm)  (m >= 0) (atom)
+             | (P, P)                        (molecule)
+             | \X.P                          (link creation)
+             | (P :- P)                      (rule)
 ```
 Fig.1. Syntax
 
@@ -32,7 +32,7 @@ An unary atom `X -> Y` is called an _indirection_ atom, which can be read as ali
 The set of the free link names in a process `P` is denoted as `fn(P)` and is defined inductively as Fig.2.
 
 ```
-fn(())                   = {}
+fn(())                  = {}
 fn(X -> p(X1, ..., Xm)) = {X, X1, ..., Xm}
 fn((P, Q))              = fn(P) `union` fn(Q)
 fn(\X.P)                = fn(P) \ {X}
@@ -60,11 +60,11 @@ Given an process `\X.P` where `X` in `fn(P)`, the _head_ of the `X` must exist i
 ### Rules
 Given a rule `(P :- Q)`, `P` is called the left-hand side and `Q` is called the right-hand side of the rule.
 
-There are several conditions a rule `(P :- Q)` must satisfy.
+There are several conditions a rule `(P :- Q)` must satisfy the following conditions.
 
-- If the _head_ of a link `X` occurs in `P`, the _head_ of the link `X` must also occur in `Q`.
-- fn(P) should be a super set of fn(Q).
-- Rule must appear in `P`
+1. `fn(P)` should be a super set of `fn(Q)`.
+1. Rule must not appear in `P`
+1. If the _head_ of a link `X` occurs in `P`, the _head_ of the link `X` must also occur in `Q`.
 
 ## Operational Semantics
 
