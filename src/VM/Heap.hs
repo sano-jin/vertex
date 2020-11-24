@@ -17,7 +17,6 @@ module VM.Heap (
   -- Should be eliminated after testing.
   ) where
 import qualified Data.Map.Strict as M
-import qualified Data.Set as S
 import Data.List
 import Compiler.Compiler hiding (Envs)
 import Data.Tuple.Extra
@@ -47,8 +46,6 @@ showHeap (Heap _ mapAddr2IndegNode)
   
 type AtomList = [Addr]
                 
-type AssocList key val = [(key, val)]
-
 -- | initial heap
 initialHeap :: Heap
 initialHeap = Heap [1..] M.empty
@@ -83,6 +80,8 @@ incrIndeg addr (Heap freeAddrs mapAddr2IndegNode)
 hAlloc :: Heap -> IndegNode -> (Heap, Addr)
 hAlloc (Heap (addr:freeAddrs) mapAddr2IndegNode) resource
   = (Heap freeAddrs (M.insert addr resource mapAddr2IndegNode), addr)
+hAlloc (Heap [] _) _ = error "run out of the free addresses"
+
 
 -- | Replace resource at the given address with a certain resource
 hReplace :: Addr -> IndegNode -> Heap -> Heap
@@ -139,17 +138,6 @@ normalizeAddrNode (fromAddr, fromIndeg) toAddr addr (indeg, node)
 isNInd :: Node -> Bool
 isNInd (NInd _) = True
 isNInd _        = False
-
--- | lookup a map for the certain value that satisfies the given function
-m_lookupVal :: Ord key => (val -> Bool) -> M.Map key val -> Maybe (key, val)
-m_lookupVal f mapA2B
-  = let list = M.toAscList mapA2B
-        lookupVal' ((key, val):t)
-          = if f val then Just (key, val)
-            else lookupVal' t
-        lookupVal' [] = Nothing
-    in
-      lookupVal' list
 
 -- | normalize heap
 -- This should be the only exposed function.
