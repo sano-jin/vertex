@@ -1,0 +1,83 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           vertex
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/sano-jin/vertex#readme>
+homepage:       https://github.com/sano-jin/vertex#readme
+bug-reports:    https://github.com/sano-jin/vertex/issues
+author:         sano
+maintainer:     sano-jin@akane.waseda.jp
+copyright:      MIT
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/sano-jin/vertex
+
+library
+  exposed-modules:
+      Compiler.Compiler
+      Compiler.Normalize
+      Compiler.Parser
+      Compiler.Syntax
+      Lib
+      Repl
+      Util.Util
+      VM.Envs
+      VM.FindAtom
+      VM.Heap
+      VM.PushAtom
+      VM.VM
+  other-modules:
+      Paths_vertex
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , extra
+    , mtl
+    , parsec
+  default-language: Haskell2010
+
+executable vertex-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_vertex
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , extra
+    , mtl
+    , parsec
+    , vertex
+  default-language: Haskell2010
+
+test-suite vertex-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_vertex
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , containers
+    , extra
+    , mtl
+    , parsec
+    , vertex
+  default-language: Haskell2010
