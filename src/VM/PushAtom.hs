@@ -105,8 +105,6 @@ push envs oldHeap procVals
 
 
       
-setLinks :: ProcVal -> Envs -> Envs
-setLinks procVal envs = envs
 
 
 
