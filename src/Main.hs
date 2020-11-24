@@ -16,7 +16,7 @@ import Compiler.Normalize (
 import VM.Heap
 import VM.VM
 -- import Data.Tuple.Extra
-
+import VM.FindAtom
 
 {--|
 readExpr :: String -> String
@@ -34,10 +34,13 @@ readExpr input = case Parser.readExpr input of
 readExpr :: String -> String
 readExpr input = case normalize =<< compile input of
     Left err -> "Error : " ++ show err
-    Right procs ->
-      showProcs procs
+    Right (procVals, rules) ->
+      showProcs (procVals, rules) ++ "\n" ++
+      show (findAtoms procVals initTestHeap)
+
 
 main :: IO()
 main = do
   args <- getArgs
+  putStrLn $ show initTestHeap
   putStrLn $ readExpr $ head args 

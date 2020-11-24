@@ -48,17 +48,21 @@ updateIncommingLinks f envs
   = envs { incommingLinks = f $ incommingLinks envs}
 
 addMatchedLocalAddrs :: Addr -> Envs -> Envs
-addMatchedLocalAddrs addr envs
-  = updateMatchedLocalAddrs (S.insert addr) envs
+addMatchedLocalAddrs matchedAddr envs
+  = updateMatchedLocalAddrs (S.insert matchedAddr) envs
 
 updateMatchedLocalAddrs :: (S.Set Addr -> S.Set Addr) -> Envs -> Envs
 updateMatchedLocalAddrs f envs
   = envs { matchedLocalAddrs = f $ matchedLocalAddrs envs}
-  
+
+-- | the arguments are ...
+-- - matching address
+-- - matched address
+-- - envs to update
 addLocalLink2Addr :: Addr -> Addr -> Envs -> Envs
-addLocalLink2Addr addr addr' envs
-  = addMatchedLocalAddrs addr
-    $ updateLocalLink2Addr (M.insert addr addr') envs
+addLocalLink2Addr matchingAddr matchedAddr envs
+  = addMatchedLocalAddrs matchedAddr
+    $ updateLocalLink2Addr (M.insert matchingAddr matchedAddr) envs
 
 updateLocalLink2Addr :: (M.Map Addr Addr -> M.Map Addr Addr) -> Envs -> Envs
 updateLocalLink2Addr f envs
@@ -69,8 +73,8 @@ updateFreeLink2Addr f envs
   = envs { freeLink2Addr = f $ freeLink2Addr envs}
 
 addFreeLink2Addr :: String -> Addr -> Envs -> Envs
-addFreeLink2Addr linkName addr envs
-  = updateFreeLink2Addr (M.insert linkName addr) envs
+addFreeLink2Addr linkName matchedAddr envs
+  = updateFreeLink2Addr (M.insert linkName matchedAddr) envs
 
 updateFreeAddr2Indeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs
