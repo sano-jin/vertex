@@ -42,7 +42,31 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 clone https://github.com/sano-jin/vertex.git
 cd vertex
 stack build         
-stack exec vertec-exe "a. a :- b"  # run program
+stack exec vertec-exe "sample.dhl"  # run program `sample.dhl`
+```
+
+If the `sample.dhl` was the following,
+```
+a(b). a(X) :- b. b :- c.
+```
+
+the result should be like the following.
+```
+0: 
+L1 -> b. a(L1). 
+a(X) :- b. b :- c. 
+
+1: a(X) :- b ~> 
+b. b. 
+a(X) :- b. b :- c. 
+
+2: b :- c ~> 
+c. b. 
+a(X) :- b. b :- c. 
+
+3: b :- c ~> 
+c. c. 
+a(X) :- b. b :- c. 
 ```
 
 ## Development
