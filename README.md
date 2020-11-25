@@ -41,8 +41,7 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 ```bash
 clone https://github.com/sano-jin/vertex.git
 cd vertex
-stack build         
-stack exec vertec-exe "sample.dhl"  # run the program `sample.dhl`
+stack run "sample.dhl"  # run the program `sample.dhl`
 ```
 
 If the `sample.dhl` was the following,
