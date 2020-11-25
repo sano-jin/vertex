@@ -34,7 +34,7 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 ## Usage
 
 ### Requirement
-- Haskell ghc 
+- stack (haskell)
 
 ### How to use
 
