@@ -1,4 +1,4 @@
-# Formal semantics of Directed HyperFlatLMNtal 
+# Formal semantics of Directed HyperLMNtal 
 
 This page describes the formal semantics of DHLMNtal.
 
