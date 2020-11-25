@@ -39,7 +39,7 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 ### How to use
 
 ```bash
-clone https://github.com/sano-jin/vertex.git
+git clone https://github.com/sano-jin/vertex.git
 cd vertex
 stack run "sample.dhl"  # run the program `sample.dhl`
 ```
