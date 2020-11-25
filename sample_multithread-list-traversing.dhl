@@ -1,0 +1,6 @@
+\X.(
+  th(X), th(X), th(X),
+  X -> cons(a, cons(b, cons(c, nil)))
+).
+th(P), P -> cons(E, N)
+:- th(N), P -> cons(E, N).
