@@ -1,6 +1,6 @@
 module VM.VM (
   State (..),
-  run,
+  reduce,
   initializeHeap,
   showTransition,
   ) where
@@ -41,8 +41,8 @@ applyTillFail f (h:t)
 applyTillFail _ [] = Nothing
 
 -- | runs the program and returns the next state
-run :: State -> Maybe (State, Rule)
-run (State heap rules)
+reduce :: State -> Maybe (State, Rule)
+reduce (State heap rules)
   = do (newHeap, newlyCreatedRules, appliedRule) <- applyTillFail (execRule heap) rules
        return (State (normalizeHeap newHeap) (rules ++ newlyCreatedRules), appliedRule)
 

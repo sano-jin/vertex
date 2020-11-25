@@ -28,13 +28,11 @@ deleteLocalAtoms envs heap
   = let localAddrs = matchedLocalAddrs envs in
       foldl (flip hDelete) heap localAddrs
 
-{--|
 -- | decrease the indegree where the free link was poinitng to.
 -- This should be called after the matching, before the rewriting (pushing) process.
 decrFreeLinkIndeg :: Envs -> Heap -> Heap
 decrFreeLinkIndeg envs heap
   = M.foldrWithKey setIndeg heap $ freeAddr2Indeg envs
-|--}
 
 pushLinkVal :: Envs -> LocalEnv -> Heap -> LinkVal -> (Heap, Addr)
 pushLinkVal envs _ heap (FreeLinkVal linkName) 
@@ -57,7 +55,8 @@ pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links
   = let (newHeap, hLinks)
           = mapAccumL (pushLinkVal envs localEnv) oldHeap links
         hAddr = freeLink2Addr envs M.! linkName
-        indeg = freeAddr2Indeg envs M.! hAddr + getIndeg hAddr newHeap
+        indeg = -- freeAddr2Indeg envs M.! hAddr +
+          getIndeg hAddr newHeap
     in 
       (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) 
@@ -80,8 +79,12 @@ pushProcVals envs localEnv oldHeap procVals
           
 push :: Heap -> [ProcVal] -> Envs -> Heap
 push oldHeap procVals envs
-  = let (newHeap, ascList)
-          = pushProcVals envs localEnv (deleteLocalAtoms envs oldHeap) procVals
+  = let poppedHeap =
+          decrFreeLinkIndeg envs
+          $ deleteLocalAtoms envs
+          $ oldHeap
+        (newHeap, ascList)
+          = pushProcVals envs localEnv poppedHeap procVals
         localEnv = M.fromList ascList
     in
       newHeap
