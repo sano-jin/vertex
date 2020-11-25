@@ -4,15 +4,15 @@ module Compiler.Normalize (
   normalize
   ) where
 import Control.Monad.Except
--- import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.List
--- import Data.Tuple.Extra
-import Compiler.Compiler 
+import Compiler.Process
+import Compiler.Compiler
 import Util.Util (
   mapEitherList
   )
 
+  
 -- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
 substituteAddr fromAddr toAddr addr 
@@ -163,11 +163,11 @@ normalizeProcVals procVals
       else throwError $ IsNotSerialAfterNormalization notSerials
 
 normalizeRule :: Rule -> ThrowsCompileError Rule
-normalizeRule (Rule lhs rhs linkNames rhsRules)
+normalizeRule (Rule lhs rhs rhsRules)
   = do lhs' <- normalizeProcVals lhs
        rhs' <- normalizeProcVals rhs
        rhsRules' <- mapEitherList normalizeRule rhsRules
-       return $ Rule lhs' rhs' linkNames rhsRules'
+       return $ Rule lhs' rhs' rhsRules'
       
 normalize :: Procs -> ThrowsCompileError Procs  
 normalize (procVals, rules)

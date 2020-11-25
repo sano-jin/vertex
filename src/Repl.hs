@@ -2,7 +2,9 @@ module Repl where
 import System.Environment
 import System.IO
 import Compiler.Compiler (
-  compile,
+  compile
+  )
+import Compiler.Process (
   showProcs,
   showRule
   )

@@ -1,21 +1,9 @@
 {-# LANGUAGE Safe #-}
+
 module Compiler.Compiler (
-  Addr,
-  Indeg,
-  AtomName,
-  LinkVal (..),
-  ProcVal (..),
-  Procs,
-  Rule (..),
-  showProcs,
-  showProcVals,
-  showRules,
-  showRule,
   compile,
   ThrowsCompileError,
   CompileError (IsNotSerialAfterNormalization),
-  Envs,
-  updateLocalMapAddrIndeg
   ) where
 import Control.Monad.Except
 import qualified Data.Map.Strict as M
@@ -34,71 +22,8 @@ import Compiler.Syntax (
 import Util.Util (
   monadicMapAccumL
   )
-
-
-type Addr = Int
-type Indeg = Int
-type AtomName = String
-
-data LinkVal = FreeLinkVal String
-               -- ^ X
-             | LocalLinkVal Addr
-               -- ^ X
-             | AtomVal String [LinkVal]
-             -- ^ p(X1,...,Xm)
-             deriving(Eq)
-
-data ProcVal = LocalAliasVal Indeg Addr LinkVal
-               -- ^ \X. ... X -> p(X1,...,Xm)
-             | FreeAliasVal AtomName LinkVal
-               -- ^ X -> p(X1,...,Xm)
-             deriving(Eq)
-
--- | some functions for showing processes
-showSet :: S.Set String -> String
-showSet stringSet = "{" ++ intercalate ", " (S.toList stringSet) ++ "}"
-
-showProcVals :: [ProcVal] -> String
-showProcVals = intercalate ", " . map showProcVal
-
-showProcVal :: ProcVal -> String
-showProcVal (LocalAliasVal indeg addr linkVal)
-  = show indeg ++ " &" ++ show addr ++ " -> " ++ showLinkVal linkVal
-showProcVal (FreeAliasVal linkName linkVal)
-  = linkName ++ " -> " ++ showLinkVal linkVal
-
-showLinkVal :: LinkVal -> String
-showLinkVal (FreeLinkVal linkName) = linkName
-showLinkVal (LocalLinkVal addr) = "&" ++ show addr
-showLinkVal (AtomVal atomName links)
-  = if null links then atomName
-    else atomName ++ "(" ++ intercalate ", " (map showLinkVal links) ++ ")"
-
-
-data Rule = Rule [ProcVal] [ProcVal] (S.Set String) [Rule]
--- ^ A rule is specified with ...
--- - left-hand-side atoms to match,
--- - right-hand-side atoms to generate,
--- - a set of names of free head links
--- - right-hand-side rules to generate.
-
-showRule :: Rule -> String
-showRule (Rule lhs rhs freeTailLinks rules)
-  = "(" ++ showProcVals lhs ++ " :- " ++ showProcVals rhs
-    ++ " ./*" ++ showSet freeTailLinks ++ "*/. "
-    ++ showRules rules
-    ++ ")"
-
-showRules :: [Rule] -> String
-showRules = intercalate ", " . map showRule
-
-type Procs = ([ProcVal], [Rule])
--- ^ Processes are specified with atoms and rules
-
-showProcs :: Procs -> String
-showProcs (procVals, rules)
-  = let dot = if null procVals || null rules then "" else ". " in
-      showProcVals procVals ++ dot ++ showRules rules
+import Compiler.Process
+import Compiler.Envs
 
 type ThrowsCompileError = Either CompileError
 -- ^ a type for handling results and errors
@@ -141,13 +66,6 @@ showCompileError (IsNotSerialAfterNormalization errors)
             = "local link(s) '" ++ showSet (S.map show addrs)
               ++ "' in '" ++ showProcVal procVal ++ "' is not serial"
 
-type HasHead = Bool
-type EnvList = [(String, (Addr, HasHead))]
--- ^ A type for the environment of local links
-
-type EnvSet  = S.Set String
--- ^ A type for the environment of free links
-
 -- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
 updateAssocList f key ((h@(k, v)):t)
@@ -155,58 +73,6 @@ updateAssocList f key ((h@(k, v)):t)
     else h : updateAssocList f key t
 updateAssocList _ _ [] = []
 
--- | A type for the Envirnment of pointes
-data Envs = Envs { localEnv :: EnvList
-                   -- ^ A mapping (list of tuple) from the local link names
-                   -- to the tuples of the given address
-                   -- and the boolean denotes whether its head appeared or not
-                 , localMapAddrIndeg :: M.Map Addr Indeg 
-                   -- ^ A map from the local link addresses to their indegrees
-                 , freeTailEnv :: EnvSet
-                   -- ^ A set of free tail link names
-                 , freeHeadEnv :: EnvSet
-                   -- ^ A set of free head link names
-                 , addrSeed :: Int
-                   -- ^ the number of the local links appeared in the process
-                 } deriving (Show)
-
--- | Some helper functions for the link environment
-updateLocalEnv :: (EnvList -> EnvList) -> Envs -> Envs
-updateLocalEnv f envs
-  = envs { localEnv = f $ localEnv envs }
-
-updateLocalMapAddrIndeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
-updateLocalMapAddrIndeg f envs
-  = envs { localMapAddrIndeg = f $ localMapAddrIndeg envs }
-
-updateFreeTailEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
-updateFreeTailEnv f envs
-  = envs { freeTailEnv = f $ freeTailEnv envs }
-
-{--|
-updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
-updateFreeHeadEnv f envs
-  = envs { freeHeadEnv = f $ freeHeadEnv envs }
-|--}
-
-updateAddrSeed :: (Int -> Int) -> Envs -> Envs
-updateAddrSeed f envs
-  = envs { addrSeed = f $ addrSeed envs }
-
-nullEnvs :: Envs
-nullEnvs = Envs { localEnv = []
-                , localMapAddrIndeg = M.empty
-                , freeTailEnv = S.empty
-                , freeHeadEnv = S.empty
-                , addrSeed = 0  
-                }
-
-incrAddrSeed :: Envs -> Envs
-incrAddrSeed = updateAddrSeed (+ 1)
-
-incrLocalIndeg :: Addr -> Envs -> Envs
-incrLocalIndeg addr envs
-  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) envs
 
 -- | Check if the links are the local link or not.
 -- If it is a local link, then increse its indegree in the environment
@@ -282,7 +148,7 @@ compileProcLit envs (RuleLit lhs rhs)
               then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS $ RuleLit lhs rhs
               else if not $ S.null notRedirectedLinks
                 then throwError $ NotRedirectedLinks notRedirectedLinks $ RuleLit lhs rhs
-                else return $ (envs, ([], [Rule lhsProcs' rhsProcs' freeTailLinksOnLHS rhsRules]))
+                else return $ (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
 
 -- | handles the link creation
 -- firstly add the new local link to the environment,

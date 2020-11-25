@@ -4,7 +4,7 @@ module VM.VM (
   initializeHeap,
   showTransition,
   ) where
-import Compiler.Compiler hiding (Envs)
+import Compiler.Process
 import VM.Heap 
 import VM.FindAtom (
   findAtoms
@@ -31,7 +31,7 @@ showState (State heap rules)
   
 -- | execute rule and returns the new heap, the newly created rules and the applied rule
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
-execRule heap rule@(Rule lhs rhs _ rhsRules) 
+execRule heap rule@(Rule lhs rhs rhsRules) 
   = do envs <- findAtoms lhs heap
        return (push heap rhs envs, rhsRules, rule)
 

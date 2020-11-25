@@ -14,7 +14,8 @@ module VM.Envs (
 ) where
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import Compiler.Compiler hiding (Envs)
+import Compiler.Process
+
 
 
 data Envs = Envs { incommingLinks :: S.Set Addr

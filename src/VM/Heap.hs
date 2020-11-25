@@ -18,7 +18,7 @@ module VM.Heap (
   ) where
 import qualified Data.Map.Strict as M
 import Data.List
-import Compiler.Compiler hiding (Envs)
+import Compiler.Process
 import Data.Tuple.Extra
 
 data Node = NAtom AtomName [Addr]

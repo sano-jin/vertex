@@ -4,7 +4,7 @@ module VM.FindAtom (
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Data.Maybe
-import Compiler.Compiler hiding (Envs)
+import Compiler.Process
 import Util.Util (
   monadicFoldl
   )
