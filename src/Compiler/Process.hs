@@ -67,12 +67,26 @@ data Rule = Rule [ProcVal] [ProcVal] [Rule]
 
 showRule :: Rule -> String
 showRule (Rule lhs rhs rules)
-  = "(" ++ showProcVals lhs ++ " :- " ++ showProcVals rhs
-    ++ showRules rules
-    ++ ")"
+  = let sep = if null rhs || null rules then "" else ", " in
+  showProcVals lhs ++ " :- "
+  ++ showProcVals rhs ++ sep
+  ++ showSubRules rules
+
+  
+paren :: String -> String
+paren str = "(" ++ str ++ ")"
 
 showRules :: [Rule] -> String
-showRules = intercalate ", " . map showRule
+showRules
+  = concat
+    . map (++ ". ")
+    . map showRule
+
+showSubRules :: [Rule] -> String
+showSubRules
+  = intercalate ", "
+    . map paren
+    . map showRule
 
 type Procs = ([ProcVal], [Rule])
 -- ^ Processes are specified with atoms and rules

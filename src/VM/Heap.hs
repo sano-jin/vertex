@@ -35,13 +35,29 @@ data Heap = Heap [Addr] (M.Map Addr IndegNode)
 
 instance Show Heap where show = showHeap
 
+showHeapNode :: Addr -> IndegNode -> String
+showHeapNode addr (indeg, NAtom atomName links)
+  = let incommingLink =
+          if indeg > 0 then "L" ++ show addr ++ " -> " else ""
+        args =
+          if length links > 0
+          then "(" ++ (intercalate ", " $ map (\link -> "L" ++ show link) links) ++ ")"
+          else ""
+    in
+      incommingLink ++ atomName ++ args
+showHeapNode addr (indeg, NInd link)
+  = "L" ++ show addr ++ " -> L" ++ show link
+
 showHeap :: Heap -> String
 showHeap (Heap _ mapAddr2IndegNode)
-  = let list = intercalate "\n"
-          $ map show
+  = let list =
+          concat
+          $ map (++ ". ")
+          $ map (uncurry showHeapNode)
           $ M.toAscList mapAddr2IndegNode
   in
       list
+
 
   
 type AtomList = [Addr]
