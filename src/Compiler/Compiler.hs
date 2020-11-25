@@ -1,5 +1,18 @@
 {-# LANGUAGE Safe #-}
 
+{-|
+Module      : Compiler
+Description : A compiler for the vertex language
+Copyright   : (c) sano, 2020
+License     : MIT
+Maintainer  : sample@email.com
+Stability   : experimental
+Portability : POSIX
+
+Here is a longer description of this module, containing some
+commentary with @some markup@.
+-}
+
 module Compiler.Compiler (
   compile,
   ThrowsCompileError,

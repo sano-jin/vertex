@@ -31,7 +31,6 @@ library
       Compiler.Parser
       Compiler.Process
       Compiler.Syntax
-      Lib
       Repl
       Util.Util
       VM.Envs

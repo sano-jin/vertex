@@ -15,7 +15,6 @@ import VM.VM (
   State (..),
   reduce,
   initializeHeap,
-  showTransition,
   )
   
 -- runtime

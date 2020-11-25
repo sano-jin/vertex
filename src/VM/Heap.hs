@@ -1,3 +1,18 @@
+{-# LANGUAGE Safe #-}
+
+{-|
+Module      : Heap
+Description : A heap of the processes
+Copyright   : (c) sano, 2020
+License     : MIT
+Maintainer  : sample@email.com
+Stability   : experimental
+Portability : POSIX
+
+Here is a longer description of this module, containing some
+commentary with @some markup@.
+-}
+
 module VM.Heap (
   Node (..),
   Heap,
@@ -12,9 +27,6 @@ module VM.Heap (
   hReplace,
   setIndeg,
   incrIndeg,
-  initTestHeap,
-  -- ^ A heap for testing.
-  -- Should be eliminated after testing.
   ) where
 import qualified Data.Map.Strict as M
 import Data.List
@@ -168,19 +180,20 @@ normalizeHeap heap
       Nothing -> heap
       _ -> error "should not reach here"
 
-
+-- | A heap for testing.
+-- Should be eliminated after testing.
 initTestHeap :: Heap
 initTestHeap =
   let assocList
-        = [ (1, NAtom "a" [3, 1])   -- ^ 1
-          , (0, NAtom "b" [3]   )   -- ^ 2
-          , (2, NAtom "c" []    )   -- ^ 3
-          , (0, NAtom "d" []    )   -- ^ 4          
-          , (0, NAtom "e" [6, 6])   -- ^ 5
-          , (2, NAtom "f" []    )   -- ^ 6
-          , (0, NAtom "g" [8]   )   -- ^ 7
-          , (1, NAtom "h" []    )   -- ^ 8
-          , (1, NAtom "i" [9]    )  -- ^ 9
+        = [ (1, NAtom "a" [3, 1])   -- 1
+          , (0, NAtom "b" [3]   )   -- 2
+          , (2, NAtom "c" []    )   -- 3
+          , (0, NAtom "d" []    )   -- 4          
+          , (0, NAtom "e" [6, 6])   -- 5
+          , (2, NAtom "f" []    )   -- 6
+          , (0, NAtom "g" [8]   )   -- 7
+          , (1, NAtom "h" []    )   -- 8
+          , (1, NAtom "i" [9]    )  -- 9
           ]
   in
     fst $ mapAccumL hAlloc initialHeap assocList

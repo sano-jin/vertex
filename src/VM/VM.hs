@@ -2,7 +2,7 @@ module VM.VM (
   State (..),
   reduce,
   initializeHeap,
-  showTransition,
+--   showTransition,
   ) where
 import Compiler.Process
 import VM.Heap 
@@ -17,9 +17,7 @@ import GHC.Base
 
 
 data State = State Heap [Rule]
--- ^ State is consists of tuple
--- - the heap,
--- - the rules.
+-- ^ State is consists of tuple, the heap and the list of rules.
 
 instance Show State where show = showState
 
@@ -49,9 +47,11 @@ reduce (State heap rules)
 initializeHeap :: [ProcVal] -> Heap
 initializeHeap procVals
   = push initialHeap procVals nullEnvs
- 
+
+{--| 
 showTransition :: Maybe (State, Rule) -> String
 showTransition (Just (state, rule))
   = show state ++ "\n with a rule " ++ showRule rule
 showTransition Nothing
  = "halted"  
+|--}

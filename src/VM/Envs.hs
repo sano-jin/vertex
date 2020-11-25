@@ -1,5 +1,18 @@
 {-# LANGUAGE Safe #-}
 
+{-|
+Module      : VM.Envs
+Description : A data to keep the correspondence of the links and the matched addresses
+Copyright   : (c) sano, 2020
+License     : MIT
+Maintainer  : sample@email.com
+Stability   : experimental
+Portability : POSIX
+
+Here is a longer description of this module, containing some
+commentary with @some markup@.
+-}
+
 module VM.Envs (
   Envs (..),
   nullEnvs,
@@ -15,7 +28,6 @@ module VM.Envs (
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import Compiler.Process
-
 
 
 data Envs = Envs { incommingLinks :: S.Set Addr
@@ -37,6 +49,7 @@ data Envs = Envs { incommingLinks :: S.Set Addr
                  }
             deriving (Show)
 
+-- | The initial envirnonment, which holds nothing.
 nullEnvs :: Envs
 nullEnvs = Envs { incommingLinks = S.empty
                 , matchedLocalAddrs = S.empty
@@ -58,9 +71,12 @@ updateMatchedLocalAddrs f envs
   = envs { matchedLocalAddrs = f $ matchedLocalAddrs envs}
 
 -- | the arguments are ...
--- - matching address
--- - matched address
--- - envs to update
+--
+--   - matching address
+--
+--   - matched address
+--
+--   - envs to update
 addLocalLink2Addr :: Addr -> Addr -> Envs -> Envs
 addLocalLink2Addr matchingAddr matchedAddr envs
   = addMatchedLocalAddrs matchedAddr
