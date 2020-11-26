@@ -5,7 +5,11 @@ import Repl
 import VM.VM
 
 main :: IO ()
-main = do [f] <- getArgs
+main = do (f:args) <- getArgs
           s   <- readFile f
-          readAndRun show s
+          case args of
+            ["--nd"]   
+              -> readAndRunND show s
+            _   
+              -> readAndRun show s
           

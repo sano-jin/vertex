@@ -29,6 +29,7 @@ module VM.Heap (
   incrIndeg,
   showHeapForDebugging,
   isHeapNull,
+  heap2ProcVals,
   ) where
 import qualified Data.Map.Strict as M
 import Data.List
@@ -49,6 +50,17 @@ data Heap = Heap [Addr] (M.Map Addr IndegNode)
 
 instance Show Heap where show = showHeap
 
+heapNode2ProcVal :: Addr -> (Indeg, Node) -> ProcVal
+heapNode2ProcVal addr (indeg, NAtom atomName links)
+  = LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal links
+heapNode2ProcVal addr (indeg, NInd link)
+  = LocalAliasVal indeg addr $ LocalLinkVal link
+
+heap2ProcVals :: Heap -> [ProcVal]
+heap2ProcVals (Heap _ mapAddr2Node)
+  = map (uncurry heapNode2ProcVal)
+    $ M.toAscList mapAddr2Node
+  
 isHeapNull :: Heap -> Bool
 isHeapNull (Heap _ mapAddr2Node) = null mapAddr2Node
 
