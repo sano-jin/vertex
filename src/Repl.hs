@@ -124,7 +124,7 @@ runND state2String oldStateID oldPath oldState
           oldPath
           (reduceND oldState)
     in
-      mapM (putStrLn . (\(id, state) -> show id ++ ": " ++ show state)) transitions
+      mapM (putStrLn . (\(id, (state, _)) -> show id ++ ": " ++ state2String state)) transitions
       >> if null transitions
          then return path
          else
