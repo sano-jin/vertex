@@ -2,6 +2,7 @@ module VM.VM (
   State (..),
   reduce,
   initializeHeap,
+  showStateForDebugging,
 --   showTransition,
   ) where
 import Compiler.Process
@@ -22,10 +23,22 @@ data State = State Heap [Rule]
 instance Show State where show = showState
 
 
--- | shows the state
+-- | Shows the state
+-- Pritty print the heap and the rules
 showState :: State -> String
 showState (State heap rules)
-  = show heap ++ "\n" ++ showRules rules
+  = show heap ++ showRules rules
+  
+-- | Shows the state
+-- Print all the addresses and the nodes in the heap.
+showStateForDebugging :: State -> String
+showStateForDebugging (State heap rules)
+  = "The heap status:\n"
+    ++ showHeapForDebugging 4 heap
+    ++ "Pritty printed heap:\n"
+    ++ replicate 4 ' ' ++ show heap
+    ++ "\nRules:\n"
+    ++ showRulesForDebugging 4 rules
   
 -- | execute rule and returns the new heap, the newly created rules and the applied rule
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)

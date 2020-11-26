@@ -27,10 +27,12 @@ module VM.Heap (
   hReplace,
   setIndeg,
   incrIndeg,
+  showHeapForDebugging,
+  isHeapNull,
   ) where
 import qualified Data.Map.Strict as M
 import Data.List
-import Compiler.Process
+import Compiler.Process 
 import Data.Tuple.Extra
 
 data Node = NAtom AtomName [Addr]
@@ -47,6 +49,9 @@ data Heap = Heap [Addr] (M.Map Addr IndegNode)
 
 instance Show Heap where show = showHeap
 
+isHeapNull :: Heap -> Bool
+isHeapNull (Heap _ mapAddr2Node) = null mapAddr2Node
+
 showHeapNode :: Addr -> IndegNode -> String
 showHeapNode addr (indeg, NAtom atomName links)
   = let incommingLink =
@@ -60,19 +65,36 @@ showHeapNode addr (indeg, NAtom atomName links)
 showHeapNode addr (indeg, NInd link)
   = "L" ++ show addr ++ " -> L" ++ show link
 
+-- | (This should) pritty print the heap.
+-- Not yet implemented the prity printing. 
+-- This just shows the node and the address of the nodes in the heap in order.
+-- This function is a instance of the `show`
 showHeap :: Heap -> String
 showHeap (Heap _ mapAddr2IndegNode)
-  = let list =
-          concat
-          $ map (++ ". ")
-          $ map (uncurry showHeapNode)
-          $ M.toAscList mapAddr2IndegNode
-  in
-      list
+  = concat
+    . map (++ ". ")
+    . map (uncurry showHeapNode)
+    . M.toAscList
+    $ mapAddr2IndegNode
+
+  
+-- | Show heap with addresses.
+-- This is (mainly) used for debugging.
+showHeapForDebugging :: Int -> Heap -> String
+showHeapForDebugging indentLevel (Heap _ mapAddr2IndegNode)
+  = concat
+    . map (++ "\n")
+    . map (replicate indentLevel ' ' ++ )
+    . ("/* Address -> (Indeg, Node) */" :)
+    . map (\(addr, (indeg, node))
+            -> "A" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show node ++ ")")
+    . M.toAscList
+    $ mapAddr2IndegNode
 
 
   
 type AtomList = [Addr]
+-- ^ AtomList is a list of addresses (pointers) 
                 
 -- | initial heap
 initialHeap :: Heap
@@ -120,13 +142,12 @@ hReplace addr resource (Heap freeAddrs mapAddr2IndegNode)
 -- | lookup for the certain value
 hLookupVal :: (IndegNode -> Bool) -> Heap -> Maybe (Addr, IndegNode)
 hLookupVal f (Heap _ mapAddr2IndegNode)
-  = let list = M.toAscList mapAddr2IndegNode
-        lookupVal' ((key, val):t)
+  = let lookupVal' ((key, val):t)
           = if f val then Just (key, val)
             else lookupVal' t
         lookupVal' [] = Nothing
     in
-      lookupVal' list
+      lookupVal' $ M.toAscList mapAddr2IndegNode
 
 -- | A heap version Map.mapWithKey 
 hMapWithAddr :: (Addr -> IndegNode -> IndegNode) -> Heap -> Heap
@@ -175,8 +196,9 @@ normalizeHeap heap
   = case hLookupVal (isNInd . snd) heap of
       Just (fromAddr, (indeg, NInd toAddr))
         -> normalizeHeap
-           $ hMapWithAddr (normalizeAddrNode (fromAddr, indeg) toAddr)
-           $ hDelete fromAddr heap
+           . hMapWithAddr (normalizeAddrNode (fromAddr, indeg) toAddr)
+           . hDelete fromAddr
+           $ heap
       Nothing -> heap
       _ -> error "should not reach here"
 

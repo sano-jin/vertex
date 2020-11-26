@@ -112,9 +112,9 @@ getLocalEffectiveAddr (LocalAliasVal _ addr _)
 getLocalEffectiveAddr _ = Nothing  
 
 collectLocalEffectiveAddrs :: [ProcVal] -> S.Set Addr
-collectLocalEffectiveAddrs procVals
+collectLocalEffectiveAddrs 
   = S.fromList
-    $ filterMap getLocalEffectiveAddr procVals
+    . filterMap getLocalEffectiveAddr
 
 collectNotSerialAddrOfLinkVal :: S.Set Addr -> LinkVal -> S.Set Addr
 collectNotSerialAddrOfLinkVal effectiveLocalAddrs (LocalLinkVal addr)
@@ -153,8 +153,8 @@ normalizeProcVals :: [ProcVal] -> ThrowsCompileError [ProcVal]
 normalizeProcVals procVals
   = let procVals' = 
           normalizeFree2LocalIndirection
-          $ normalizeLocal2FreeIndirection
-          $ normalizeLocal2LocalIndirection
+          . normalizeLocal2FreeIndirection
+          . normalizeLocal2LocalIndirection
           $ procVals
         notSerials
           = collectNotSerialAddrsOfProcVals procVals'

@@ -5,8 +5,7 @@ import Compiler.Compiler (
   compile
   )
 import Compiler.Process (
-  showProcs,
-  showRule
+  showProcs
   )
 import Compiler.Normalize (
   normalize
@@ -21,24 +20,25 @@ import VM.VM (
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
 
-run :: Int -> State -> IO ()
-run stepN oldState
+run :: (State -> String) -> Int -> State -> IO ()
+run state2String stepN oldState 
   = case reduce oldState of
       Just (newState, rule)
         -> putStrLn
            (show stepN ++ ": "
-             ++ showRule rule ++ " ~> \n"
-             ++ show newState ++ "\n")
-           >> run (stepN + 1) newState
+             ++ show rule ++ " ~> \n"
+             ++ state2String newState ++ "\n")
+           >> run state2String (stepN + 1) newState 
       Nothing -> return ()
 
-readAndRun:: String -> IO ()
-readAndRun input = case normalize =<< compile input of
+readAndRun:: (State -> String) -> String -> IO ()
+readAndRun state2String input
+  = case normalize =<< compile input of
     Left err -> putStrLn ("Error : " ++ show err)
     Right (procVals, rules) ->
       let initialState = State (initializeHeap procVals) rules in
-        putStrLn ("0: \n" ++ show initialState ++ "\n")
-        >> run 1 initialState
+        putStrLn ("0: \n" ++ state2String initialState ++ "\n")
+        >> run state2String 1 initialState
 
 
 

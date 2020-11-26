@@ -114,8 +114,8 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr)
             if indeg < 0 then Nothing
             else 
               Just
-              $ updateFreeLink2Addr (M.insert freeLinkName hAddr)
-              $ updateFreeAddr2Indeg (M.insert hAddr indeg)
+              . updateFreeLink2Addr (M.insert freeLinkName hAddr)
+              . updateFreeAddr2Indeg (M.insert hAddr indeg)
               $ envs
         Just hAddr'
           -> if hAddr' /= hAddr
@@ -132,7 +132,7 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr)
                  if indeg < 0 then Nothing
                  else
                    Just
-                   $ updateFreeAddr2Indeg (M.insert hAddr indeg)
+                   . updateFreeAddr2Indeg (M.insert hAddr indeg)
                    $ envs
 
 -- | findAtom's arguments are followings
@@ -161,7 +161,7 @@ findAtom (atomList, heap)
     else
       let envs' =
             updateIncommingLinks (S.insert hAddr)
-            $ addLocalLink2Addr matchingAddr hAddr
+            . addLocalLink2Addr matchingAddr hAddr
             $ envs
       in
         (checkLinkVal heap (Just indeg) envs' (atomVal, hAddr)
@@ -181,8 +181,8 @@ findAtom (atomList, heap)
     else
       let envs' =
             updateIncommingLinks (S.insert hAddr)
-            $ addFreeLink2Addr linkName hAddr
-            $ updateFreeAddr2Indeg (insertIfNone hAddr (getIndeg hAddr heap))
+            . addFreeLink2Addr linkName hAddr
+            . updateFreeAddr2Indeg (insertIfNone hAddr (getIndeg hAddr heap))
             $ envs
       in
         (checkLinkVal heap Nothing envs' (atomVal, hAddr)

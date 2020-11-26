@@ -36,6 +36,7 @@ import Util.Util (
   monadicMapAccumL
   )
 import Compiler.Process
+
 import Compiler.Envs
 
 type ThrowsCompileError = Either CompileError
@@ -77,7 +78,7 @@ showCompileError (IsNotSerialAfterNormalization errors)
   = intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
     where showIsNotSerialAfterNormalizationError (addrs, procVal)
             = "local link(s) '" ++ showSet (S.map show addrs)
-              ++ "' in '" ++ showProcVal procVal ++ "' is not serial"
+              ++ "' in '" ++ show procVal ++ "' is not serial"
 
 -- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 

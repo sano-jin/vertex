@@ -71,9 +71,11 @@ a(X) :- b. b :- c.
 ## Development
 
 ### Test
-Test is currently not working.
+Run this test to obtain more detailed information about the state of the heap, etc.
 
-- See [here](https://github.com/sano-jin/vertex/blob/master/test/README.md) to get description about testing.
+```shell
+stack test --test-arguments "sample.dhl"
+```
 
 
 
