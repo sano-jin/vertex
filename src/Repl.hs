@@ -106,7 +106,7 @@ showEnds state2String (Path stateN states transitions)
     ++ "\nstates:\n"
     ++ unlines (reverse $ map (\(stateId, state)
                               -> show stateId ++ ": " ++ state2String state) states)
-    ++ "\ntransitions:\n"
+    ++ "\ntransitions: " ++ show (length transitions) ++ "\n"
     ++ unlines ((reverse
                  . map (\((prev, next), rule)
                          -> show prev ++ " ~> " ++ show next
