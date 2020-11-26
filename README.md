@@ -68,6 +68,12 @@ c. c.
 a(X) :- b. b :- c. 
 ```
 
+Also, put `--nd` for the "non-deterministic" execution.
+```bash
+stack run -- "sample_nd.dhl" --nd
+```
+
+
 ## Development
 
 ### Test
