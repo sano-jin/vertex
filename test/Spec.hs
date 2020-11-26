@@ -6,7 +6,13 @@ import System.Environment
 import Repl
 import VM.VM
 
+
 main :: IO ()
-main = do [f] <- getArgs
+main = do (f:args) <- getArgs
           s   <- readFile f
-          readAndRun showStateForDebugging s
+          case args of
+            ["--nd"]   
+              -> readAndRunND showStateForDebugging s
+            _   
+              -> readAndRun showStateForDebugging s
+
