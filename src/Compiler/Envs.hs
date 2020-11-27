@@ -13,9 +13,9 @@ module Compiler.Envs (
   EnvList,
   EnvSet,
   ) where
-import qualified Data.Map.Strict as M
-import qualified Data.Set as S
-import Compiler.Process
+import           Compiler.Process
+import qualified Data.Map.Strict  as M
+import qualified Data.Set         as S
 
 
 type HasHead = Bool
@@ -28,17 +28,17 @@ type EnvSet  = S.Set String
 
 
 -- | A type for the Envirnment of pointes
-data Envs = Envs { localEnv :: EnvList
+data Envs = Envs { localEnv          :: EnvList
                    -- ^ A mapping (list of tuple) from the local link names
                    -- to the tuples of the given address
                    -- and the boolean denotes whether its head appeared or not
-                 , localMapAddrIndeg :: M.Map Addr Indeg 
+                 , localMapAddrIndeg :: M.Map Addr Indeg
                    -- ^ A map from the local link addresses to their indegrees
-                 , freeTailEnv :: EnvSet
+                 , freeTailEnv       :: EnvSet
                    -- ^ A set of free tail link names
-                 , freeHeadEnv :: EnvSet
+                 , freeHeadEnv       :: EnvSet
                    -- ^ A set of free head link names
-                 , addrSeed :: Int
+                 , addrSeed          :: Int
                    -- ^ the number of the local links appeared in the process
                  } deriving (Show)
 
@@ -72,12 +72,12 @@ nullEnvs = Envs { localEnv = []
                 , localMapAddrIndeg = M.empty
                 , freeTailEnv = S.empty
                 , freeHeadEnv = S.empty
-                , addrSeed = 0  
+                , addrSeed = 0
                 }
 
 incrAddrSeed :: Envs -> Envs
 incrAddrSeed = updateAddrSeed (+ 1)
 
 incrLocalIndeg :: Addr -> Envs -> Envs
-incrLocalIndeg addr 
-  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) 
+incrLocalIndeg addr
+  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)

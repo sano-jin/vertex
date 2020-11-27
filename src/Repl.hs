@@ -1,43 +1,31 @@
 module Repl where
 -- import System.Environment
-import System.IO
-import Compiler.Compiler (
-  compile
-  )
-import Compiler.Process (
-  -- showProcs,
-  Rule,
-  )
-import Compiler.Normalize (
-  normalize
-  )
-import VM.VM (
-  State (..),
-  reduce,
-  initializeHeap,
-  isStateEq,
-  reduceND,
-  )
-import Data.List  
-import Data.Maybe
+import           Compiler.Compiler  (compile)
+import           Compiler.Normalize (normalize)
+import           Compiler.Process   (Rule)
+import           Data.List
+import           Data.Maybe
+import           System.IO
+import           VM.VM              (State (..), initializeHeap, isStateEq,
+                                     reduce, reduceND)
 -- import Util.Util
-import Control.Monad
-import Data.Tuple.Extra
+import           Control.Monad
+import           Data.Tuple.Extra
 
-  
+
 -- | runtime
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
 
 run :: (State -> String) -> Int -> State -> IO ()
-run state2String stepN oldState 
+run state2String stepN oldState
   = case reduce oldState of
       Just (newState, rule)
         -> putStrLn
            (show stepN ++ ": "
              ++ show rule ++ " ~> \n"
              ++ state2String newState ++ "\n")
-           >> run state2String (stepN + 1) newState 
+           >> run state2String (stepN + 1) newState
       Nothing -> return ()
 
 readAndRun:: (State -> String) -> String -> IO ()
@@ -63,11 +51,11 @@ readAndRunND state2String input
 
 data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
 -- ^ The arguments are
--- the number of the states, 
+-- the number of the states,
 -- the list of the state id and the states
 -- and the list of the tuples : [(
 -- (the id of the before state, the id of the consequent state)
--- , the rule that was applied to reduce 
+-- , the rule that was applied to reduce
 -- )]
 
 -- | The initial path
@@ -85,7 +73,7 @@ addState2Path oldStateId (Path stateN states transitions) (newState, appliedRule
              (((oldStateId, stateN), appliedRule) : transitions)
            , Just (stateN, (newState, appliedRule)))
       Just (matchedStateId, _)
-        -> ( Path 
+        -> ( Path
              stateN
              states
              (((oldStateId, matchedStateId), appliedRule) : transitions)
@@ -114,9 +102,9 @@ showEnds state2String (Path stateN states transitions)
                        )
                 ) transitions)
 
-    
+
 runND :: (State -> String) -> Int -> Path -> State -> IO Path
-runND state2String oldStateID oldPath oldState 
+runND state2String oldStateID oldPath oldState
   = let (path, transitions)
           = second catMaybes
           $ mapAccumL
@@ -130,11 +118,11 @@ runND state2String oldStateID oldPath oldState
          then return path
          else
            let runND' path (oldStateId, (state, _))
-                 = runND state2String oldStateId path state 
+                 = runND state2String oldStateId path state
            in
              foldM runND' path transitions
-        
-  
+
+
 
 
 {--|
@@ -154,5 +142,5 @@ readAndRunND state2String input
 main :: IO ()
 main = do
   args <- getArgs
-  putStrLn $ readExpr $ head args 
+  putStrLn $ readExpr $ head args
 |--}

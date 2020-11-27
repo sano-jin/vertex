@@ -1,15 +1,15 @@
 module Main where
-import System.Environment
+import           System.Environment
 
-import Repl
-import VM.VM
+import           Repl
+import           VM.VM
 
 main :: IO ()
 main = do (f:args) <- getArgs
-          s   <- readFile f
+          s        <- readFile f
           case args of
-            ["--nd"]   
+            ["--nd"]
               -> readAndRunND show s
-            _   
+            _
               -> readAndRun show s
-          
+

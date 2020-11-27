@@ -23,25 +23,25 @@ module VM.Envs (
   updateLocalLink2Addr,
   updateFreeLink2Addr,
   addFreeLink2Addr,
-  updateFreeAddr2Indeg  
+  updateFreeAddr2Indeg
 ) where
-import qualified Data.Map.Strict as M
-import qualified Data.Set as S
-import Compiler.Process
+import           Compiler.Process
+import qualified Data.Map.Strict  as M
+import qualified Data.Set         as S
 
 
-data Envs = Envs { incommingLinks :: S.Set Addr
+data Envs = Envs { incommingLinks    :: S.Set Addr
                    -- ^ A set of the addresseses of the matched incoming links
                  , matchedLocalAddrs :: S.Set Addr
                    -- ^ A set of the addresseses of the matched local links
                    -- contains the addresses to the "embedded atom"s.
-                 , localLink2Addr :: M.Map Addr Addr
+                 , localLink2Addr    :: M.Map Addr Addr
                    -- ^ A map from local links to the matched addresses
                    -- Does not contain the addresses to the "embedded atom"s.
                    -- Since the local links of them are not known
-                 , freeLink2Addr :: M.Map String Addr
+                 , freeLink2Addr     :: M.Map String Addr
                    -- ^ A map from free link names to the matched addresses
-                 , freeAddr2Indeg :: M.Map Addr Indeg
+                 , freeAddr2Indeg    :: M.Map Addr Indeg
                  -- ^ A map from the addresses which the free links have mathced
                  -- to the indegrees that are left
                  -- That is, matching free links will consume the indegrees in this map
@@ -78,7 +78,7 @@ updateMatchedLocalAddrs f envs
 --
 --   - envs to update
 addLocalLink2Addr :: Addr -> Addr -> Envs -> Envs
-addLocalLink2Addr matchingAddr matchedAddr 
+addLocalLink2Addr matchingAddr matchedAddr
   = addMatchedLocalAddrs matchedAddr
     . updateLocalLink2Addr (M.insert matchingAddr matchedAddr)
 

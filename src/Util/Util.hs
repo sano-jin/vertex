@@ -4,7 +4,7 @@ module Util.Util (
   monadicMapAccumL,
   monadicFoldl
   ) where
-import Control.Monad.Except
+import           Control.Monad.Except
 
 {--|
 mapEitherList :: (a -> Either b c) -> [a] -> Either b [c]

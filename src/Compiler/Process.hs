@@ -14,8 +14,8 @@ module Compiler.Process (
   showSet,
   showRulesForDebugging,
   ) where
-import Data.List
-import qualified Data.Set as S
+import           Data.List
+import qualified Data.Set  as S
 
 type Addr = Int
 type Indeg = Int
@@ -26,7 +26,7 @@ data LinkVal = FreeLinkVal String
              | LocalLinkVal Addr
                -- ^ X
              | AtomVal String [LinkVal]
-             -- ^ p(X1,...,Xm)
+               -- ^ p(X1,...,Xm)
              deriving(Eq)
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal
@@ -93,7 +93,7 @@ showRuleForDebugging (Rule lhs rhs rules)
   showProcValsForDebugging lhs ++ " :- "
   ++ showProcValsForDebugging rhs ++ sep
   ++ showSubRulesForDebugging rules
-  
+
 paren :: String -> String
 paren str = "(" ++ str ++ ")"
 

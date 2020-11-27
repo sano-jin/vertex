@@ -31,10 +31,10 @@ module VM.Heap (
   isHeapNull,
   heap2ProcVals,
   ) where
-import qualified Data.Map.Strict as M
-import Data.List
-import Compiler.Process 
-import Data.Tuple.Extra
+import           Compiler.Process
+import           Data.List
+import qualified Data.Map.Strict  as M
+import           Data.Tuple.Extra
 
 data Node = NAtom AtomName [Addr]
             -- ^ NAtom SymbolAtomName [Link]
@@ -60,7 +60,7 @@ heap2ProcVals :: Heap -> [ProcVal]
 heap2ProcVals (Heap _ mapAddr2Node)
   = map (uncurry heapNode2ProcVal)
     $ M.toAscList mapAddr2Node
-  
+
 isHeapNull :: Heap -> Bool
 isHeapNull (Heap _ mapAddr2Node) = null mapAddr2Node
 
@@ -78,7 +78,7 @@ showHeapNode addr (indeg, NInd link)
   = "L" ++ show addr ++ " -> L" ++ show link
 
 -- | (This should) pritty print the heap.
--- Not yet implemented the prity printing. 
+-- Not yet implemented the prity printing.
 -- This just shows the node and the address of the nodes in the heap in order.
 -- This function is a instance of the `show`
 showHeap :: Heap -> String
@@ -87,7 +87,7 @@ showHeap (Heap _ mapAddr2IndegNode)
     . M.toAscList
     $ mapAddr2IndegNode
 
-  
+
 -- | Show heap with addresses.
 -- This is (mainly) used for debugging.
 showHeapForDebugging :: Int -> Heap -> String
@@ -100,10 +100,10 @@ showHeapForDebugging indentLevel (Heap _ mapAddr2IndegNode)
     $ mapAddr2IndegNode
 
 
-  
+
 type AtomList = [Addr]
--- ^ AtomList is a list of addresses (pointers) 
-                
+-- ^ AtomList is a list of addresses (pointers)
+
 -- | initial heap
 initialHeap :: Heap
 initialHeap = Heap [1..] M.empty
@@ -115,21 +115,21 @@ toAtomList (Heap _ mapAddr2IndegNode)
 
 -- | lookup
 hLookup :: Addr -> Heap -> IndegNode
-hLookup addr (Heap _ mapAddr2IndegNode) 
+hLookup addr (Heap _ mapAddr2IndegNode)
   = mapAddr2IndegNode M.! addr
 
 -- | delete
 hDelete :: Addr -> Heap -> Heap
-hDelete addr (Heap freeAddrs mapAddr2IndegNode) 
+hDelete addr (Heap freeAddrs mapAddr2IndegNode)
   = Heap (addr:freeAddrs) (M.delete addr mapAddr2IndegNode)
 
 setIndeg :: Addr -> Indeg -> Heap -> Heap
-setIndeg addr indeg (Heap freeAddrs mapAddr2IndegNode) 
+setIndeg addr indeg (Heap freeAddrs mapAddr2IndegNode)
  = Heap freeAddrs
    $ M.adjust (first $ const indeg) addr mapAddr2IndegNode
 
 incrIndeg :: Addr -> Heap -> Heap
-incrIndeg addr (Heap freeAddrs mapAddr2IndegNode) 
+incrIndeg addr (Heap freeAddrs mapAddr2IndegNode)
  = Heap freeAddrs
    $ M.adjust (first (+ 1)) addr mapAddr2IndegNode
 
@@ -143,7 +143,7 @@ hAlloc (Heap [] _) _ = error "run out of the free addresses"
 
 -- | Replace resource at the given address with a certain resource
 hReplace :: Addr -> IndegNode -> Heap -> Heap
-hReplace addr resource (Heap freeAddrs mapAddr2IndegNode) 
+hReplace addr resource (Heap freeAddrs mapAddr2IndegNode)
   = Heap freeAddrs (M.insert addr resource mapAddr2IndegNode)
 
 
@@ -157,7 +157,7 @@ hLookupVal f (Heap _ mapAddr2IndegNode)
     in
       lookupVal' $ M.toAscList mapAddr2IndegNode
 
--- | A heap version Map.mapWithKey 
+-- | A heap version Map.mapWithKey
 hMapWithAddr :: (Addr -> IndegNode -> IndegNode) -> Heap -> Heap
 hMapWithAddr f (Heap freeAddrs mapAddr2IndegNode)
   = Heap freeAddrs $ M.mapWithKey f mapAddr2IndegNode
@@ -171,22 +171,22 @@ getIndeg addr (Heap _ mapAddr2IndegNode)
 
 -- | Address substitution
 substituteAddr :: Addr -> Addr -> Addr -> Addr
-substituteAddr fromAddr toAddr addr 
+substituteAddr fromAddr toAddr addr
   = if addr == fromAddr then toAddr
     else addr
 
--- | Substitute addresses of the nodes to the given address 
+-- | Substitute addresses of the nodes to the given address
 normalizeNode :: Addr -> Addr -> Node -> Node
 normalizeNode fromAddr toAddr (NAtom atomName links)
   = NAtom atomName $ map substitute links
-  where substitute = substituteAddr fromAddr toAddr 
+  where substitute = substituteAddr fromAddr toAddr
 normalizeNode fromAddr toAddr (NInd addr)
   = NInd $ substituteAddr fromAddr toAddr addr
 
 -- | Substitute addresses of the nodes to the given address
 normalizeAddrNode :: (Addr, Indeg) -> Addr -> Addr -> (Indeg, Node) -> (Indeg, Node)
 normalizeAddrNode (fromAddr, fromIndeg) toAddr addr (indeg, node)
-  = let indeg' = 
+  = let indeg' =
           if toAddr == addr then indeg + fromIndeg - 1
           else indeg
     in
@@ -218,7 +218,7 @@ initTestHeap =
         = [ (1, NAtom "a" [3, 1])   -- 1
           , (0, NAtom "b" [3]   )   -- 2
           , (2, NAtom "c" []    )   -- 3
-          , (0, NAtom "d" []    )   -- 4          
+          , (0, NAtom "d" []    )   -- 4
           , (0, NAtom "e" [6, 6])   -- 5
           , (2, NAtom "f" []    )   -- 6
           , (0, NAtom "g" [8]   )   -- 7
