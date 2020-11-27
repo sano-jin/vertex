@@ -1,5 +1,8 @@
 # Directed HyperLMNtal
 
+![Image of DHLMNtalIcon](https://github.com/sano-jin/vertex/DHLMNtal%20logo-horizontal.png)
+
+
 Directed HyperLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
 
 - Focused on concurrency
