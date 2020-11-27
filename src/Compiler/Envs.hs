@@ -1,59 +1,60 @@
 {-# LANGUAGE Safe #-}
 
-module Compiler.Envs (
-  Envs (..),
-  updateLocalMapAddrIndeg,
-  updateLocalEnv,
-  updateFreeTailEnv,
-  updateAddrSeed,
-  nullEnvs,
-  incrAddrSeed,
-  incrLocalIndeg,
-  HasHead,
-  EnvList,
-  EnvSet,
+module Compiler.Envs
+  ( Envs(..)
+  , updateLocalMapAddrIndeg
+  , updateLocalEnv
+  , updateFreeTailEnv
+  , updateAddrSeed
+  , nullEnvs
+  , incrAddrSeed
+  , incrLocalIndeg
+  , HasHead
+  , EnvList
+  , EnvSet
   ) where
 import           Compiler.Process
-import qualified Data.Map.Strict  as M
-import qualified Data.Set         as S
+import qualified Data.Map.Strict               as M
+import qualified Data.Set                      as S
 
 
 type HasHead = Bool
 type EnvList = [(String, (Addr, HasHead))]
 -- ^ A type for the environment of local links
 
-type EnvSet  = S.Set String
+type EnvSet = S.Set String
 -- ^ A type for the environment of free links
 
 
 
 -- | A type for the Envirnment of pointes
-data Envs = Envs { localEnv          :: EnvList
+data Envs = Envs
+  { localEnv          :: EnvList
                    -- ^ A mapping (list of tuple) from the local link names
                    -- to the tuples of the given address
                    -- and the boolean denotes whether its head appeared or not
-                 , localMapAddrIndeg :: M.Map Addr Indeg
+  , localMapAddrIndeg :: M.Map Addr Indeg
                    -- ^ A map from the local link addresses to their indegrees
-                 , freeTailEnv       :: EnvSet
+  , freeTailEnv       :: EnvSet
                    -- ^ A set of free tail link names
-                 , freeHeadEnv       :: EnvSet
+  , freeHeadEnv       :: EnvSet
                    -- ^ A set of free head link names
-                 , addrSeed          :: Int
+  , addrSeed          :: Int
                    -- ^ the number of the local links appeared in the process
-                 } deriving (Show)
+  }
+  deriving Show
 
 -- | Some helper functions for the link environment
 updateLocalEnv :: (EnvList -> EnvList) -> Envs -> Envs
-updateLocalEnv f envs
-  = envs { localEnv = f $ localEnv envs }
+updateLocalEnv f envs = envs { localEnv = f $ localEnv envs }
 
-updateLocalMapAddrIndeg :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
-updateLocalMapAddrIndeg f envs
-  = envs { localMapAddrIndeg = f $ localMapAddrIndeg envs }
+updateLocalMapAddrIndeg
+  :: (M.Map Addr Indeg -> M.Map Addr Indeg) -> Envs -> Envs
+updateLocalMapAddrIndeg f envs =
+  envs { localMapAddrIndeg = f $ localMapAddrIndeg envs }
 
 updateFreeTailEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
-updateFreeTailEnv f envs
-  = envs { freeTailEnv = f $ freeTailEnv envs }
+updateFreeTailEnv f envs = envs { freeTailEnv = f $ freeTailEnv envs }
 
 {--|
 updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
@@ -64,20 +65,18 @@ updateFreeHeadEnv f envs
 
 
 updateAddrSeed :: (Int -> Int) -> Envs -> Envs
-updateAddrSeed f envs
-  = envs { addrSeed = f $ addrSeed envs }
+updateAddrSeed f envs = envs { addrSeed = f $ addrSeed envs }
 
 nullEnvs :: Envs
-nullEnvs = Envs { localEnv = []
+nullEnvs = Envs { localEnv          = []
                 , localMapAddrIndeg = M.empty
-                , freeTailEnv = S.empty
-                , freeHeadEnv = S.empty
-                , addrSeed = 0
+                , freeTailEnv       = S.empty
+                , freeHeadEnv       = S.empty
+                , addrSeed          = 0
                 }
 
 incrAddrSeed :: Envs -> Envs
 incrAddrSeed = updateAddrSeed (+ 1)
 
 incrLocalIndeg :: Addr -> Envs -> Envs
-incrLocalIndeg addr
-  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)
+incrLocalIndeg addr = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)

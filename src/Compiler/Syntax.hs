@@ -12,11 +12,11 @@ commentary with @some markup@.
 -}
 {-# LANGUAGE Safe #-}
 
-module Compiler.Syntax (
-  showBlock,
-  showProc,
-  LinkLit (..),
-  ProcLit (..)
+module Compiler.Syntax
+  ( showBlock
+  , showProc
+  , LinkLit(..)
+  , ProcLit(..)
   ) where
 import           Data.List
 
@@ -40,28 +40,28 @@ showBlock = intercalate ". " . map showProc
 
 -- | Show the procLit
 showProc :: ProcLit -> String
-showProc (AliasLit (Just p) to) =
-  showLink (LinkLit p) ++ " -> " ++ showLink to
+showProc (AliasLit (Just p) to) = showLink (LinkLit p) ++ " -> " ++ showLink to
 showProc (AliasLit Nothing to) = showLink to
 showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
-showProc (CreationLit link procs)
-  = "\\" ++ link ++ "." ++ if length procs == 1 then showProcSet procs
-                              else "(" ++ showProcSet procs ++ ")"
+showProc (CreationLit link procs) = "\\" ++ link ++ "." ++ if length procs == 1
+  then showProcSet procs
+  else "(" ++ showProcSet procs ++ ")"
 
 -- | Show the processes on the left/right hand-side of the rules
 showProcSet :: [ProcLit] -> String
 showProcSet = intercalate ", " . map showProc_
-  where showProc_ r@(RuleLit _ _) = "(" ++ showProc r ++ ")"
-        showProc_ others          = showProc others
+ where
+  showProc_ r@(RuleLit _ _) = "(" ++ showProc r ++ ")"
+  showProc_ others          = showProc others
 
 -- | Show the list of links of the atom
 showLinkList :: [LinkLit] -> String
-showLinkList [] = ""
+showLinkList []   = ""
 showLinkList args = "(" ++ unwordsList args ++ ")"
   where unwordsList = intercalate ", " . map showLink
 
 -- | Show the given link or the embedded atom
 showLink :: LinkLit -> String
-showLink (LinkLit name)      = name
+showLink (LinkLit name     ) = name
 showLink (AtomLit name args) = name ++ showLinkList args
 

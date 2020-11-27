@@ -13,28 +13,35 @@ Here is a longer description of this module, containing some
 commentary with @some markup@.
 -}
 
-module Compiler.Compiler (
-  compile,
-  ThrowsCompileError,
-  CompileError (IsNotSerialAfterNormalization),
+module Compiler.Compiler
+  ( compile
+  , ThrowsCompileError
+  , CompileError(IsNotSerialAfterNormalization)
   ) where
 import           Compiler.Envs
-import qualified Compiler.Parser      as Parser (ParseError, readExpr)
+import qualified Compiler.Parser               as Parser
+                                                ( ParseError
+                                                , readExpr
+                                                )
 import           Compiler.Process
-import           Compiler.Syntax      (LinkLit (..), ProcLit (..), showProc)
+import           Compiler.Syntax                ( LinkLit(..)
+                                                , ProcLit(..)
+                                                , showProc
+                                                )
 import           Control.Monad.Except
-import           Data.Bifunctor       (bimap)
+import           Data.Bifunctor                 ( bimap )
 import           Data.List
-import qualified Data.Map.Strict      as M
-import qualified Data.Set             as S
+import qualified Data.Map.Strict               as M
+import qualified Data.Set                      as S
 import safe      Data.Tuple.Extra
-import           Util.Util            (monadicMapAccumL)
+import           Util.Util                      ( monadicMapAccumL )
 
 type ThrowsCompileError = Either CompileError
 -- ^ a type for handling results and errors
 
 -- type IOThrowsError = ExceptT CompileError IO
-instance Show CompileError where show = showCompileError
+instance Show CompileError where
+  show = showCompileError
 
 -- | type for denoting compile errors
 data CompileError = IsNotSerial String
@@ -46,48 +53,50 @@ data CompileError = IsNotSerial String
                   | ParseError Parser.ParseError
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
 
+
 -- | functions for showing errors
 showCompileError :: CompileError -> String
-showCompileError (IsNotSerial name )
-  = "link '" ++ name ++ "' is not serial"
-showCompileError (IsNotFunctional name)
-  = "link '" ++ name ++ "' is not functional"
-showCompileError (RuleOnLHS rule)
-  = "Rule on LHS in " ++ showProc rule
-showCompileError (NewFreeLinksOnRHS links rule)
-  = "New free link(s) " ++ showSet links
-    ++ " appeard on RHS of " ++ showProc rule
-showCompileError (NotRedirectedLinks links rule)
-  = "Not redirected free tail link(s) " ++ showSet links
-    ++ " appeard on RHS of " ++ showProc rule
-showCompileError (FreeLinksOnTopLevel links)
-  = "Free link(s) " ++ showSet links
-    ++ " appeard on the top level process"
-showCompileError (ParseError parseError)
-  = "Parse error at " ++ show parseError
-showCompileError (IsNotSerialAfterNormalization errors)
-  = intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
-    where showIsNotSerialAfterNormalizationError (addrs, procVal)
-            = "local link(s) '" ++ showSet (S.map show addrs)
-              ++ "' in '" ++ show procVal ++ "' is not serial"
+showCompileError (IsNotSerial name) = "link '" ++ name ++ "' is not serial"
+showCompileError (IsNotFunctional name) =
+  "link '" ++ name ++ "' is not functional"
+showCompileError (RuleOnLHS rule) = "Rule on LHS in " ++ showProc rule
+showCompileError (NewFreeLinksOnRHS links rule) =
+  "New free link(s) " ++ showSet links ++ " appeard on RHS of " ++ showProc rule
+showCompileError (NotRedirectedLinks links rule) =
+  "Not redirected free tail link(s) "
+    ++ showSet links
+    ++ " appeard on RHS of "
+    ++ showProc rule
+showCompileError (FreeLinksOnTopLevel links) =
+  "Free link(s) " ++ showSet links ++ " appeard on the top level process"
+showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
+showCompileError (IsNotSerialAfterNormalization errors) =
+  intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
+ where
+  showIsNotSerialAfterNormalizationError (addrs, procVal) =
+    "local link(s) '"
+      ++ showSet (S.map show addrs)
+      ++ "' in '"
+      ++ show procVal
+      ++ "' is not serial"
 
 -- | A helper function for updating a list of tuples
-updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)]
-updateAssocList f key (h@(k, v):t)
-  = if key == k then (k, f v) : t
-    else h : updateAssocList f key t
+updateAssocList
+  :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)]
+updateAssocList f key (h@(k, v) : t) =
+  if key == k then (k, f v) : t else h : updateAssocList f key t
 updateAssocList _ _ [] = []
 
 
 -- | Check if the links are the local link or not.
 -- If it is a local link, then increse its indegree in the environment
 compilePointingToLit :: Envs -> LinkLit -> (Envs, LinkVal)
-compilePointingToLit envs (LinkLit linkName)
-  = case lookup linkName $ localEnv envs of
-      Nothing        -> (envs, FreeLinkVal linkName)
-      Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
-compilePointingToLit envs (AtomLit atomName links)
-  = second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
+compilePointingToLit envs (LinkLit linkName) =
+  case lookup linkName $ localEnv envs of
+    Nothing        -> (envs, FreeLinkVal linkName)
+    Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
+compilePointingToLit envs (AtomLit atomName links) =
+  second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
 
 -- | Check if the incoming link is the local link or not.
 -- Also, check the "functional condition",
@@ -96,42 +105,40 @@ compilePointingToLit envs (AtomLit atomName links)
 -- Here, initially, we just set it to be 0.
 -- It will be correctly set after checking all the process appears on left/right hand-side of the rules or at the top-level process.
 compileProcLit :: Envs -> ProcLit -> ThrowsCompileError (Envs, Procs)
-compileProcLit envs (AliasLit (Just linkName) pointingTo)
-  = case lookup linkName $ localEnv envs of
-      Nothing ->
-        if S.member linkName $ freeTailEnv envs
-        then throwError $ IsNotFunctional linkName
-        else
-          let (envs', pointingToVal)
-                = compilePointingToLit
-                  (updateFreeTailEnv (S.insert linkName) envs)
-                  pointingTo
-          in
-            return (envs', ([FreeAliasVal linkName pointingToVal], []))
-      Just (_, True) -> throwError $ IsNotFunctional linkName
-      Just (addr, False) ->
-        let
-          envs' = updateLocalEnv (updateAssocList (second $ const True) linkName) envs
-          (envs'', pointingToVal) = compilePointingToLit envs' pointingTo
-        in
-          return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
-compileProcLit envs (AliasLit Nothing pointingTo)
-  = let addr = addrSeed envs
+compileProcLit envs (AliasLit (Just linkName) pointingTo) =
+  case lookup linkName $ localEnv envs of
+    Nothing -> if S.member linkName $ freeTailEnv envs
+      then throwError $ IsNotFunctional linkName
+      else
+        let (envs', pointingToVal) = compilePointingToLit
+              (updateFreeTailEnv (S.insert linkName) envs)
+              pointingTo
+        in  return (envs', ([FreeAliasVal linkName pointingToVal], []))
+    Just (_, True) -> throwError $ IsNotFunctional linkName
+    Just (addr, False) ->
+      let
         envs' =
-          incrAddrSeed
-          $ updateLocalMapAddrIndeg (M.insert addr 0) envs
-        (envs'', pointingToVal) = compilePointingToLit envs' pointingTo in
-      return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
+          updateLocalEnv (updateAssocList (second $ const True) linkName) envs
+        (envs'', pointingToVal) = compilePointingToLit envs' pointingTo
+      in
+        return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
+compileProcLit envs (AliasLit Nothing pointingTo) =
+  let addr = addrSeed envs
+      envs' = incrAddrSeed $ updateLocalMapAddrIndeg (M.insert addr 0) envs
+      (envs'', pointingToVal) = compilePointingToLit envs' pointingTo
+  in  return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
+
 
 -- | A Rule `(P :- Q)` has several conditions.
 -- - There should be no rules on `Q`,
---   - otherwise thrors the "RuleOnLHS" error.
+--   otherwise thrors the "RuleOnLHS" error.
 -- - `fl(P)` must be a superset of `fl(Q)`,
---   - otherwise thrors the "NewFreeLinksOnRHS" error.
+--   otherwise thrors the "NewFreeLinksOnRHS" error.
 -- - For any free tail link `X` in P,
 --   there must be a free tail link `X` that has the same name in `Q`,
---   - otherwise thrors the "NotRedirectedLinks" error.
+--   otherwise thrors the "NotRedirectedLinks" error.
 -- Also, this sets the indeg of all the local links appears in the processes on the left/right hand-sides
+
 compileProcLit envs (RuleLit lhs rhs)
   = do (lhsEnvs, (lhsProcs, lhsRules)) <- compileProcLits nullEnvs lhs
        if not $ null lhsRules
@@ -155,6 +162,7 @@ compileProcLit envs (RuleLit lhs rhs)
                 then throwError $ NotRedirectedLinks notRedirectedLinks $ RuleLit lhs rhs
                 else return (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
 
+
 -- | handles the link creation
 -- firstly add the new local link to the environment,
 -- check the child processes,
@@ -176,21 +184,20 @@ compileProcLit envs (CreationLit linkName procs)
 
 -- | set indeg of the local links
 setIndeg :: Envs -> ProcVal -> ProcVal
-setIndeg envs (LocalAliasVal _ addr pointingTo)
-  = LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
+setIndeg envs (LocalAliasVal _ addr pointingTo) =
+  LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
 setIndeg _ procVals = procVals
 
 setIndegs :: Envs -> [ProcVal] -> [ProcVal]
-setIndegs envs
-  = map (setIndeg envs)
+setIndegs envs = map (setIndeg envs)
 
 zipConcatBoth :: [([a], [b])] -> ([a], [b])
 zipConcatBoth = bimap concat concat . unzip
 
 -- | check the processes
 compileProcLits :: Envs -> [ProcLit] -> ThrowsCompileError (Envs, Procs)
-compileProcLits envs
-  = fmap (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
+compileProcLits envs =
+  fmap (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
 
 -- | check the top-level process
 compile :: String -> ThrowsCompileError Procs
@@ -205,4 +212,3 @@ compile input
              then throwError $ FreeLinksOnTopLevel freeLinks
              else
                return (procVals', rules)
-

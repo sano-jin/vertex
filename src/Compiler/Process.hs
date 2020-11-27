@@ -1,21 +1,21 @@
 {-# LANGUAGE Safe #-}
 
-module Compiler.Process (
-  Addr,
-  Indeg,
-  AtomName,
-  LinkVal (..),
-  ProcVal (..),
-  Procs,
-  Rule (..),
-  showProcs,
-  showProcVals,
-  showRules,
-  showSet,
-  showRulesForDebugging,
+module Compiler.Process
+  ( Addr
+  , Indeg
+  , AtomName
+  , LinkVal(..)
+  , ProcVal(..)
+  , Procs
+  , Rule(..)
+  , showProcs
+  , showProcVals
+  , showRules
+  , showSet
+  , showRulesForDebugging
   ) where
 import           Data.List
-import qualified Data.Set  as S
+import qualified Data.Set                      as S
 
 type Addr = Int
 type Indeg = Int
@@ -35,8 +35,10 @@ data ProcVal = LocalAliasVal Indeg Addr LinkVal
                -- ^ X -> p(X1,...,Xm)
              deriving(Eq)
 
-instance Show LinkVal where show = showLinkVal
-instance Show ProcVal where show = showProcVal
+instance Show LinkVal where
+  show = showLinkVal
+instance Show ProcVal where
+  show = showProcVal
 
 -- | some functions for showing processes
 showSet :: S.Set String -> String
@@ -46,26 +48,24 @@ showProcVals :: [ProcVal] -> String
 showProcVals = intercalate ", " . map show
 
 showProcVal :: ProcVal -> String
-showProcVal (LocalAliasVal indeg addr linkVal)
-  = let incommingLink =
-          if indeg > 0 then "L" ++ show addr ++ " -> " else "" in
-      incommingLink ++ show linkVal
-showProcVal (FreeAliasVal linkName linkVal)
-  = linkName ++ " -> " ++ show linkVal
+showProcVal (LocalAliasVal indeg addr linkVal) =
+  let incommingLink = if indeg > 0 then "L" ++ show addr ++ " -> " else ""
+  in  incommingLink ++ show linkVal
+showProcVal (FreeAliasVal linkName linkVal) =
+  linkName ++ " -> " ++ show linkVal
 
 showLinkVal :: LinkVal -> String
-showLinkVal (FreeLinkVal linkName) = linkName
-showLinkVal (LocalLinkVal addr) = "L" ++ show addr
-showLinkVal (AtomVal atomName links)
-  = if null links then atomName
-    else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
+showLinkVal (FreeLinkVal  linkName ) = linkName
+showLinkVal (LocalLinkVal addr     ) = "L" ++ show addr
+showLinkVal (AtomVal atomName links) = if null links
+  then atomName
+  else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
 
 
 showProcValForDebugging :: ProcVal -> String
-showProcValForDebugging (LocalAliasVal indeg addr linkVal)
-  = if indeg > 0
-    then "L" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show linkVal ++ ")"
-    else show linkVal
+showProcValForDebugging (LocalAliasVal indeg addr linkVal) = if indeg > 0
+  then "L" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show linkVal ++ ")"
+  else show linkVal
 showProcValForDebugging procVal = showProcVal procVal
 
 showProcValsForDebugging :: [ProcVal] -> String
@@ -78,46 +78,44 @@ data Rule = Rule [ProcVal] [ProcVal] [Rule]
 -- - right-hand-side atoms to generate,
 -- - right-hand-side rules to generate.
 
-instance Show Rule where show = showRule
+instance Show Rule where
+  show = showRule
 
 showRule :: Rule -> String
-showRule (Rule lhs rhs rules)
-  = let sep = if null rhs || null rules then "" else ", " in
-  showProcVals lhs ++ " :- "
-  ++ showProcVals rhs ++ sep
-  ++ showSubRules rules
+showRule (Rule lhs rhs rules) =
+  let sep = if null rhs || null rules then "" else ", "
+  in  showProcVals lhs
+        ++ " :- "
+        ++ showProcVals rhs
+        ++ sep
+        ++ showSubRules rules
 
 showRuleForDebugging :: Rule -> String
-showRuleForDebugging (Rule lhs rhs rules)
-  = let sep = if null rhs || null rules then "" else ", " in
-  showProcValsForDebugging lhs ++ " :- "
-  ++ showProcValsForDebugging rhs ++ sep
-  ++ showSubRulesForDebugging rules
+showRuleForDebugging (Rule lhs rhs rules) =
+  let sep = if null rhs || null rules then "" else ", "
+  in  showProcValsForDebugging lhs
+        ++ " :- "
+        ++ showProcValsForDebugging rhs
+        ++ sep
+        ++ showSubRulesForDebugging rules
 
 paren :: String -> String
 paren str = "(" ++ str ++ ")"
 
 showRules :: [Rule] -> String
-showRules
-  = concatMap ((++ ". ") . show)
+showRules = concatMap ((++ ". ") . show)
 
 showSubRules :: [Rule] -> String
-showSubRules
-  = intercalate ", "
-    . map (paren . show)
+showSubRules = intercalate ", " . map (paren . show)
 
 
 showRulesForDebugging :: Int -> [Rule] -> String
-showRulesForDebugging indentLevel
-  = intercalate "\n"
-    . map ((replicate indentLevel ' ' ++)
-            . (++ ".")
-            . showRuleForDebugging)
+showRulesForDebugging indentLevel = intercalate "\n"
+  . map ((replicate indentLevel ' ' ++) . (++ ".") . showRuleForDebugging)
 
 showSubRulesForDebugging :: [Rule] -> String
-showSubRulesForDebugging
-  = intercalate ", "
-    . map (paren . showRuleForDebugging)
+showSubRulesForDebugging =
+  intercalate ", " . map (paren . showRuleForDebugging)
 
 
 
@@ -125,7 +123,7 @@ type Procs = ([ProcVal], [Rule])
 -- ^ Processes are specified with atoms and rules
 
 showProcs :: Procs -> String
-showProcs (procVals, rules)
-  = let dot = if null procVals || null rules then "" else ". " in
-      showProcVals procVals ++ dot ++ showRules rules
+showProcs (procVals, rules) =
+  let dot = if null procVals || null rules then "" else ". "
+  in  showProcVals procVals ++ dot ++ showRules rules
 
