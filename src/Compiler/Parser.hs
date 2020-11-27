@@ -7,6 +7,7 @@ module Compiler.Parser (
 import           Compiler.Syntax                        (LinkLit (..),
                                                          ProcLit (..))
 import           Control.Monad
+import           Control.Applicative (liftA2, (<*))
 import           Data.Functor.Identity
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
@@ -34,7 +35,7 @@ parens      = Token.parens     lexer
 -- comma       = Token.comma      lexer
 
 dot, turnstile, arrow :: Parser String
-dot         = Token.dot        lexer
+dot         = Token.dot    lexer
 turnstile   = Token.lexeme lexer $ string ":-"
 arrow       = Token.lexeme lexer $ string "->"
 
@@ -51,22 +52,16 @@ commaSep1   = Token.commaSep1  lexer
 atomName :: Parser String
 atomName =
   Token.lexeme lexer $
-  do c <- lower
-     cs <- many (alphaNum <|> char '_')
-     return $ c : cs
+  liftA2 (:) lower $ many $ alphaNum <|> char '_'
 
 linkName :: Parser String
 linkName =
   Token.lexeme lexer $
-  do c <- upper
-     cs <- many (alphaNum <|> char '_')
-     return $ c : cs
+  liftA2 (:) upper $ many $ alphaNum <|> char '_'
 
 -- parser
 whileParser :: Parser [ProcLit]
-whileParser = do x <- whiteSpace >> parseBlock
-                 _ <- eof
-                 return x
+whileParser = (whiteSpace >> parseBlock) <* eof
 
 parseBlock :: Parser [ProcLit]
 parseBlock = concat <$> sepEndBy1 parseLine dot
@@ -88,19 +83,17 @@ parseCreates = do creates <- endBy (backslash >> sepBy1 linkName whiteSpace) dot
                     $ concat creates
 
 parseAtomBody :: Parser (String, [LinkLit])
-parseAtomBody = do name <- atomName
-                   args <- parens (commaSep parseLink) <|> return []
-                   return (name, args)
+parseAtomBody = liftA2 (,) atomName $ parens (commaSep parseLink) <|> return []
 
 parseLink :: Parser LinkLit
-parseLink = fmap LinkLit linkName
-            <|> fmap (uncurry AtomLit) parseAtomBody
+parseLink = LinkLit <$> linkName
+            <|> uncurry AtomLit <$> parseAtomBody
 
 parseProc :: Parser [ProcLit]
 parseProc = (do from <- linkName
                 to <- arrow >> parseLink
                 return $ (:[]) $ AliasLit (Just from) to)
-            <|> fmap ((:[]) . AliasLit Nothing . uncurry AtomLit) parseAtomBody
+            <|> (:[]) . AliasLit Nothing . uncurry AtomLit <$> parseAtomBody
             <|> parens parseLine
 
 readExpr :: String -> Either ParseError [ProcLit]

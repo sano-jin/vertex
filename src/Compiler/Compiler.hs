@@ -138,8 +138,8 @@ compileProcLit envs (RuleLit lhs rhs)
          then throwError $ RuleOnLHS $ RuleLit lhs rhs
          else
          do (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
-            let lhsProcs'                = setIndegs lhsEnvs lhsProcs
-                rhsProcs'                = setIndegs rhsEnvs rhsProcs
+            let lhsProcs'             = setIndegs lhsEnvs lhsProcs
+                rhsProcs'             = setIndegs rhsEnvs rhsProcs
                 freeTailLinksOnLHS    = freeTailEnv lhsEnvs
                 freeTailLinksOnRHS    = freeTailEnv rhsEnvs
                 freeHeadLinksOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailLinksOnLHS
