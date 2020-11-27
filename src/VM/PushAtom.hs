@@ -81,7 +81,7 @@ push :: Heap -> [ProcVal] -> Envs -> Heap
 push oldHeap procVals envs
   = let poppedHeap =
           decrFreeLinkIndeg envs
-          $ deleteLocalAtoms envs
+          . deleteLocalAtoms envs
           $ oldHeap
         (newHeap, ascList)
           = pushProcVals envs localEnv poppedHeap procVals

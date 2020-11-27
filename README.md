@@ -1,6 +1,6 @@
 # Directed HyperLMNtal
 
-![Image of DHLMNtalIcon](https://github.com/sano-jin/vertex/blob/master/DHLMNtal-logo-red.png)
+![Image of DHLMNtalIcon](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal-logo-red.png)
 
 
 Directed HyperLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
@@ -34,7 +34,7 @@ That is, the rule will rewrite the process that matches to its left hand-side to
 
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
 
-Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/DHLMNtal.pdf) (its written in Japanese though).
+Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
 
 ## Usage
 
@@ -46,7 +46,7 @@ Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/
 ```bash
 git clone https://github.com/sano-jin/vertex.git
 cd vertex
-stack run "sample.dhl"  # run the program `sample.dhl`
+stack run "example/sample.dhl"  # run the program `sample.dhl`
 ```
 
 If the `sample.dhl` was the following,
@@ -75,7 +75,7 @@ a(X) :- b. b :- c.
 
 Also, put `--nd` for the "non-deterministic" execution.
 ```bash
-stack run -- "sample_nd.dhl" --nd
+stack run -- "example/sample_nd.dhl" --nd
 ```
 
 
@@ -85,7 +85,7 @@ stack run -- "sample_nd.dhl" --nd
 Run this test to obtain more detailed information about the state of the heap, etc.
 
 ```shell
-stack test --test-arguments "sample.dhl"
+stack test --test-arguments "example/sample.dhl"
 ```
 
 

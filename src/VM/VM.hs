@@ -24,11 +24,13 @@ data State = State Heap [Rule]
 
 instance Show State where show = showState
 
+{--|
 -- | adds rules to the state
 addRules2State :: [Rule] -> State -> State 
 addRules2State rules2Add (State heap rules)
   = State heap (rules ++ rules2Add)
-  
+|--}
+
 -- | Shows the state
 -- Pritty print the heap and the rules
 showState :: State -> String
@@ -78,11 +80,11 @@ isStateEq (State heap1 _) (State heap2 _) =
 -- | runs the program and returns the all possible next states.
 -- This is for the non-deterministic execution.
 reduceND :: State -> [(State, Rule)]
-reduceND (State heap rules)
-  = map (\(heap, rhsRules, appliedRule)
-          -> (State (normalizeHeap heap) (rules ++ rhsRules)
+reduceND (State oldHeap rules)
+  = map (\(newHeap, rhsRules, appliedRule)
+          -> (State (normalizeHeap newHeap) (rules ++ rhsRules)
              , appliedRule))
-    . mapMaybe (execRule heap)
+    . mapMaybe (execRule oldHeap)
     $ rules
   
 

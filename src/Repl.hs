@@ -1,11 +1,11 @@
 module Repl where
-import System.Environment
+-- import System.Environment
 import System.IO
 import Compiler.Compiler (
   compile
   )
 import Compiler.Process (
-  showProcs,
+  -- showProcs,
   Rule,
   )
 import Compiler.Normalize (
@@ -124,7 +124,8 @@ runND state2String oldStateID oldPath oldState
           oldPath
           (reduceND oldState)
     in
-      mapM (putStrLn . (\(id, (state, _)) -> show id ++ ": " ++ state2String state)) transitions
+      mapM_ (putStrLn . (\(stateId, (state, _))
+                          -> show stateId ++ ": " ++ state2String state)) transitions
       >> if null transitions
          then return path
          else

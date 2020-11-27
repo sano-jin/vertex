@@ -36,8 +36,8 @@ import Util.Util (
   monadicMapAccumL
   )
 import Compiler.Process
-
 import Compiler.Envs
+import Data.Bifunctor (bimap)
 
 type ThrowsCompileError = Either CompileError
 -- ^ a type for handling results and errors
@@ -82,7 +82,7 @@ showCompileError (IsNotSerialAfterNormalization errors)
 
 -- | A helper function for updating a list of tuples
 updateAssocList :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)] 
-updateAssocList f key ((h@(k, v)):t)
+updateAssocList f key (h@(k, v):t)
   = if key == k then (k, f v) : t
     else h : updateAssocList f key t
 updateAssocList _ _ [] = []
@@ -116,7 +116,7 @@ compileProcLit envs (AliasLit (Just linkName) pointingTo)
                   (updateFreeTailEnv (S.insert linkName) envs)
                   pointingTo
           in
-            return $ (envs', ([FreeAliasVal linkName pointingToVal], []))
+            return (envs', ([FreeAliasVal linkName pointingToVal], []))
       Just (_, True) -> throwError $ IsNotFunctional linkName
       Just (addr, False) ->
         let
@@ -130,7 +130,7 @@ compileProcLit envs (AliasLit Nothing pointingTo)
           incrAddrSeed
           $ updateLocalMapAddrIndeg (M.insert addr 0) envs
         (envs'', pointingToVal) = compilePointingToLit envs' pointingTo in
-      return $ (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
+      return (envs'', ([LocalAliasVal 0 addr pointingToVal], []))
 
 -- | A Rule `(P :- Q)` has several conditions.
 -- - There should be no rules on `Q`,
@@ -162,7 +162,7 @@ compileProcLit envs (RuleLit lhs rhs)
               then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS $ RuleLit lhs rhs
               else if not $ S.null notRedirectedLinks
                 then throwError $ NotRedirectedLinks notRedirectedLinks $ RuleLit lhs rhs
-                else return $ (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
+                else return (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
 
 -- | handles the link creation
 -- firstly add the new local link to the environment,
@@ -190,16 +190,16 @@ setIndeg envs (LocalAliasVal _ addr pointingTo)
 setIndeg _ procVals = procVals
 
 setIndegs :: Envs -> [ProcVal] -> [ProcVal]
-setIndegs envs procVals
-  = map (setIndeg envs) procVals
+setIndegs envs 
+  = map (setIndeg envs) 
 
 zipConcatBoth :: [([a], [b])] -> ([a], [b])
-zipConcatBoth = first concat . second concat . unzip
+zipConcatBoth = bimap concat concat . unzip
 
 -- | check the processes
 compileProcLits :: Envs -> [ProcLit] -> ThrowsCompileError (Envs, Procs)
 compileProcLits envs 
-  = liftM (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
+  = fmap (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
 
 -- | check the top-level process
 compile :: String -> ThrowsCompileError Procs

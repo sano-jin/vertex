@@ -79,5 +79,5 @@ incrAddrSeed :: Envs -> Envs
 incrAddrSeed = updateAddrSeed (+ 1)
 
 incrLocalIndeg :: Addr -> Envs -> Envs
-incrLocalIndeg addr envs
-  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) envs
+incrLocalIndeg addr 
+  = updateLocalMapAddrIndeg (M.adjust (+ 1) addr) 

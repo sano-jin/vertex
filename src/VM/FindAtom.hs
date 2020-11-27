@@ -46,8 +46,8 @@ import VM.Envs (
 -- | Inserts to a map if the key and the value does NOT exist.
 -- Preserve the map if the they are present.
 insertIfNone :: Ord key => key -> value -> M.Map key value -> M.Map key value
-insertIfNone key value mapKeyValue
-  = M.alter (Just . fromMaybe value) key mapKeyValue
+insertIfNone key value 
+  = M.alter (Just . fromMaybe value) key 
 
 -- | Check whether the given linkVal can match the heap or not.
 -- This firstly checks that this is not "non-injectively matching" to the heap.
@@ -66,11 +66,11 @@ checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr
 -- This is a bit loose matching compared with the `checkEmbeddedLinkVal`.
 -- This doesn't check the matching address is a member of the `matchedLocalAddrs`
 -- Since we want to use this also for matching the atom of the head of the incomming link.
-checkLinkVal :: Heap -> (Maybe Indeg) -> Envs -> (LinkVal, Addr) -> Maybe Envs
+checkLinkVal :: Heap -> Maybe Indeg -> Envs -> (LinkVal, Addr) -> Maybe Envs
 checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr)
   = case hLookup hAddr heap of
-      (hIndeg, (NAtom hAtomName hLinks))
-        -> if (maybeIndeg == Nothing
+      (hIndeg, NAtom hAtomName hLinks)
+        -> if (isNothing maybeIndeg
                -- this atom was the head of the free link
                || maybeIndeg == Just hIndeg
                -- or the head of the local link with a certain indegree.
@@ -79,7 +79,7 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr)
               && length links == length hLinks
            then
              let envs' =
-                   if maybeIndeg == Nothing then envs
+                   if isNothing maybeIndeg then envs
                    else addMatchedLocalAddrs hAddr envs
                  -- If the maybeIndeg == Nothing, the incomming link is a free link
                  -- otherwise, it is a local link and it should be added
@@ -151,7 +151,7 @@ findAtom (atomList, heap)
   (hAddr:tAtomList)
   procVal@(LocalAliasVal indeg matchingAddr atomVal@(AtomVal _ _):tProcVals)
   envs
-  = if (S.member hAddr $ incommingLinks envs)
+  = if S.member hAddr (incommingLinks envs)
        -- Has already matched
        || case M.lookup matchingAddr $ localLink2Addr envs of
             Just hAddr' -> hAddr' /= hAddr
@@ -171,7 +171,7 @@ findAtom (atomList, heap)
   (hAddr:tAtomList)
   procVal@(FreeAliasVal linkName atomVal@(AtomVal _ _):tProcVals)
   envs
-  = if (S.member hAddr $ incommingLinks envs) 
+  = if S.member hAddr (incommingLinks envs) 
        -- Has already matched
        || case M.lookup linkName (freeLink2Addr envs) of
             Just hAddr' -> hAddr' /= hAddr  

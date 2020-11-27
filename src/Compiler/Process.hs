@@ -99,29 +99,25 @@ paren str = "(" ++ str ++ ")"
 
 showRules :: [Rule] -> String
 showRules
-  = concat
-    . map (++ ". ")
-    . map show
+  = concatMap ((++ ". ") . show)
 
 showSubRules :: [Rule] -> String
 showSubRules
   = intercalate ", "
-    . map paren
-    . map show
+    . map (paren . show)
 
 
 showRulesForDebugging :: Int -> [Rule] -> String
 showRulesForDebugging indentLevel
   = intercalate "\n"
-    . map (replicate indentLevel ' ' ++)
-    . map (++ ".")
-    . map showRuleForDebugging
+    . map ((replicate indentLevel ' ' ++)
+            . (++ ".")
+            . showRuleForDebugging)
 
 showSubRulesForDebugging :: [Rule] -> String
 showSubRulesForDebugging
   = intercalate ", "
-    . map paren
-    . map showRuleForDebugging 
+    . map (paren . showRuleForDebugging)
 
 
 

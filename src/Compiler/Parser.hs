@@ -66,21 +66,21 @@ linkName =
 
 -- parser
 whileParser :: Parser [ProcLit]
-whileParser = do x <- (whiteSpace >> parseBlock)
+whileParser = do x <- whiteSpace >> parseBlock
                  _ <- eof
                  return x
   
 parseBlock :: Parser [ProcLit]
-parseBlock = liftM concat $ sepEndBy1 parseLine dot
+parseBlock = concat <$> sepEndBy1 parseLine dot
              
 parseLine :: Parser [ProcLit]
 parseLine = do x <- parseList <|> return []
-               ((do y <- (turnstile >> (parseList <|> return []))
-                    return [RuleLit x y]
-                ) <|> (return x))
+               (do y <- turnstile >> (parseList <|> return [])
+                   return [RuleLit x y]
+                ) <|> return x
                
 parseList :: Parser [ProcLit]
-parseList = liftM concat $ commaSep1 parseCreates
+parseList = concat <$> commaSep1 parseCreates
 
 parseCreates :: Parser [ProcLit]
 parseCreates = do creates <- endBy (backslash >> sepBy1 linkName whiteSpace) dot
@@ -91,18 +91,18 @@ parseCreates = do creates <- endBy (backslash >> sepBy1 linkName whiteSpace) dot
 
 parseAtomBody :: Parser (String, [LinkLit])
 parseAtomBody = do name <- atomName
-                   args <- (parens $ commaSep parseLink) <|> return []
+                   args <- parens (commaSep parseLink) <|> return []
                    return (name, args)
 
 parseLink :: Parser LinkLit
-parseLink = (liftM LinkLit linkName)
-               <|> liftM (uncurry AtomLit) parseAtomBody
+parseLink = fmap LinkLit linkName
+            <|> fmap (uncurry AtomLit) parseAtomBody
   
 parseProc :: Parser [ProcLit]
 parseProc = (do from <- linkName
-                to <- (arrow >> parseLink)
+                to <- arrow >> parseLink
                 return $ (:[]) $ AliasLit (Just from) to)
-            <|> (liftM ((:[]) . AliasLit Nothing . uncurry AtomLit) parseAtomBody)
+            <|> fmap ((:[]) . AliasLit Nothing . uncurry AtomLit) parseAtomBody
             <|> parens parseLine
 
 readExpr :: String -> Either ParseError [ProcLit]

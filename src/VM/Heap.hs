@@ -69,8 +69,8 @@ showHeapNode addr (indeg, NAtom atomName links)
   = let incommingLink =
           if indeg > 0 then "L" ++ show addr ++ " -> " else ""
         args =
-          if length links > 0
-          then "(" ++ (intercalate ", " $ map (\link -> "L" ++ show link) links) ++ ")"
+          if not $ null links
+          then "(" ++ intercalate ", " (map (("L" ++) . show) links) ++ ")"
           else ""
     in
       incommingLink ++ atomName ++ args
@@ -83,9 +83,7 @@ showHeapNode addr (indeg, NInd link)
 -- This function is a instance of the `show`
 showHeap :: Heap -> String
 showHeap (Heap _ mapAddr2IndegNode)
-  = concat
-    . map (++ ". ")
-    . map (uncurry showHeapNode)
+  = concatMap ((++ ". ") . uncurry showHeapNode)
     . M.toAscList
     $ mapAddr2IndegNode
 
@@ -94,9 +92,7 @@ showHeap (Heap _ mapAddr2IndegNode)
 -- This is (mainly) used for debugging.
 showHeapForDebugging :: Int -> Heap -> String
 showHeapForDebugging indentLevel (Heap _ mapAddr2IndegNode)
-  = concat
-    . map (++ "\n")
-    . map (replicate indentLevel ' ' ++ )
+  = concatMap ((++ "\n") . (replicate indentLevel ' ' ++ ))
     . ("/* Address -> (Indeg, Node) */" :)
     . map (\(addr, (indeg, node))
             -> "A" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show node ++ ")")
