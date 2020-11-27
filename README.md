@@ -34,6 +34,8 @@ That is, the rule will rewrite the process that matches to its left hand-side to
 
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
 
+Also, take a look at the ![Slide](https://github.com/sano-jin/vertex/blob/master/DHLMNtal.pdf) (its written in Japanese though).
+
 ## Usage
 
 ### Requirement
