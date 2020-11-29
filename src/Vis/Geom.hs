@@ -54,6 +54,11 @@ applyV2 :: Num s =>
             (s -> s -> a) -> V2 s -> a
 applyV2 f (V2 x y) = f x y
 
+
+pos2Tup :: Num s =>
+           V2 s -> (s, s)
+pos2Tup (V2 x y) = (x, y)
+
 -- | Angles
 
 newtype Angle s = A s

@@ -9,6 +9,8 @@ module Vis.DGraph (
   updateDGraph,
   -- updatePosAndVel,
   posOfNode,
+  incommingPosesOfNode,
+  outgoingPosesOfNode,
   ) where
 
 -- import           Data.List
@@ -51,11 +53,11 @@ map2DGraph mapping
 
 
 springConstance, frictionCoefficient, mass, coulombConstance, naturalSpringLength :: Floating s => s
-springConstance = 100.0
-frictionCoefficient = 0.95
+springConstance = 10.0
+frictionCoefficient = 0.8
 mass = 1.0
-coulombConstance = 50.0
-naturalSpringLength = 50.0
+coulombConstance = 5 * 10 ** 6.0
+naturalSpringLength = 20.0
 
 
 -- type State a = (DGraph a, PVMap)
@@ -83,6 +85,17 @@ randamizeDGraph :: (Floating s, Random s, RandomGen g) =>
                 -> M.Map k (DNode node s)
 randamizeDGraph width height g oldGraph
   = snd $ M.mapAccum (randomizePosOfNode width height) g oldGraph
+
+incommingPosesOfNode :: Num s =>
+                        DGraph a s -> DNode a s -> [V2 s]
+incommingPosesOfNode dGraph (Node _ (incommingLinks, _) _)
+  = map (posOfNode . (M.!) dGraph) $ S.toList incommingLinks  
+
+outgoingPosesOfNode :: Num s =>
+                        DGraph a s -> DNode a s -> [V2 s]
+outgoingPosesOfNode dGraph (Node _ (_, outgoingLinks) _)
+  = map (posOfNode . (M.!) dGraph) $ S.toList outgoingLinks  
+
 
 posOfNode :: DNode a s -> V2 s
 posOfNode (Node _ _ (pos, _)) = pos
@@ -115,10 +128,10 @@ updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos
             $ M.foldr
             (\node
               -> let pos2     = posOfNode node
-                     pDiff    = pos2 ^-^ oldPos
-                     d        = norm pDiff
+                     pDiff    = oldPos ^-^ pos2
+                     d        = normSq pDiff
                  in
-                   (^+^) (direct (coulombConstance / (d ** 3)) pDiff)
+                   (^+^) (direct (coulombConstance / (d + 10.0)) pDiff)
             )
             zero
             oldDGraph
