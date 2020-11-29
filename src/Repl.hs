@@ -36,13 +36,13 @@ run state2String stepN oldState = case reduce oldState of
   Nothing -> return ()
 
 readAndRun :: (State -> String) -> String -> IO ()
-readAndRun state2String input = case normalize =<< compile input of
-  Left err -> putStrLn ("Error : " ++ show err)
-  Right (procVals, rules) ->
-    let initialState = State (initializeHeap procVals) rules
-    in  putStrLn ("0: \n" ++ state2String initialState ++ "\n")
-          >> run state2String 1 initialState
-
+readAndRun state2String input
+  = case normalize =<< compile input of
+      Left err -> putStrLn ("Error : " ++ show err)
+      Right (procVals, rules) ->
+        let initialState = State (initializeHeap procVals) rules
+        in  putStrLn ("0: \n" ++ state2String initialState ++ "\n")
+            >> run state2String 1 initialState
 
 readAndRunND :: (State -> String) -> String -> IO ()
 readAndRunND state2String input = case normalize =<< compile input of

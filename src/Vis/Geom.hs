@@ -1,13 +1,13 @@
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | copied from https://github.com/byorgey/comprog-hs
--- Should be replaced with well-known packages
+-- | Copied from https://github.com/byorgey/comprog-hs
+--   Should be replaced with well-known packages
 
 module Vis.Geom where
 
 import           Data.Function (on)
-import           Data.Ord      (compare)
+-- import           Data.Ord      (compare)
 
 -- | 2D points and vectors
 
@@ -48,6 +48,17 @@ instance Ord s => Ord (ByX s) where
 instance Ord s => Ord (ByY s) where
   compare = compare `on` (getY . unByY)
 
+
+-- | Apply the vector to the 2-arity function
+applyV2 :: Num s =>
+            (s -> s -> a) -> V2 s -> a
+applyV2 f (V2 x y) = f x y
+
+
+pos2Tup :: Num s =>
+           V2 s -> (s, s)
+pos2Tup (V2 x y) = (x, y)
+
 -- | Angles
 
 newtype Angle s = A s
@@ -83,7 +94,7 @@ rot (A θ) (V2 x y) = V2 (cos θ * x - sin θ * y) (sin θ * x + cos θ * y)
 --   are perpendicular.
 (<.>), dot :: Num s => V2 s -> V2 s -> s
 dot (V2 x1 y1) (V2 x2 y2) = x1*x2 + y1*y2
-v1 <.> v2 = dot v1 v2
+vec1 <.> vec2 = dot vec1 vec2
 
 -- | 'dotP p1 p2 p3' computes the dot product of the vectors from p1
 -- to p2 and from p1 to p3.
@@ -105,14 +116,13 @@ direct :: Eq s => Floating s => s -> V2 s -> V2 s
 direct scalar vector =
   if vector == zero then zero
   else (scalar / norm vector) *^ vector
-  where denom = norm vector
-
+  
 
 distance :: Floating s => V2 s -> V2 s -> s
-distance v1 v2 = norm $ v1 ^-^ v2
+distance vec1 vec2 = norm $ vec1 ^-^ vec2
 
 distanceSq :: Floating s => V2 s -> V2 s -> s
-distanceSq v1 v2 = normSq $ v1 ^-^ v2
+distanceSq vec1 vec2 = normSq $ vec1 ^-^ vec2
 
 
 
