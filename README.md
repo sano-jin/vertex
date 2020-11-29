@@ -73,9 +73,21 @@ c. c.
 a(X) :- b. b :- c. 
 ```
 
-Also, put `--nd` for the "non-deterministic" execution.
+### Non-deterministic execution
+Experimental.
+
+Put `--nd` for the "non-deterministic" execution.
 ```bash
-stack run -- "example/sample_nd.dhl" --nd
+stack run -- "example/sample_nd.dhl --nd"
+```
+
+### Visualizer
+Experimental.
+
+Currently able to show only the initial state.
+
+```bash
+stack run dhlvis -- example/sample_list.dhl
 ```
 
 
