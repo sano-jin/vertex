@@ -7,6 +7,7 @@ module VM.VM
 --   showTransition,
     isStateEq
   , reduceND
+  , state2DGraph
   ) where
 import           Compiler.Process
 import           Data.Maybe
@@ -15,6 +16,8 @@ import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
+import           Vis.DGraph
+import qualified Data.Map.Strict as M 
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.
@@ -28,6 +31,10 @@ addRules2State :: [Rule] -> State -> State
 addRules2State rules2Add (State heap rules)
   = State heap (rules ++ rules2Add)
 |--}
+
+state2DGraph :: Floating s =>
+                State -> M.Map Int (DNode String s)
+state2DGraph (State heap _) = heap2DGraph heap
 
 -- | Shows the state
 -- Pritty print the heap and the rules

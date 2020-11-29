@@ -1,5 +1,3 @@
-{-# LANGUAGE Safe #-}
-
 {-|
 Module      : Heap
 Description : A heap of the processes
@@ -30,12 +28,21 @@ module VM.Heap
   , showHeapForDebugging
   , isHeapNull
   , heap2ProcVals
+  , heap2DGraph
   ) where
 import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
 import           Data.Tuple.Extra
+import           Vis.DGraph (DGraph, DNode, map2DGraph)
+
+heap2DGraph :: Floating s => Heap -> M.Map Int (DNode String s)
+heap2DGraph (Heap _ mapAddrIndegNode) 
+  = map2DGraph $ M.map (translateNode . snd) mapAddrIndegNode
+  where translateNode (NAtom atomName links) = (atomName, links )
+        translateNode (NInd  link          ) = ("->"    , [link])
+
 
 data Node = NAtom AtomName [Addr]
             -- ^ NAtom SymbolAtomName [Link]
