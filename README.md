@@ -90,6 +90,8 @@ Currently able to show only the initial state.
 stack run dhlvis -- example/sample_list.dhl
 ```
 
+![Image of Visualizer](https://github.com/sano-jin/vertex/blob/master/doc/dhlvis_image.png)
+
 
 ## Development
 
