@@ -12,7 +12,7 @@ commentary with @some markup@.
 -}
 
 module VM.Heap
-  ( Node(..)
+  ( Node (..)
   , Heap
   , AtomList
   , normalizeHeap
@@ -29,6 +29,7 @@ module VM.Heap
   , isHeapNull
   , heap2ProcVals
   , heap2DGraph
+  , addrs
   ) where
 import           Compiler.Process
 import           Data.List
@@ -60,6 +61,9 @@ instance Show Heap where
   show = showHeap
 
 
+addrs :: Heap -> S.Set Addr
+addrs (Heap _ mapAddr2IndegNode)
+  = M.keysSet mapAddr2IndegNode
 
 heapNode2ProcVal :: Addr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal addr (indeg, NAtom atomName links) =
