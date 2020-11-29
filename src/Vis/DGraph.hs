@@ -53,7 +53,7 @@ map2DGraph mapping
 
 
 springConstance, frictionCoefficient, mass, coulombConstance, naturalSpringLength :: Floating s => s
-springConstance = 10.0
+springConstance = 20.0
 frictionCoefficient = 0.8
 mass = 1.0
 coulombConstance = 5 * 10 ** 6.0
@@ -74,8 +74,8 @@ phyEnergy velocity
 randomizePosOfNode :: (Floating s, Random s, RandomGen g) =>
                       s -> s -> g -> DNode node s -> (g, DNode node s)
 randomizePosOfNode width height g (Node a edges (_, vel))
-  = let (x, g') = randomR (0, width) g
-        (y, g'') = randomR (0, height) g'
+  = let (x, g') = randomR (- width * 0.5, width * 0.5) g
+        (y, g'') = randomR (- height * 0.5, height * 0.5) g'
        in (g'', Node a edges $ (V2 x y, vel))
 
 -- | Randamize the position of the nodes of the given graph

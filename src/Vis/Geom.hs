@@ -125,7 +125,12 @@ distanceSq :: Floating s => V2 s -> V2 s -> s
 distanceSq vec1 vec2 = normSq $ vec1 ^-^ vec2
 
 
-
+angleH :: (Floating s, Ord s) => P2 s -> Angle s
+angleH (V2 x y) 
+  | y == 0 = if x > 0 then 0 else pi
+  | y > 0 = A $ atan (x/y)
+  | y < 0 && x >= 0 = A $ atan (x/y) + pi
+  | y < 0 && x < 0 = A $ atan (x/y) - pi
 
 
 -- | 'angleP p1 p2 p3' computes the (unsigned) angle of p1-p2-p3
