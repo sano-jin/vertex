@@ -34,6 +34,7 @@ module VM.Heap
 import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
+import qualified Data.Set                      as S
 import           Data.Tuple.Extra
 
 data Node = NAtom AtomName [Addr]
@@ -50,6 +51,8 @@ data Heap = Heap [Addr] (M.Map Addr IndegNode)
 
 instance Show Heap where
   show = showHeap
+
+
 
 heapNode2ProcVal :: Addr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal addr (indeg, NAtom atomName links) =

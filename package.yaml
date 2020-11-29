@@ -11,7 +11,7 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
+# synopsis:            A Proof Of Concept of DHLMNtal
 # category:            Web
 
 # To avoid duplicated efforts in documentation and dealing with the
@@ -25,21 +25,36 @@ dependencies:
 - mtl
 - containers
 - extra
+- linear
+- random
 
 library:
   source-dirs: src
 
 executables:
-  vertex-exe:
-    main:                Main.hs
-    source-dirs:         app
+  dhli:
+    main:                app/Main.hs
+    # source-dirs:         app
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Wall
     dependencies:
     - vertex
-
+  dhlvis:
+    main:                app/Vis.hs
+    # source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -Wall
+    dependencies:
+    - vertex
+    - gloss
+    
+    
 tests:
   vertex-test:
     main:                Spec.hs
