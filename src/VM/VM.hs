@@ -80,8 +80,11 @@ reduce (State heap rules) = do
 -- This is surely NOT efficient at all.
 isStateEq :: State -> State -> Bool
 isStateEq (State heap1 _) (State heap2 _) =
-  isJust $ findAtoms (heap2ProcVals heap1) heap2
-
+  case findAtoms (heap2ProcVals heap1) heap2 of
+    Just envs ->
+      let matchedLocals = matchedLocalAddrs envs
+      in  addrs heap2 == matchedLocals 
+    _ -> False
 
 -- | runs the program and returns the all possible next states.
 -- This is for the non-deterministic execution.
