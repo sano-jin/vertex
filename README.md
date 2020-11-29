@@ -46,7 +46,7 @@ Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/
 ```bash
 git clone https://github.com/sano-jin/vertex.git
 cd vertex
-stack run "example/sample.dhl"  # run the program `sample.dhl`
+stack run example/sample.dhl  # run the program `sample.dhl`
 ```
 
 If the `sample.dhl` was the following,
@@ -78,7 +78,7 @@ Experimental.
 
 Put `--nd` for the "non-deterministic" execution.
 ```bash
-stack run -- "example/sample_nd.dhl --nd"
+stack run -- example/sample_nd.dhl --nd
 ```
 
 ### Visualizer
