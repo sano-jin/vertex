@@ -84,14 +84,15 @@ stack run -- example/sample_nd.dhl --nd
 ### Visualizer
 Experimental.
 
-Currently able to show only the initial state.
 
 ```bash
 stack run dhlvis -- example/sample_list.dhl
 ```
 
+
 ![Image of the Visualizer](https://github.com/sano-jin/vertex/blob/master/doc/dhlvis_image.png)
 
+Press ESC to stop.
 
 ## Development
 

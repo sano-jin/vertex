@@ -54,7 +54,7 @@ map2DGraph mapping
 
 springConstance, frictionCoefficient, mass, coulombConstance, naturalSpringLength :: Floating s => s
 springConstance = 20.0
-frictionCoefficient = 0.8
+frictionCoefficient = 0.9
 mass = 1.0
 coulombConstance = 5 * 10 ** 6.0
 naturalSpringLength = 20.0
@@ -81,10 +81,10 @@ randomizePosOfNode width height g (Node a edges (_, vel))
 -- | Randamize the position of the nodes of the given graph
 randamizeDGraph :: (Floating s, Random s, RandomGen g) =>
                    s -> s -> g -> M.Map k (DNode node s)
-                -- -> (g, M.Map k (DNode node s))
-                -> M.Map k (DNode node s)
+                -> (g, M.Map k (DNode node s))
+                -- -> M.Map k (DNode node s)
 randamizeDGraph width height g oldGraph
-  = snd $ M.mapAccum (randomizePosOfNode width height) g oldGraph
+  = M.mapAccum (randomizePosOfNode width height) g oldGraph
 
 incommingPosesOfNode :: Num s =>
                         DGraph a s -> DNode a s -> [V2 s]
