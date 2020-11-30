@@ -86,13 +86,14 @@ Experimental.
 
 
 ```bash
-stack run dhlvis -- example/sample_list.dhl
+stack run dhlvis -- example/sample_multithread-list-traversing.dhl
 ```
 
 
 ![Image of the Visualizer](https://github.com/sano-jin/vertex/blob/master/doc/dhlvis_image.png)
 
-Press ESC to stop.
+- Press ESC to stop.
+- Press SPACE to obtain the next state.
 
 ## Development
 
