@@ -37,7 +37,7 @@ dGraph2Picture dGraph =
            ]
 
 triangle :: Picture
-triangle  = polygon [(-10, 0), (0, 15), (10, 0)]
+triangle  = polygon [(-8, 0), (0, 15), (8, 0)]
 
 arrow :: V2 Float -> V2 Float -> Picture
 arrow start end
