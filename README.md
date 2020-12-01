@@ -78,7 +78,7 @@ Experimental.
 
 Put `--nd` for the "non-deterministic" execution.
 ```bash
-stack run -- example/nd.dhl --nd
+stack run -- example/nd1.dhl --nd
 ```
 
 ### Visualizer
