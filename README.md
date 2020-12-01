@@ -74,7 +74,6 @@ a(X) :- b. b :- c.
 ```
 
 ### Non-deterministic execution
-Experimental.
 
 Put `--nd` for the "non-deterministic" execution.
 ```bash
@@ -82,13 +81,12 @@ stack run -- example/nd1.dhl --nd
 ```
 
 ### Visualizer
-Experimental.
 
+Run `dhlvis` to obtain the graph representing the atoms and links.
 
 ```bash
 stack run dhlvis -- example/multithread-list-traversal.dhl
 ```
-
 
 ![Image of the Visualizer](https://github.com/sano-jin/vertex/blob/master/doc/dhlvis_image.png)
 
