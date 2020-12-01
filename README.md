@@ -33,9 +33,9 @@ Basicaly, the reduction (calculation step) proceeds as `(P, (P :- Q)) --> (Q, (P
 That is, the rule will rewrite the process that matches to its left hand-side to its right hand-side.
 
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
-[This pdf](https://github.com/sano-jin/vertex/blob/master/doc/Directed_HyperFlatLMNtal.pdf) too describes the semantics.
+[This pdf](https://github.com/sano-jin/vertex/blob/master/doc/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
 
-Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
+Also, feel free to take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
 
 ## Usage
 
