@@ -1,0 +1,8 @@
+\X Y Z W U V.(
+   X -> a(Y, Z),
+   Y -> a(Z),
+   Z -> a(W, U),
+   W -> a(U),
+   U -> a(V, X),
+   V -> a(X)
+)

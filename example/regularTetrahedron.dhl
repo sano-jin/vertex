@@ -1,0 +1,6 @@
+\X Y Z W.(
+   X -> a(Y, Z, W),
+   Y -> a(Z, W, X),
+   Z -> a(W, X, Y),
+   W -> a(X, Y, Z)
+)
