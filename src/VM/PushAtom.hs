@@ -15,11 +15,16 @@ import           VM.Heap                        ( Heap
                                                 , setIndeg
                                                 )
 
+import           Data.Maybe                     (catMaybes)
+import           Data.Tuple.Extra               (second)
+
 
 type LocalEnv = M.Map Addr Addr
                  -- ^ A map from the addresses in the procVal and linkVal
                  -- to the addresses in the heap.
 
+
+-- | Delete the the atoms which are the head of the local links on the LHS of the rule.
 deleteLocalAtoms :: Envs -> Heap -> Heap
 deleteLocalAtoms envs heap =
   let localAddrs = matchedLocalAddrs envs
@@ -31,6 +36,8 @@ decrFreeLinkIndeg :: Envs -> Heap -> Heap
 decrFreeLinkIndeg envs heap =
   M.foldrWithKey setIndeg heap $ freeAddr2Indeg envs
 
+-- | Pushes the atom of the argument of the atom to the heap.
+--   Resolves if it is the link.
 pushLinkVal :: Envs -> LocalEnv -> Heap -> LinkVal -> (Heap, Addr)
 pushLinkVal envs _ heap (FreeLinkVal linkName) =
   let hAddr = freeLink2Addr envs M.! linkName in (incrIndeg hAddr heap, hAddr)
@@ -40,6 +47,8 @@ pushLinkVal envs localEnv oldHeap (AtomVal atomName links) =
   let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
   in  hAlloc newHeap (1, NAtom atomName hLinks)
 
+
+-- | Pushes the atom.
 pushProcVal
   :: Envs -> LocalEnv -> Heap -> ProcVal -> (Heap, Maybe (Addr, Addr))
 pushProcVal envs localEnv oldHeap (LocalAliasVal indeg addr headingAtom) =
@@ -48,7 +57,7 @@ pushProcVal envs localEnv oldHeap (LocalAliasVal indeg addr headingAtom) =
 pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links))
   = let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
         hAddr             = freeLink2Addr envs M.! linkName
-        indeg = -- freeAddr2Indeg envs M.! hAddr +
+        indeg =
           getIndeg hAddr newHeap
     in  (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
@@ -60,14 +69,10 @@ pushProcVal _ _ _ _ = error "not normalized"
 
 pushProcVals :: Envs -> LocalEnv -> Heap -> [ProcVal] -> (Heap, [(Addr, Addr)])
 pushProcVals envs localEnv oldHeap procVals =
-  let (newHeap, hLinks) =
-        mapAccumL (pushProcVal envs localEnv) oldHeap procVals
-  in  (newHeap, filterMaybe hLinks)
- where
-  filterMaybe (Just h  : t) = h : filterMaybe t
-  filterMaybe (Nothing : t) = filterMaybe t
-  filterMaybe []            = []
+  second catMaybes
+  $ mapAccumL (pushProcVal envs localEnv) oldHeap procVals
 
+-- | Pushes the RHS on the heap
 push :: Heap -> [ProcVal] -> Envs -> Heap
 push oldHeap procVals envs =
   let poppedHeap = decrFreeLinkIndeg envs . deleteLocalAtoms envs $ oldHeap

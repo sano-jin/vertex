@@ -10,10 +10,10 @@ Portability : POSIX
 Here is a longer description of this module, containing some
 commentary with @some markup@.
 -}
-module VM.FindAtom (
-  findAtoms
+module VM.FindAtom
+  ( findAtoms
   ) where
-import           Control.Monad.Except           (foldM)
+import           Control.Monad.Except           ( foldM )
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
@@ -91,9 +91,9 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
 checkLinkVal _ _ envs (LocalLinkVal matchingAddr, hAddr) =
   case M.lookup matchingAddr $ localLink2Addr envs of
     Nothing     -> Just $ addLocalLink2Addr matchingAddr hAddr envs
-               -- Haven't matched yet
+      -- Haven't matched yet
     Just hAddr' -> if hAddr' == hAddr then Just envs else Nothing
-                -- non-functional matching of local links
+      -- non-functional matching of local links
 checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
   if S.member hAddr $ matchedLocalAddrs envs
     then Nothing
