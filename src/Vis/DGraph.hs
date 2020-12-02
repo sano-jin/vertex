@@ -51,7 +51,7 @@ map2DGraph mapping = M.mapWithKey
 
 springConstance, frictionCoefficient, mass, coulombConstance, naturalSpringLength
   :: Floating s => s
-springConstance = 20.0
+springConstance = 40.0
 frictionCoefficient = 0.9
 mass = 1.0
 coulombConstance = 5 * 10 ** 6.0
@@ -125,7 +125,7 @@ updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos
           let pos2  = posOfNode node
               pDiff = oldPos ^-^ pos2
               d     = normSq pDiff
-          in  (^+^) (direct (coulombConstance / (d + 10.0)) pDiff)
+          in  (^+^) (direct (coulombConstance / (d + 10000.0)) pDiff)
         )
         zero
         oldDGraph

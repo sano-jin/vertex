@@ -1,0 +1,5 @@
+\X.(
+    th(X), 
+    X -> cons(a, cons(b, cons(c, cons(d, cons(e, cons(f, cons(g, X)))))))
+).
+th(X), X -> cons(A, Y) :- th(Y), X -> cons(A, Y).
