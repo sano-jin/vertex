@@ -8,8 +8,6 @@ import           Compiler.Process
 import           Control.Monad.Except
 import           Data.List
 import qualified Data.Set                      as S
-import           Util.Util                      ( mapEitherList )
-
 
 -- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
@@ -150,11 +148,11 @@ normalizeRule :: Rule -> ThrowsCompileError Rule
 normalizeRule (Rule lhs rhs rhsRules) = do
   lhs'      <- normalizeProcVals lhs
   rhs'      <- normalizeProcVals rhs
-  rhsRules' <- mapEitherList normalizeRule rhsRules
+  rhsRules' <- mapM normalizeRule rhsRules
   return $ Rule lhs' rhs' rhsRules'
 
 normalize :: Procs -> ThrowsCompileError Procs
 normalize (procVals, rules) = do
   procVals' <- normalizeProcVals procVals
-  rules'    <- mapEitherList normalizeRule rules
+  rules'    <- mapM normalizeRule rules
   return (procVals', rules')

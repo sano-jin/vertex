@@ -10,15 +10,15 @@ Portability : POSIX
 Here is a longer description of this module, containing some
 commentary with @some markup@.
 -}
-module VM.FindAtom
-  ( findAtoms
+module VM.FindAtom (
+  findAtoms
   ) where
+import           Control.Monad.Except           (foldM)
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
 import qualified Data.Set                      as S
 import           GHC.Base                       ( (<|>) )
-import           Util.Util                      ( monadicFoldl )
 import           VM.Envs                        ( Envs(..)
                                                 , addFreeLink2Addr
                                                 , addLocalLink2Addr
@@ -84,7 +84,7 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
             -- to the matchedLocalAddrs of envs
           zippedLinks = zip links hLinks
         in
-          monadicFoldl (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
+          foldM (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
       else
         Nothing
     _ -> error "indirection traversing is not implemented yet"
