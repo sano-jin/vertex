@@ -94,6 +94,15 @@ stack run dhlvis -- example/multithread-list-traversal.dhl
 - Press ESC to stop.
 - Press SPACE to obtain the next state.
 
+### State Viewer
+Experimental.
+
+Run `StateViewer` to obtain the state transition space.
+
+```bash
+stack run StateViewer -- example/nd1.dhl
+```
+
 ## Development
 
 ### Test
