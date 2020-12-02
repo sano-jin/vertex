@@ -15,8 +15,8 @@ import           VM.Heap                        ( Heap
                                                 , setIndeg
                                                 )
 
-import           Data.Maybe                     (catMaybes)
-import           Data.Tuple.Extra               (second)
+import           Data.Maybe                     ( catMaybes )
+import           Data.Tuple.Extra               ( second )
 
 
 type LocalEnv = M.Map Addr Addr
@@ -57,8 +57,7 @@ pushProcVal envs localEnv oldHeap (LocalAliasVal indeg addr headingAtom) =
 pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links))
   = let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
         hAddr             = freeLink2Addr envs M.! linkName
-        indeg =
-          getIndeg hAddr newHeap
+        indeg             = getIndeg hAddr newHeap
     in  (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
   let fromHAddr = freeLink2Addr envs M.! fromLinkName
@@ -69,8 +68,7 @@ pushProcVal _ _ _ _ = error "not normalized"
 
 pushProcVals :: Envs -> LocalEnv -> Heap -> [ProcVal] -> (Heap, [(Addr, Addr)])
 pushProcVals envs localEnv oldHeap procVals =
-  second catMaybes
-  $ mapAccumL (pushProcVal envs localEnv) oldHeap procVals
+  second catMaybes $ mapAccumL (pushProcVal envs localEnv) oldHeap procVals
 
 -- | Pushes the RHS on the heap
 push :: Heap -> [ProcVal] -> Envs -> Heap

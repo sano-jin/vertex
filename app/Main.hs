@@ -2,7 +2,7 @@ module Main where
 import           System.Environment
 
 import           Repl
--- import           VM.VM
+import           ND
 
 main :: IO ()
 main = do
