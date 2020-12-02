@@ -3,11 +3,10 @@ module VM.VM
   , reduce
   , initializeHeap
   , showStateForDebugging
-  ,
---   showTransition,
-    isStateEq
+  , isStateEq
   , reduceND
   , state2DGraph
+--  , showTransition
   ) where
 import           Compiler.Process
 import           Data.Maybe
@@ -17,7 +16,7 @@ import           VM.FindAtom                    ( findAtoms )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
 import           Vis.DGraph
-import qualified Data.Map.Strict as M 
+import qualified Data.Map.Strict               as M
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.
@@ -25,24 +24,16 @@ data State = State Heap [Rule]
 instance Show State where
   show = showState
 
-{--|
--- | adds rules to the state
-addRules2State :: [Rule] -> State -> State
-addRules2State rules2Add (State heap rules)
-  = State heap (rules ++ rules2Add)
-|--}
-
-state2DGraph :: Floating s =>
-                State -> M.Map Int (DNode String s)
+state2DGraph :: Floating s => State -> M.Map Int (DNode String s)
 state2DGraph (State heap _) = heap2DGraph heap
 
--- | Shows the state
--- Pritty print the heap and the rules
+-- | Shows the state.
+--   Pritty print the heap and the rules.
 showState :: State -> String
 showState (State heap rules) = show heap ++ showRules rules
 
--- | Shows the state
--- Print all the addresses and the nodes in the heap.
+-- | Shows the state.
+--   Print all the addresses and the nodes in the heap.
 showStateForDebugging :: State -> String
 showStateForDebugging (State heap rules) =
   "The heap status:\n"
@@ -53,7 +44,7 @@ showStateForDebugging (State heap rules) =
     ++ "\nRules:\n"
     ++ showRulesForDebugging 4 rules
 
--- | execute rule and returns the new heap, the newly created rules and the applied rule
+-- | Execute rule and returns the new heap, the newly created rules and the applied rule.
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
 execRule heap rule@(Rule lhs rhs rhsRules) = do
   envs <- findAtoms lhs heap
@@ -65,7 +56,7 @@ applyTillFail f (h : t) = f h <|> applyTillFail f t
 applyTillFail _ []      = Nothing
 
 
--- | runs the program and returns the next state
+-- | Runs the program and returns the next state.
 reduce :: State -> Maybe (State, Rule)
 reduce (State heap rules) = do
   (newHeap, newlyCreatedRules, appliedRule) <- applyTillFail (execRule heap)
@@ -74,20 +65,16 @@ reduce (State heap rules) = do
     (State (normalizeHeap newHeap) (rules ++ newlyCreatedRules), appliedRule)
 
 
-
 -- | For the non-deterministic execution.
--- Currently, this does not check the equivalence of the rules.
--- This is surely NOT efficient at all.
+--   Currently, this does not check the equivalence of the rules.
+--   This is surely NOT efficient at all.
 isStateEq :: State -> State -> Bool
-isStateEq (State heap1 _) (State heap2 _) =
-  case findAtoms (heap2ProcVals heap1) heap2 of
-    Just envs ->
-      let matchedLocals = matchedLocalAddrs envs
-      in  addrs heap2 == matchedLocals 
-    _ -> False
+isStateEq (State heap1 _) (State heap2 _) = if hSize heap1 == hSize heap2
+  then isJust $ findAtoms (heap2ProcVals heap1) heap2
+  else False
 
--- | runs the program and returns the all possible next states.
--- This is for the non-deterministic execution.
+-- | Runs the program and returns the all possible next states.
+--   This is for the non-deterministic execution.
 reduceND :: State -> [(State, Rule)]
 reduceND (State oldHeap rules) =
   map
@@ -101,6 +88,7 @@ reduceND (State oldHeap rules) =
 initializeHeap :: [ProcVal] -> Heap
 initializeHeap procVals = push initialHeap procVals nullEnvs
 
+
 {--|
 showTransition :: Maybe (State, Rule) -> String
 showTransition (Just (state, rule))
@@ -108,3 +96,11 @@ showTransition (Just (state, rule))
 showTransition Nothing
  = "halted"
 |--}
+
+{--|
+-- | adds rules to the state
+addRules2State :: [Rule] -> State -> State
+addRules2State rules2Add (State heap rules)
+  = State heap (rules ++ rules2Add)
+|--}
+

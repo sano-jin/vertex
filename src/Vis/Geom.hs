@@ -6,16 +6,20 @@
 
 module Vis.Geom where
 
-import           Data.Function (on)
+import           Data.Function                  ( on )
 -- import           Data.Ord      (compare)
 
 -- | 2D points and vectors
 
-data V2 s = V2 { getX :: !s, getY :: !s } deriving (Eq, Ord, Show, Functor)
-type V2D  = V2 Double
+data V2 s = V2
+  { getX :: !s
+  , getY :: !s
+  }
+  deriving (Eq, Ord, Show, Functor)
+type V2D = V2 Double
 
 type P2 s = V2 s
-type P2D  = P2 Double
+type P2D = P2 Double
 
 instance Foldable V2 where
   foldMap f (V2 x y) = f x <> f y
@@ -25,12 +29,12 @@ zero = V2 0 0
 
 -- | Adding and subtracting vectors.
 (^+^), (^-^) :: Num s => V2 s -> V2 s -> V2 s
-V2 x1 y1 ^+^ V2 x2 y2 = V2 (x1+x2) (y1+y2)
-V2 x1 y1 ^-^ V2 x2 y2 = V2 (x1-x2) (y1-y2)
+V2 x1 y1 ^+^ V2 x2 y2 = V2 (x1 + x2) (y1 + y2)
+V2 x1 y1 ^-^ V2 x2 y2 = V2 (x1 - x2) (y1 - y2)
 
 -- | Scalar multiple of a vector.
 (*^) :: Num s => s -> V2 s -> V2 s
-(*^) k = fmap (k*)
+(*^) k = fmap (k *)
 
 -- | Utilities
 
@@ -50,13 +54,11 @@ instance Ord s => Ord (ByY s) where
 
 
 -- | Apply the vector to the 2-arity function
-applyV2 :: Num s =>
-            (s -> s -> a) -> V2 s -> a
+applyV2 :: Num s => (s -> s -> a) -> V2 s -> a
 applyV2 f (V2 x y) = f x y
 
 
-pos2Tup :: Num s =>
-           V2 s -> (s, s)
+pos2Tup :: Num s => V2 s -> (s, s)
 pos2Tup (V2 x y) = (x, y)
 
 -- | Angles
@@ -93,7 +95,7 @@ rot (A θ) (V2 x y) = V2 (cos θ * x - sin θ * y) (sin θ * x + cos θ * y)
 --   (unsigned) angle between u and v).  So u·v is zero iff the vectors
 --   are perpendicular.
 (<.>), dot :: Num s => V2 s -> V2 s -> s
-dot (V2 x1 y1) (V2 x2 y2) = x1*x2 + y1*y2
+dot (V2 x1 y1) (V2 x2 y2) = x1 * x2 + y1 * y2
 vec1 <.> vec2 = dot vec1 vec2
 
 -- | 'dotP p1 p2 p3' computes the dot product of the vectors from p1
@@ -114,9 +116,8 @@ norm = sqrt . normSq
 --   `direct scalar vector` is as same as `(scalar / norm vector) *^ vector`
 direct :: Eq s => Floating s => s -> V2 s -> V2 s
 direct scalar vector =
-  if vector == zero then zero
-  else (scalar / norm vector) *^ vector
-  
+  if vector == zero then zero else (scalar / norm vector) *^ vector
+
 
 distance :: Floating s => V2 s -> V2 s -> s
 distance vec1 vec2 = norm $ vec1 ^-^ vec2
@@ -126,11 +127,10 @@ distanceSq vec1 vec2 = normSq $ vec1 ^-^ vec2
 
 
 angleH :: (Floating s, Ord s) => P2 s -> Angle s
-angleH (V2 x y) 
-  | y == 0 = if x > 0 then 0 else pi
-  | y > 0 = A $ atan (x/y)
-  | y < 0 && x >= 0 = A $ atan (x/y) + pi
-  | y < 0 && x < 0 = A $ atan (x/y) - pi
+angleH (V2 x y) | y == 0          = if x > 0 then 0 else pi
+                | y > 0           = A $ atan (x / y)
+                | y < 0 && x >= 0 = A $ atan (x / y) + pi
+                | y < 0 && x < 0  = A $ atan (x / y) - pi
 
 
 -- | 'angleP p1 p2 p3' computes the (unsigned) angle of p1-p2-p3
@@ -138,9 +138,9 @@ angleH (V2 x y)
 --   will always be in the range $[0, \pi]$.
 angleP :: Floating s => P2 s -> P2 s -> P2 s -> Angle s
 angleP x y z = A $ acos (dot a b / (norm a * norm b))
-  where
-    a = (x ^-^ y)
-    b = (z ^-^ y)
+ where
+  a = (x ^-^ y)
+  b = (z ^-^ y)
 
 -- | 'signedAngleP p1 p2 p3' computes the /signed/ angle p1-p2-p3
 --   (/i.e./ the angle at p2 made by rays to p1 and p3), in the range
@@ -162,7 +162,7 @@ signedAngleP x y z = case turnP x y z of
 --
 --   Note this works even for integral scalar types.
 cross :: Num s => V2 s -> V2 s -> s
-cross (V2 ux uy) (V2 vx vy) = ux*vy - vx*uy
+cross (V2 ux uy) (V2 vx vy) = ux * vy - vx * uy
 
 -- | A version of cross product specialized to three points describing
 --   the endpoints of the vectors.  The first argument is the shared
@@ -188,7 +188,8 @@ triArea p1 p2 p3 = abs (signedTriArea p1 p2 p3)
 --   "shoelace formula". Positive iff the points are given in
 --   counterclockwise order.
 signedPolyArea :: Fractional s => [P2 s] -> s
-signedPolyArea pts = sum $ zipWith (signedTriArea zero) pts (tail pts ++ [head pts])
+signedPolyArea pts =
+  sum $ zipWith (signedTriArea zero) pts (tail pts ++ [head pts])
 
 -- | The (nonnegative) area of the polygon with the given vertices.
 polyArea :: Fractional s => [P2 s] -> s
@@ -206,11 +207,9 @@ data Turn = CCW | Par | CW
 --   through p1 and p2 dividing the plane in two, is p3 on the right
 --   side, left side, or on the line?
 turnP :: (Num s, Ord s) => P2 s -> P2 s -> P2 s -> Turn
-turnP x y z
-  | s > 0 = CCW
-  | s == 0 = Par
-  | otherwise = CW
-  where
-    s = signum (crossP x y z)
+turnP x y z | s > 0     = CCW
+            | s == 0    = Par
+            | otherwise = CW
+  where s = signum (crossP x y z)
 
 
