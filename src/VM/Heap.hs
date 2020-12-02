@@ -12,7 +12,7 @@ commentary with @some markup@.
 -}
 
 module VM.Heap
-  ( Node (..)
+  ( Node(..)
   , Heap
   , AtomList
   , normalizeHeap
@@ -26,23 +26,26 @@ module VM.Heap
   , setIndeg
   , incrIndeg
   , showHeapForDebugging
-  , isHeapNull
   , heap2ProcVals
   , heap2DGraph
-  , addrs
+  , hSize
   ) where
 import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
 import           Data.Tuple.Extra
-import           Vis.DGraph (DGraph, DNode, map2DGraph)
+import           Vis.DGraph                     ( DGraph
+                                                , DNode
+                                                , map2DGraph
+                                                )
 
 heap2DGraph :: Floating s => Heap -> M.Map Int (DNode String s)
-heap2DGraph (Heap _ mapAddrIndegNode) 
-  = map2DGraph $ M.map (translateNode . snd) mapAddrIndegNode
-  where translateNode (NAtom atomName links) = (atomName, links )
-        translateNode (NInd  link          ) = ("->"    , [link])
+heap2DGraph (Heap _ mapAddrIndegNode) = map2DGraph
+  $ M.map (translateNode . snd) mapAddrIndegNode
+ where
+  translateNode (NAtom atomName links) = (atomName, links)
+  translateNode (NInd link           ) = ("->", [link])
 
 
 data Node = NAtom AtomName [Addr]
@@ -60,11 +63,6 @@ data Heap = Heap [Addr] (M.Map Addr IndegNode)
 instance Show Heap where
   show = showHeap
 
-
-addrs :: Heap -> S.Set Addr
-addrs (Heap _ mapAddr2IndegNode)
-  = M.keysSet mapAddr2IndegNode
-
 heapNode2ProcVal :: Addr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal addr (indeg, NAtom atomName links) =
   LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal links
@@ -75,8 +73,8 @@ heap2ProcVals :: Heap -> [ProcVal]
 heap2ProcVals (Heap _ mapAddr2Node) =
   map (uncurry heapNode2ProcVal) $ M.toAscList mapAddr2Node
 
-isHeapNull :: Heap -> Bool
-isHeapNull (Heap _ mapAddr2Node) = null mapAddr2Node
+hSize :: Heap -> Int
+hSize (Heap _ mapAddr2Node) = M.size mapAddr2Node
 
 showHeapNode :: Addr -> IndegNode -> String
 showHeapNode addr (indeg, NAtom atomName links) =
@@ -108,7 +106,6 @@ showHeapForDebugging indentLevel (Heap _ mapAddr2IndegNode) =
         )
     . M.toAscList
     $ mapAddr2IndegNode
-
 
 
 type AtomList = [Addr]
@@ -166,6 +163,8 @@ hMapWithAddr :: (Addr -> IndegNode -> IndegNode) -> Heap -> Heap
 hMapWithAddr f (Heap freeAddrs mapAddr2IndegNode) =
   Heap freeAddrs $ M.mapWithKey f mapAddr2IndegNode
 
+
+-- | Get indegree of the node at the given address
 getIndeg :: Addr -> Heap -> Indeg
 getIndeg addr (Heap _ mapAddr2IndegNode) = fst $ mapAddr2IndegNode M.! addr
 
@@ -224,4 +223,15 @@ initTestHeap =
         , (1, NAtom "i" [9])  -- 9
         ]
   in  fst $ mapAccumL hAlloc initialHeap assocList
+
+{--|
+hAddrs :: Heap -> S.Set Addr
+hAddrs (Heap _ mapAddr2IndegNode)
+  = M.keysSet mapAddr2IndegNode
+|--}
+
+{--|
+isHeapNull :: Heap -> Bool
+isHeapNull (Heap _ mapAddr2Node) = null mapAddr2Node
+|--}
 
