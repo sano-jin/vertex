@@ -31,6 +31,7 @@ library
       Compiler.Parser
       Compiler.Process
       Compiler.Syntax
+      ND
       Repl
       Util.Util
       Vis.DGraph

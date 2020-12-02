@@ -15,7 +15,7 @@ import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
-import           Vis.DGraph
+import           Vis.DGraph                     ( DGraph(..) )
 import qualified Data.Map.Strict               as M
 
 data State = State Heap [Rule]
@@ -24,7 +24,7 @@ data State = State Heap [Rule]
 instance Show State where
   show = showState
 
-state2DGraph :: Floating s => State -> M.Map Int (DNode String s)
+state2DGraph :: Floating s => State -> DGraph String s
 state2DGraph (State heap _) = heap2DGraph heap
 
 -- | Shows the state.

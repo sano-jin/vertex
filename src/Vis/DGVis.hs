@@ -3,7 +3,17 @@ module Vis.DGVis where
 import           Graphics.Gloss
 import           Graphics.Gloss.Data.Color
 import           Graphics.Gloss.Interface.IO.Game
-import           Vis.DGraph
+import           Vis.DGraph                     ( randamizeDGraph
+                                                , Edge
+                                                , DGraph
+                                                , DNode(..)
+                                                , map2DGraph
+                                                , updateDGraph
+                                                , posOfNode
+                                                , incommingPosesOfNode
+                                                , outgoingPosesOfNode
+                                                , elems
+                                                )
 import qualified Data.Map.Strict               as M
 import           Vis.Geom
 
@@ -13,10 +23,10 @@ diameter = 10
 circleNode :: Picture
 circleNode = circleSolid diameter
 
-dGraph2Picture :: M.Map Int (DNode String Float) -> Picture
+dGraph2Picture :: DGraph String Float -> Picture
 dGraph2Picture dGraph = Pictures
-  [ Pictures . map (dNode2PictureArrow dGraph) . M.elems $ dGraph
-  , Pictures . map (dNode2PictureNode dGraph) . M.elems $ dGraph
+  [ Pictures . map (dNode2PictureArrow dGraph) . elems $ dGraph
+  , Pictures . map dNode2PictureNode . elems $ dGraph
   ]
 
 triangle :: Picture
@@ -29,13 +39,11 @@ arrow start end =
       head = applyV2 translate end2 $ rotate (toDeg $ angleH vec) triangle
   in  color (greyN 0.7) $ Pictures [line [pos2Tup start, pos2Tup end2], head]
 
-dNode2PictureNode
-  :: M.Map Int (DNode String Float) -> DNode String Float -> Picture
-dNode2PictureNode dGraph node@(Node a _ (pos, _)) = applyV2 translate pos
+dNode2PictureNode :: DNode String Float -> Picture
+dNode2PictureNode node@(Node a _ (pos, _)) = applyV2 translate pos
   $ Pictures [color (aquamarine) $ circleNode, scale 0.2 0.2 $ text a]
 
-dNode2PictureArrow
-  :: M.Map Int (DNode String Float) -> DNode String Float -> Picture
-dNode2PictureArrow dGraph node@(Node a _ (pos, _)) =
+dNode2PictureArrow :: DGraph String Float -> DNode String Float -> Picture
+dNode2PictureArrow dGraph node@(Node _ _ (pos, _)) =
   Pictures $ map (arrow pos) $ outgoingPosesOfNode dGraph node
 

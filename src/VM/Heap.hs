@@ -40,7 +40,7 @@ import           Vis.DGraph                     ( DGraph
                                                 , map2DGraph
                                                 )
 
-heap2DGraph :: Floating s => Heap -> M.Map Int (DNode String s)
+heap2DGraph :: Floating s => Heap -> DGraph String s
 heap2DGraph (Heap _ mapAddrIndegNode) = map2DGraph
   $ M.map (translateNode . snd) mapAddrIndegNode
  where

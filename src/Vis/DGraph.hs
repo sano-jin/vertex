@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GADTs #-}
 
 module Vis.DGraph
   ( randamizeDGraph
@@ -10,20 +11,22 @@ module Vis.DGraph
   , posOfNode
   , incommingPosesOfNode
   , outgoingPosesOfNode
+  , elems
   ) where
 
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
 import           System.Random
 import           Vis.Geom
+import           Data.Tuple.Extra               ( second )
 
 type Edge = Int
 
-type DGraph a s = Num s => M.Map Edge (DNode a s)
-data DNode a s = Node a (S.Set Edge, S.Set Edge) (V2 s, V2 s)
-               -- ^ data,
-               -- the tuple of the set of the incomming links and the set of the outgoing links
-               -- and the tuple of position and velocity.
+data DGraph a s = Num s => DGraph (M.Map Edge (DNode a s))
+data DNode a s = Num s => Node a (S.Set Edge, S.Set Edge) (V2 s, V2 s)
+  -- ^ data,
+  -- the tuple of the set of the incomming links and the set of the outgoing links
+  -- and the tuple of position and velocity.
 
 
 initialPosAndVel :: Floating s => (V2 s, V2 s)
@@ -39,7 +42,7 @@ collectEdges incommingEdge (_, outgoingEdges) mapping = foldl
 
 -- | Translate map to Directed Graph
 map2DGraph :: Floating s => M.Map Edge (a, [Edge]) -> DGraph a s
-map2DGraph mapping = M.mapWithKey
+map2DGraph mapping = DGraph $ M.mapWithKey
   (\key (a, outGoingEdges) -> Node
     a
     (M.findWithDefault S.empty key incommingMap, S.fromList outGoingEdges)
@@ -72,23 +75,24 @@ randomizePosOfNode width height g (Node a edges (_, vel)) =
       (y, g'') = randomR (-height * 0.5, height * 0.5) g'
   in  (g'', Node a edges $ (V2 x y, vel))
 
--- | Randamize the position of the nodes of the given graph
+-- | Randamize the position of the nodes of the given grap
 randamizeDGraph
   :: (Floating s, Random s, RandomGen g)
   => s
   -> s
   -> g
-  -> M.Map k (DNode node s)
-  -> (g, M.Map k (DNode node s))
-randamizeDGraph width height g oldGraph =
-  M.mapAccum (randomizePosOfNode width height) g oldGraph
+  -> DGraph a s
+  -> (g, DGraph a s)
+randamizeDGraph width height g (DGraph oldGraph) =
+  second DGraph $ M.mapAccum (randomizePosOfNode width height) g oldGraph
+
 
 incommingPosesOfNode :: Num s => DGraph a s -> DNode a s -> [V2 s]
-incommingPosesOfNode dGraph (Node _ (incommingLinks, _) _) =
+incommingPosesOfNode (DGraph dGraph) (Node _ (incommingLinks, _) _) =
   map (posOfNode . (M.!) dGraph) $ S.toList incommingLinks
 
 outgoingPosesOfNode :: Num s => DGraph a s -> DNode a s -> [V2 s]
-outgoingPosesOfNode dGraph (Node _ (_, outgoingLinks) _) =
+outgoingPosesOfNode (DGraph dGraph) (Node _ (_, outgoingLinks) _) =
   map (posOfNode . (M.!) dGraph) $ S.toList outgoingLinks
 
 
@@ -103,7 +107,12 @@ velOfNode (Node _ _ (_, vel)) = vel
 --   and returns the new graph and the updated physical energy,
 --   which are based on the simulation on the _spring model_.
 updatePosAndVel
-  :: (Eq s, Floating s) => s -> DGraph a s -> s -> DNode a s -> (s, DNode a s)
+  :: (Eq s, Floating s)
+  => s
+  -> M.Map Edge (DNode a s)
+  -> s
+  -> DNode a s
+  -> (s, DNode a s)
 updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos, oldVel))
   = let
       forceOfSpring edges accForce = S.fold
@@ -142,7 +151,9 @@ updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos
 -- | Given the difference of the time and the old graph,
 --   return the next (time-passed) graph
 updateDGraph :: (Eq s, Floating s) => s -> DGraph a s -> DGraph a s
-updateDGraph timeDiff oldDGraph =
-  snd $ M.mapAccum (updatePosAndVel timeDiff oldDGraph) 0 oldDGraph
+updateDGraph timeDiff (DGraph oldDGraph) =
+  DGraph $ snd $ M.mapAccum (updatePosAndVel timeDiff oldDGraph) 0 $ oldDGraph
 
-
+-- | Same as Map.elems
+elems :: DGraph a s -> [DNode a s]
+elems (DGraph dGraph) = M.elems dGraph

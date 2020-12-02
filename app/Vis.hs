@@ -11,17 +11,8 @@ import           VM.VM                          ( State(..)
                                                 , initializeHeap
                                                 , reduce
                                                 , state2DGraph
-                                                -- , isStateEq
-                                                -- , reduceND
                                                 )
 import           System.Random
-import qualified Data.Map.Strict               as M
--- import           Compiler.Process               ( Rule )
--- import           Data.List
--- import           Data.Maybe
--- import           System.IO
--- import           Control.Monad
--- import           Data.Tuple.Extra
 
 
 -- | Setting the display
@@ -69,8 +60,8 @@ displayState state g = play
 updateState
   :: (Floating s, Random s, RandomGen g)
   => Event
-  -> ((g, M.Map Int (DNode String s)), State)
-  -> ((g, M.Map Int (DNode String s)), State)
+  -> ((g, DGraph String s), State)
+  -> ((g, DGraph String s), State)
 updateState (EventKey (SpecialKey KeySpace) Down _ _) ((g, oldDGraph), oldState)
   = case reduce oldState of
     Just (nextState, _) ->
@@ -80,4 +71,4 @@ updateState (EventKey (SpecialKey KeySpace) Down _ _) ((g, oldDGraph), oldState)
       , nextState
       )
     Nothing -> ((g, oldDGraph), oldState)
-updateState _ state = state
+updateState _ model = model
