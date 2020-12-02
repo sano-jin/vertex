@@ -54,11 +54,11 @@ map2DGraph mapping = DGraph $ M.mapWithKey
 
 springConstance, frictionCoefficient, mass, coulombConstance, naturalSpringLength
   :: Floating s => s
-springConstance = 40.0
+springConstance = 40
 frictionCoefficient = 0.9
 mass = 1.0
 coulombConstance = 5 * 10 ** 6.0
-naturalSpringLength = 20.0
+naturalSpringLength = 20
 
 
 -- | Randomize the position of the node
@@ -134,7 +134,7 @@ updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos
           let pos2  = posOfNode node
               pDiff = oldPos ^-^ pos2
               d     = normSq pDiff
-          in  (^+^) (direct (coulombConstance / (d + 10000.0)) pDiff)
+          in  (^+^) (direct (coulombConstance / (d + 10 ** 3)) pDiff)
         )
         zero
         oldDGraph
