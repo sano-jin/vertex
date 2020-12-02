@@ -53,7 +53,7 @@ executables:
     - -Wall
     dependencies:
     - vertex
-  stateViewer:
+  StateViewer:
     main:                app/StateViewer.hs
     # source-dirs:         app
     ghc-options:
