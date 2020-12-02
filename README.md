@@ -33,8 +33,9 @@ Basicaly, the reduction (calculation step) proceeds as `(P, (P :- Q)) --> (Q, (P
 That is, the rule will rewrite the process that matches to its left hand-side to its right hand-side.
 
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
+[This pdf](https://github.com/sano-jin/vertex/blob/master/doc/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
 
-Also, take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
+Also, feel free to take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
 
 ## Usage
 
@@ -74,21 +75,19 @@ a(X) :- b. b :- c.
 ```
 
 ### Non-deterministic execution
-Experimental.
 
 Put `--nd` for the "non-deterministic" execution.
 ```bash
-stack run -- example/sample_nd.dhl --nd
+stack run -- example/nd1.dhl --nd
 ```
 
 ### Visualizer
-Experimental.
 
+Run `dhlvis` to obtain the graph representing the atoms and links.
 
 ```bash
-stack run dhlvis -- example/sample_multithread-list-traversing.dhl
+stack run dhlvis -- example/multithread-list-traversal.dhl
 ```
-
 
 ![Image of the Visualizer](https://github.com/sano-jin/vertex/blob/master/doc/dhlvis_image.png)
 
