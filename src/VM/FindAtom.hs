@@ -94,27 +94,27 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
       else
         Nothing
     (_, NInt _) -> Nothing
-    _ -> error "indirection traversing is not implemented yet"
+    _           -> error "indirection traversing is not implemented yet"
 checkLinkVal heap maybeIndeg envs (IntVal int, hAddr) =
   case hLookup hAddr heap of
     (hIndeg, NInt hInt) ->
       if (  isNothing maybeIndeg
            -- this integer atom was the head of the free link
-         || maybeIndeg == Just hIndeg
+         || maybeIndeg
+         == Just hIndeg
            -- or the head of the local link with a certain indegree.
          )
-         && int == hInt
-      then
-        Just $ if isNothing maybeIndeg
-               then envs
-               else addMatchedLocalAddrs hAddr envs
+           && int
+           == hInt
+        then Just $ if isNothing maybeIndeg
+          then envs
+          else addMatchedLocalAddrs hAddr envs
                     -- If the maybeIndeg == Nothing, the incomming link is a free link
                     -- otherwise, it is a local link and it should be added
                     -- to the matchedLocalAddrs of envs
-      else
-        Nothing
+        else Nothing
     (_, NAtom _ _) -> Nothing
-    _ -> error "indirection traversing is not implemented yet"
+    _              -> error "indirection traversing is not implemented yet"
 
 
 checkLinkVal _ _ envs (LocalLinkVal matchingAddr, hAddr) =
@@ -166,24 +166,35 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
 --   and the envirnonmemnt
 findAtom :: (AtomList, Heap) -> AtomList -> [ProcVal] -> Envs -> Maybe Envs
 findAtom _ _ [] envs = Just envs
-findAtom _ _  (LocalAliasVal _ fromAddr (LocalLinkVal toAddr):_)  _
-  = error
-  $ "Local to Local indirection \""
-  ++ show fromAddr ++ " -> " ++ show toAddr ++ "\" is not normalized"
-findAtom _ _  (FreeAliasVal fromLinkName (LocalLinkVal toAddr):_)  _
-  = error
-  $ "Free 2 Local indirection \""
-  ++ fromLinkName ++ " -> " ++ show toAddr ++ "\" is not normalized"
-findAtom _ _  (LocalAliasVal _ fromAddr (FreeLinkVal toLinkName):_)  _
-  = error
-  $ "Local 2 Local indirection \""
-  ++ show fromAddr ++ " -> " ++ toLinkName ++ "\" is not normalized"
-findAtom _ _  (FreeAliasVal fromLinkName (FreeLinkVal toLinkName):_)  _
-  = error
-  $ "Free 2 Free indirection on LHS is not implemented. \""
-  ++ fromLinkName ++ " -> " ++ toLinkName ++ "\" is not normalized"
-findAtom (atomList, heap) (hAddr : tAtomList)
-  procVal@(LocalAliasVal indeg matchingAddr atomVal : tProcVals) envs
+findAtom _ _ (LocalAliasVal _ fromAddr (LocalLinkVal toAddr) : _) _ =
+  error
+    $  "Local to Local indirection \""
+    ++ show fromAddr
+    ++ " -> "
+    ++ show toAddr
+    ++ "\" is not normalized"
+findAtom _ _ (FreeAliasVal fromLinkName (LocalLinkVal toAddr) : _) _ =
+  error
+    $  "Free 2 Local indirection \""
+    ++ fromLinkName
+    ++ " -> "
+    ++ show toAddr
+    ++ "\" is not normalized"
+findAtom _ _ (LocalAliasVal _ fromAddr (FreeLinkVal toLinkName) : _) _ =
+  error
+    $  "Local 2 Local indirection \""
+    ++ show fromAddr
+    ++ " -> "
+    ++ toLinkName
+    ++ "\" is not normalized"
+findAtom _ _ (FreeAliasVal fromLinkName (FreeLinkVal toLinkName) : _) _ =
+  error
+    $  "Free 2 Free indirection on LHS is not implemented. \""
+    ++ fromLinkName
+    ++ " -> "
+    ++ toLinkName
+    ++ "\" is not normalized"
+findAtom (atomList, heap) (hAddr : tAtomList) procVal@(LocalAliasVal indeg matchingAddr atomVal : tProcVals) envs
   = if S.member hAddr (incommingLinks envs)
        -- Has already matched
        || case M.lookup matchingAddr $ localLink2Addr envs of
@@ -200,8 +211,7 @@ findAtom (atomList, heap) (hAddr : tAtomList)
           >>= findAtom (atomList, heap) atomList tProcVals
           )
             <|> findAtom (atomList, heap) tAtomList procVal envs
-findAtom (atomList, heap) (hAddr : tAtomList)
-  procVal@(FreeAliasVal linkName atomVal : tProcVals) envs
+findAtom (atomList, heap) (hAddr : tAtomList) procVal@(FreeAliasVal linkName atomVal : tProcVals) envs
   = if S.member hAddr (incommingLinks envs)
        -- Has already matched
        || case M.lookup linkName (freeLink2Addr envs) of

@@ -47,8 +47,7 @@ pushLinkVal _ localEnv heap (LocalLinkVal addr) =
 pushLinkVal envs localEnv oldHeap (AtomVal atomName links) =
   let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
   in  hAlloc newHeap (1, NAtom atomName hLinks)
-pushLinkVal _ _ oldHeap (IntVal i)
-  = hAlloc oldHeap (1, NInt i)
+pushLinkVal _ _ oldHeap (IntVal i) = hAlloc oldHeap (1, NInt i)
 
 
 -- | Pushes the atom.
@@ -62,10 +61,10 @@ pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links
         hAddr             = freeLink2Addr envs M.! linkName
         indeg             = getIndeg hAddr newHeap
     in  (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
-pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (IntVal int))
-  = let hAddr             = freeLink2Addr envs M.! linkName
-        indeg             = getIndeg hAddr oldHeap
-    in  (hReplace hAddr (indeg, NInt int) oldHeap, Nothing)
+pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (IntVal int)) =
+  let hAddr = freeLink2Addr envs M.! linkName
+      indeg = getIndeg hAddr oldHeap
+  in  (hReplace hAddr (indeg, NInt int) oldHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
   let fromHAddr = freeLink2Addr envs M.! fromLinkName
       toHAddr   = freeLink2Addr envs M.! toLinkName
@@ -73,7 +72,8 @@ pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
   in  (hReplace fromHAddr (indeg, NInd toHAddr) heap, Nothing)
 pushProcVal _ _ _ _ = error "not normalized"
 
-pushProcVals :: Envs -> LocalEnv -> Heap -> [ProcVal] -> (Heap, [(Addr, HAddr)])
+pushProcVals
+  :: Envs -> LocalEnv -> Heap -> [ProcVal] -> (Heap, [(Addr, HAddr)])
 pushProcVals envs localEnv oldHeap procVals =
   second catMaybes $ mapAccumL (pushProcVal envs localEnv) oldHeap procVals
 

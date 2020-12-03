@@ -32,7 +32,7 @@ module VM.Heap
   , hSize
   , initTestHeap -- Should be eliminated
   ) where
-import           Compiler.Process              
+import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
 import           Data.Tuple.Extra
@@ -41,22 +41,22 @@ import           Vis.DGraph                     ( DGraph
                                                 )
 
 heap2DGraph :: Floating s => Heap -> DGraph String s
-heap2DGraph (Heap _ mapHAddr2IndegNode) = map2DGraph
-  $ M.map (translateNode . snd)
-  $ M.mapKeys hAddr2Int mapHAddr2IndegNode
+heap2DGraph (Heap _ mapHAddr2IndegNode) =
+  map2DGraph $ M.map (translateNode . snd) $ M.mapKeys hAddr2Int
+                                                       mapHAddr2IndegNode
  where
   translateNode (NAtom atomName links) = (atomName, map hAddr2Int links)
-  translateNode (NInd  link          ) = ("->", [hAddr2Int link])
-  translateNode (NInt  i             ) = (show i, [])
-  
+  translateNode (NInd link           ) = ("->", [hAddr2Int link])
+  translateNode (NInt i              ) = (show i, [])
+
 
 data HAddr = HAddr Int
-           deriving(Eq, Ord)
+  deriving (Eq, Ord)
 -- ^ The address on the heap.
 instance Show HAddr where
   show (HAddr addr) = show addr
 
-  
+
 hAddr2Int :: HAddr -> Int
 hAddr2Int (HAddr addr) = addr
 
@@ -78,7 +78,9 @@ instance Show Heap where
 
 heapNode2ProcVal :: HAddr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal (HAddr addr) (indeg, NAtom atomName links) =
-  LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal $ map hAddr2Int links
+  LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal $ map
+    hAddr2Int
+    links
 heapNode2ProcVal (HAddr addr) (indeg, NInd link) =
   LocalAliasVal indeg addr $ LocalLinkVal $ hAddr2Int link
 heapNode2ProcVal (HAddr addr) (indeg, NInt i) =
@@ -98,10 +100,10 @@ showHeapNode hAddr (indeg, NAtom atomName links) =
         then "(" ++ intercalate ", " (map (("L" ++) . show) links) ++ ")"
         else ""
   in  incommingLink ++ atomName ++ args
-showHeapNode hAddr (indeg, NInd link)
-  = if indeg > 0 then "L" ++ show hAddr ++ " -> L" ++ show link else ""
-showHeapNode hAddr (indeg, NInt i)
-  = if indeg > 0 then "L" ++ show hAddr ++ " -> " ++ show i else show i
+showHeapNode hAddr (indeg, NInd link) =
+  if indeg > 0 then "L" ++ show hAddr ++ " -> L" ++ show link else ""
+showHeapNode hAddr (indeg, NInt i) =
+  if indeg > 0 then "L" ++ show hAddr ++ " -> " ++ show i else show i
 
 
 -- | (This should) pritty print the heap.
@@ -110,7 +112,9 @@ showHeapNode hAddr (indeg, NInt i)
 --   This function is a instance of the `show`.
 showHeap :: Heap -> String
 showHeap (Heap _ mapHAddr2IndegNode) =
-  concatMap ((++ ". ") . uncurry showHeapNode) . M.toAscList $ mapHAddr2IndegNode
+  concatMap ((++ ". ") . uncurry showHeapNode)
+    . M.toAscList
+    $ mapHAddr2IndegNode
 
 
 -- | Show heap with addresses.
@@ -193,8 +197,8 @@ getIndeg hAddr (Heap _ mapHAddr2IndegNode) = fst $ mapHAddr2IndegNode M.! hAddr
 
 -- | Address substitution
 substituteHAddr :: HAddr -> HAddr -> HAddr -> HAddr
-substituteHAddr fromHAddr toHAddr hAddr
-  = if hAddr == fromHAddr then toHAddr else hAddr
+substituteHAddr fromHAddr toHAddr hAddr =
+  if hAddr == fromHAddr then toHAddr else hAddr
 
 -- | Substitute addresses of the nodes to the given address
 normalizeNode :: HAddr -> HAddr -> Node -> Node
@@ -209,7 +213,8 @@ normalizeNode _ _ nInt = nInt
 normalizeAddrNode
   :: (HAddr, Indeg) -> HAddr -> HAddr -> (Indeg, Node) -> (Indeg, Node)
 normalizeAddrNode (fromHAddr, fromIndeg) toHAddr hAddr (oldIndeg, node) =
-  let newIndeg = if toHAddr == hAddr then oldIndeg + fromIndeg - 1 else oldIndeg
+  let newIndeg =
+        if toHAddr == hAddr then oldIndeg + fromIndeg - 1 else oldIndeg
   in  (newIndeg, normalizeNode fromHAddr toHAddr node)
 
 isNInd :: Node -> Bool

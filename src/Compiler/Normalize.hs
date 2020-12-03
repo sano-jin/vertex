@@ -140,8 +140,8 @@ normalizeProcVals procVals =
 
 normalizeRule :: Rule -> ThrowsCompileError Rule
 normalizeRule (Rule lhs rhs rhsRules) = do
-  lhs'      <- normalizeProcVals  lhs
-  rhs'      <- normalizeProcVals  rhs
+  lhs'      <- normalizeProcVals lhs
+  rhs'      <- normalizeProcVals rhs
   rhsRules' <- mapM normalizeRule rhsRules
   return $ Rule lhs' rhs' rhsRules'
 

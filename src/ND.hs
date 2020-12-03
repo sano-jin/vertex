@@ -1,6 +1,6 @@
 module ND
-  ( readAndRunND,
-    readAndVisND,
+  ( readAndRunND
+  , readAndVisND
   ) where
 import           Compiler.Compiler              ( compile )
 import           Compiler.Normalize             ( normalize )
@@ -16,32 +16,32 @@ import           Control.Monad
 -- import           Control.Applicative
 import           Data.Tuple.Extra
 import qualified Data.Map.Strict               as M
-import           Vis.DGraph                    ( DGraph,
-                                                 map2DGraph
-                                               )
+import           Vis.DGraph                     ( DGraph
+                                                , map2DGraph
+                                                )
 import           Vis.DGVis
-  
 
-path2DGraph :: Floating s =>
-               Path -> DGraph String s
-path2DGraph (Path _ states transitions)
-  = map2DGraph
+
+path2DGraph :: Floating s => Path -> DGraph String s
+path2DGraph (Path _ states transitions) =
+  map2DGraph
     $ foldr
-    (\(before, after) -> M.adjust (second $ (:) after) before)
-    (M.fromList
-     $ map (second $ flip (,) [] . (\(State heap _) -> show heap)) states)
+        (\(before, after) -> M.adjust (second $ (:) after) before)
+        ( M.fromList
+        $ map (second $ flip (,) [] . (\(State heap _) -> show heap)) states
+        )
     $ map fst transitions
-  
-readAndVisND :: Floating s =>
-                (State -> String) -> String -> IO (DGraph String s)
+
+readAndVisND
+  :: Floating s => (State -> String) -> String -> IO (DGraph String s)
 readAndVisND state2String input = case normalize =<< compile input of
   Left err -> putStrLn ("Error : " ++ show err) >> error ""
   Right (procVals, rules) ->
     let initialState = State (initializeHeap procVals) rules
-    in  putStrLn ("0: " ++ state2String initialState)
-        >> fmap path2DGraph
-       (runND state2String 0 (initialPath initialState) initialState)
-        
+    in  putStrLn ("0: " ++ state2String initialState) >> fmap
+          path2DGraph
+          (runND state2String 0 (initialPath initialState) initialState)
+
 
 readAndRunND :: (State -> String) -> String -> IO ()
 readAndRunND state2String input = case normalize =<< compile input of

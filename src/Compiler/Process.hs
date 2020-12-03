@@ -62,7 +62,7 @@ showLinkVal (LocalLinkVal addr     ) = "L" ++ show addr
 showLinkVal (AtomVal atomName links) = if null links
   then atomName
   else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
-showLinkVal (IntVal i              ) = show i
+showLinkVal (IntVal i) = show i
 
 
 -- | Show indegree if the indegree is bigger than 0.
