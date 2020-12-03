@@ -124,7 +124,7 @@ showAllStates state2String path@(Path stateN states transitions) =
   ++ "\n"
   ++ "'# of States'(stored)  = " ++ show stateN ++ ".\n"
   ++ "'# of States'(end)     = " ++ show (length terminalStates) ++ ".\n"
-  ++ "'# of Transitions'     = " ++ show (length transitions) ++ ".\n"
+  ++ "'# of Transitions'     = " ++ show (length transitions) ++ "."
   
 
 showEnds :: (State -> String) -> Path -> String
