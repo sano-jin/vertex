@@ -1,4 +1,4 @@
-result(append(c(n1,c(n2,c(n3,n))),c(n4,c(n5,n)))),
+result(append(c(1,c(2,c(3,n))),c(4,c(5,n)))),
 ( Z -> append(n,Y) :- Z -> Y ),
 ( Z -> append(c(A, X1), Y) :- Z -> c(A, append(X1,Y)) ).
 
