@@ -2,6 +2,7 @@
 
 ![Image of DHLMNtalIcon](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal-logo-red.png)
 
+*This is an experimental project*
 
 Directed HyperLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
 It is designed to be able to deal with hypergraphs representing structures and pointers easily
