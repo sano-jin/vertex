@@ -4,6 +4,7 @@
 import           System.Environment
 
 import           Repl
+import           ND
 import           VM.VM
 
 
