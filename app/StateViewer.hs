@@ -13,7 +13,7 @@ import           VM.VM                          ( State(..)
                                                 , state2DGraph
                                                 )
 import           System.Random
-import           ND (readAndVisND)
+import           ND                             ( readAndVisND )
 
 -- | Setting the display
 windowWidth, windowHeight :: Num a => a
@@ -27,7 +27,7 @@ main :: IO ()
 main = do
   [f] <- getArgs
   s   <- readFile f
-  g   <- getStdGen 
+  g   <- getStdGen
   displayStates g =<< readAndVisND show s
 
 displayStates :: RandomGen g => g -> DGraph String Float -> IO ()
@@ -37,8 +37,6 @@ displayStates g dGraph = simulate
   24
   (randamizeDGraph (windowWidth * 0.3) (windowHeight * 0.3) g dGraph)
   (\(_, dGraph) -> dGraph2Picture dGraph)
-  (\_ timeDiff (g', dGraph) ->
-    (g', updateDGraph timeDiff dGraph)
-  )
+  (\_ timeDiff (g', dGraph) -> (g', updateDGraph timeDiff dGraph))
 
 
