@@ -27,6 +27,8 @@ data LinkVal = FreeLinkVal String
                -- ^ X
              | AtomVal String [LinkVal]
                -- ^ p(X1,...,Xm)
+             | IntVal  Integer
+               -- ^ N :: int(N)
              deriving(Eq)
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal
@@ -60,14 +62,17 @@ showLinkVal (LocalLinkVal addr     ) = "L" ++ show addr
 showLinkVal (AtomVal atomName links) = if null links
   then atomName
   else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
+showLinkVal (IntVal i              ) = show i
 
 
+-- | Show indegree if the indegree is bigger than 0.
 showProcValForDebugging :: ProcVal -> String
 showProcValForDebugging (LocalAliasVal indeg addr linkVal) = if indeg > 0
   then "L" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show linkVal ++ ")"
   else show linkVal
 showProcValForDebugging procVal = showProcVal procVal
 
+-- | Show the ProcVal more consisely with information of indegs.
 showProcValsForDebugging :: [ProcVal] -> String
 showProcValsForDebugging = intercalate ", " . map showProcValForDebugging
 

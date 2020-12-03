@@ -1,5 +1,3 @@
-{-# LANGUAGE Safe #-}
-
 {-|
 Module      : Compiler
 Description : A compiler for the vertex language
@@ -33,7 +31,7 @@ import           Data.Bifunctor                 ( bimap )
 import           Data.List
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
-import safe      Data.Tuple.Extra
+import           Data.Tuple.Extra
 import           Util.Util                      ( monadicMapAccumL )
 
 type ThrowsCompileError = Either CompileError
@@ -97,6 +95,7 @@ compilePointingToLit envs (LinkLit linkName) =
     Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
 compilePointingToLit envs (AtomLit atomName links) =
   second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
+compilePointingToLit envs (IntLit i) = (envs, IntVal i)  
 
 -- | Check if the incoming link is the local link or not.
 -- Also, check the "functional condition",
