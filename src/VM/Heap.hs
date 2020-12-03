@@ -137,12 +137,16 @@ showHeapNode hAddr oldHeap (indeg, node) =
 --   This function is a instance of the `show`.
 showHeap :: Heap -> String
 showHeap oldHeap =
-  let loop (heap, strs) =
-        case hFindMin heap of
-          Nothing -> reverse strs
-          Just (minHAddr, minIndegNode) ->
-            let (newHeap, newStr) = showHeapNode minHAddr heap minIndegNode
-            in  loop (newHeap, newStr : strs)
+  let loop (heap@(Heap _ mapAddr2IndegNode), strs) =
+        if hNull heap then reverse strs
+        else
+          case map (second fst) $ M.toList mapAddr2IndegNode of
+            [] -> reverse strs
+            h:t ->
+              let (minHAddr, _)
+                    = foldl (\ai1@(a1, i1) ai2@(a2, i2) -> if i1 < i2 then ai1 else ai2) h t 
+                  (newHeap, newStr) = showHeapNode minHAddr heap $ hLookup minHAddr heap
+              in  loop (newHeap, newStr : strs)
   in
     concatMap (++ ". ") $ loop (oldHeap, [])
 
@@ -226,7 +230,7 @@ hLookupVal f (Heap _ mapHAddr2IndegNode) =
 hMapWithAddr :: (HAddr -> IndegNode -> IndegNode) -> Heap -> Heap
 hMapWithAddr f (Heap freeAddrs mapHAddr2IndegNode) =
   Heap freeAddrs $ M.mapWithKey f mapHAddr2IndegNode
-
+  
 
 -- | Get indegree of the node at the given address
 getIndeg :: HAddr -> Heap -> Indeg
@@ -291,3 +295,6 @@ initTestHeap =
         , (1, NAtom "i" [HAddr 9])            -- 9
         ]
   in  fst $ mapAccumL hAlloc initialHeap assocList
+
+hNull :: Heap -> Bool
+hNull (Heap _ mapAddr2IndegNode) = M.null mapAddr2IndegNode

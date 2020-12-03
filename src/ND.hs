@@ -121,6 +121,7 @@ showAllStates state2String path@(Path stateN states transitions) =
    )
     transitions
   )
+  ++ "\n"
   ++ "'# of States'(stored)  = " ++ show stateN ++ ".\n"
   ++ "'# of States'(end)     = " ++ show (length terminalStates) ++ ".\n"
   ++ "'# of Transitions'     = " ++ show (length transitions) ++ ".\n"
@@ -128,7 +129,7 @@ showAllStates state2String path@(Path stateN states transitions) =
 
 showEnds :: (State -> String) -> Path -> String
 showEnds state2String path@(Path stateN states transitions) 
-  = let terminalStates = path2TerminalStates path in ""
+  = let terminalStates = path2TerminalStates path in "\n"
       ++ "'# of States'(stored)  = " ++ show stateN ++ ".\n"
       ++ "'# of States'(end)     = " ++ show (length terminalStates) ++ ".\n"
       ++ "'# of Transitions'     = " ++ show (length transitions) ++ ".\n"
