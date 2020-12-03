@@ -97,10 +97,10 @@ stack run dhlvis -- example/multithread-list-traversal.dhl
 ### State Viewer
 Experimental.
 
-Run `StateViewer` to obtain the state transition space.
+Run `stateViewer` to obtain the state transition space.
 
 ```bash
-stack run StateViewer -- example/nd1.dhl
+stack run stateViewer -- example/nd1.dhl
 ```
 
 ## Development
