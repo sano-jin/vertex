@@ -58,20 +58,16 @@ a(b). a(X) :- b. b :- c.
 the result should be like the following.
 ```
 0: 
-L1 -> b. a(L1). 
-a(X) :- b. b :- c. 
+a(b). 
 
 1: a(X) :- b ~> 
 b. b. 
-a(X) :- b. b :- c. 
 
 2: b :- c ~> 
-c. b. 
-a(X) :- b. b :- c. 
+b. c. 
 
 3: b :- c ~> 
 c. c. 
-a(X) :- b. b :- c. 
 ```
 
 ### Non-deterministic execution
