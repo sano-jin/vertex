@@ -1,0 +1,19 @@
+proc(load, 0).
+proc(load, 0).
+proc(load, 0).
+x(0).
+
+% Load the global variable
+proc(load, Y), x(X)
+  :- int(X), int(Y) 
+     | proc(increment, X), x(X).
+
+% Increment the local variable
+proc(increment, Y)
+  :- Y1 = Y + 1
+     | proc(store, Y1).
+
+% Store the local variable to the global variable
+proc(store, Y), x(X)
+  :- int(X), int(Y) 
+     | proc(halt, Y), x(Y).

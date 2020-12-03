@@ -32,7 +32,7 @@ module VM.Heap
   , hSize
   , initTestHeap -- Should be eliminated
   ) where
-import           Compiler.Process              
+import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
 import           Data.Tuple.Extra
@@ -41,22 +41,22 @@ import           Vis.DGraph                     ( DGraph
                                                 )
 
 heap2DGraph :: Floating s => Heap -> DGraph String s
-heap2DGraph (Heap _ mapHAddr2IndegNode) = map2DGraph
-  $ M.map (translateNode . snd)
-  $ M.mapKeys hAddr2Int mapHAddr2IndegNode
+heap2DGraph (Heap _ mapHAddr2IndegNode) =
+  map2DGraph $ M.map (translateNode . snd) $ M.mapKeys hAddr2Int
+                                                       mapHAddr2IndegNode
  where
   translateNode (NAtom atomName links) = (atomName, map hAddr2Int links)
-  translateNode (NInd  link          ) = ("->", [hAddr2Int link])
-  translateNode (NInt  i             ) = (show i, [])
-  
+  translateNode (NInd link           ) = ("->", [hAddr2Int link])
+  translateNode (NInt i              ) = (show i, [])
+
 
 data HAddr = HAddr Int
-           deriving(Eq, Ord)
+  deriving (Eq, Ord)
 -- ^ The address on the heap.
 instance Show HAddr where
   show (HAddr addr) = show addr
 
-  
+
 hAddr2Int :: HAddr -> Int
 hAddr2Int (HAddr addr) = addr
 
@@ -78,7 +78,9 @@ instance Show Heap where
 
 heapNode2ProcVal :: HAddr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal (HAddr addr) (indeg, NAtom atomName links) =
-  LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal $ map hAddr2Int links
+  LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal $ map
+    hAddr2Int
+    links
 heapNode2ProcVal (HAddr addr) (indeg, NInd link) =
   LocalAliasVal indeg addr $ LocalLinkVal $ hAddr2Int link
 heapNode2ProcVal (HAddr addr) (indeg, NInt i) =
@@ -91,17 +93,42 @@ heap2ProcVals (Heap _ mapHAddr2IndegNode) =
 hSize :: Heap -> Int
 hSize (Heap _ mapHAddr2IndegNode) = M.size mapHAddr2IndegNode
 
-showHeapNode :: HAddr -> IndegNode -> String
-showHeapNode hAddr (indeg, NAtom atomName links) =
+
+
+showLinkedHeapNode :: Heap -> HAddr -> (Heap, String)
+showLinkedHeapNode oldHeap hAddr =
+  case hSafeLookup hAddr oldHeap of
+    Nothing -> (oldHeap, "L" ++ show hAddr)
+    Just (1, NAtom atomName links) ->
+      let (newHeap, args) = mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
+          stringArgs =
+            if null args then ""
+            else "(" ++ intercalate ", " args ++ ")"
+          in
+        (newHeap, atomName ++ stringArgs)
+    Just (1, NInd link) ->
+      showLinkedHeapNode (hDelete hAddr oldHeap) link
+    Just (1, NInt i) ->
+      (hDelete hAddr oldHeap, show i)
+    Just _ -> (oldHeap, "L" ++ show hAddr)
+
+showHeapNode :: HAddr -> Heap -> IndegNode -> (Heap, String)
+showHeapNode hAddr oldHeap (indeg, NAtom atomName links) =
   let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
-      args          = if not $ null links
-        then "(" ++ intercalate ", " (map (("L" ++) . show) links) ++ ")"
-        else ""
-  in  incommingLink ++ atomName ++ args
-showHeapNode hAddr (indeg, NInd link)
-  = if indeg > 0 then "L" ++ show hAddr ++ " -> L" ++ show link else ""
-showHeapNode hAddr (indeg, NInt i)
-  = if indeg > 0 then "L" ++ show hAddr ++ " -> " ++ show i else show i
+      (newHeap, args) = mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
+      stringArgs =
+        if null args then ""
+        else "(" ++ intercalate ", " args ++ ")"
+  in
+    (newHeap, incommingLink ++ atomName ++ stringArgs)
+showHeapNode hAddr oldHeap (indeg, NInt i) =
+  let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
+  in
+    (hDelete hAddr oldHeap, incommingLink ++ show i)
+showHeapNode hAddr oldHeap (indeg, node) =
+  let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
+      (newHeap, str) = showLinkedHeapNode oldHeap hAddr
+  in  (newHeap, incommingLink ++ str)
 
 
 -- | (This should) pritty print the heap.
@@ -109,8 +136,15 @@ showHeapNode hAddr (indeg, NInt i)
 --   This just shows the node and the address of the nodes in the heap in order.
 --   This function is a instance of the `show`.
 showHeap :: Heap -> String
-showHeap (Heap _ mapHAddr2IndegNode) =
-  concatMap ((++ ". ") . uncurry showHeapNode) . M.toAscList $ mapHAddr2IndegNode
+showHeap oldHeap =
+  let loop (heap, strs) =
+        case hFindMin heap of
+          Nothing -> reverse strs
+          Just (minHAddr, minIndegNode) ->
+            let (newHeap, newStr) = showHeapNode minHAddr heap minIndegNode
+            in  loop (newHeap, newStr : strs)
+  in
+    concatMap (++ ". ") $ loop (oldHeap, [])
 
 
 -- | Show heap with addresses.
@@ -142,10 +176,20 @@ toAtomList (Heap _ mapHAddr2IndegNode) = map fst $ M.toList mapHAddr2IndegNode
 hLookup :: HAddr -> Heap -> IndegNode
 hLookup hAddr (Heap _ mapHAddr2IndegNode) = mapHAddr2IndegNode M.! hAddr
 
+-- | safe lookup
+hSafeLookup :: HAddr -> Heap -> Maybe IndegNode
+hSafeLookup hAddr (Heap _ mapHAddr2IndegNode) = M.lookup hAddr mapHAddr2IndegNode 
+
 -- | delete
 hDelete :: HAddr -> Heap -> Heap
 hDelete hAddr (Heap freeAddrs mapHAddr2IndegNode) =
   Heap (hAddr : freeAddrs) (M.delete hAddr mapHAddr2IndegNode)
+
+-- | Map.findMin
+hFindMin :: Heap -> Maybe (HAddr, IndegNode)
+hFindMin (Heap _ mapHAddr2IndegNode) =
+  if M.null mapHAddr2IndegNode then Nothing
+  else Just $ M.findMin mapHAddr2IndegNode
 
 setIndeg :: HAddr -> Indeg -> Heap -> Heap
 setIndeg hAddr indeg (Heap freeAddrs mapHAddr2IndegNode) =
@@ -193,8 +237,8 @@ getIndeg hAddr (Heap _ mapHAddr2IndegNode) = fst $ mapHAddr2IndegNode M.! hAddr
 
 -- | Address substitution
 substituteHAddr :: HAddr -> HAddr -> HAddr -> HAddr
-substituteHAddr fromHAddr toHAddr hAddr
-  = if hAddr == fromHAddr then toHAddr else hAddr
+substituteHAddr fromHAddr toHAddr hAddr =
+  if hAddr == fromHAddr then toHAddr else hAddr
 
 -- | Substitute addresses of the nodes to the given address
 normalizeNode :: HAddr -> HAddr -> Node -> Node
@@ -209,7 +253,8 @@ normalizeNode _ _ nInt = nInt
 normalizeAddrNode
   :: (HAddr, Indeg) -> HAddr -> HAddr -> (Indeg, Node) -> (Indeg, Node)
 normalizeAddrNode (fromHAddr, fromIndeg) toHAddr hAddr (oldIndeg, node) =
-  let newIndeg = if toHAddr == hAddr then oldIndeg + fromIndeg - 1 else oldIndeg
+  let newIndeg =
+        if toHAddr == hAddr then oldIndeg + fromIndeg - 1 else oldIndeg
   in  (newIndeg, normalizeNode fromHAddr toHAddr node)
 
 isNInd :: Node -> Bool

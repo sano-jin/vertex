@@ -47,9 +47,9 @@ showBlock = intercalate ". " . map showProc
 
 -- | Show the procLit
 showProc :: ProcLit -> String
-showProc (AliasLit (Just p) to  ) = showLink (LinkLit p) ++ " -> " ++ showLink to
-showProc (AliasLit Nothing to   ) = showLink to
-showProc (RuleLit lhs rhs       ) = showProcSet lhs ++ " :- " ++ showProcSet rhs
+showProc (AliasLit (Just p) to) = showLink (LinkLit p) ++ " -> " ++ showLink to
+showProc (AliasLit Nothing to) = showLink to
+showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
 showProc (CreationLit link procs) = "\\" ++ link ++ "." ++ if length procs == 1
   then showProcSet procs
   else "(" ++ showProcSet procs ++ ")"
@@ -71,5 +71,5 @@ showLinkList args = "(" ++ unwordsList args ++ ")"
 showLink :: LinkLit -> String
 showLink (LinkLit name     ) = name
 showLink (AtomLit name args) = name ++ showLinkList args
-showLink (IntLit  i        ) = show i 
+showLink (IntLit i         ) = show i
 

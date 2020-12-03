@@ -1,0 +1,132 @@
+\X.(
+    proc(load, X, 0),
+    proc(load, X, 0),
+    proc(load, X, 0),
+    X -> 0
+).
+
+
+
+% load the global variable
+
+proc(load, X, 0), X -> 0
+:- proc(increment, X, 0), X -> 0.
+
+proc(load, X, 1), X -> 0
+:- proc(increment, X, 0), X -> 0.
+
+proc(load, X, 2), X -> 0
+:- proc(increment, X, 0), X -> 0.
+
+proc(load, X, 3), X -> 0
+:- proc(increment, X, 0), X -> 0.
+
+
+proc(load, X, 0), X -> 1
+:- proc(increment, X, 1), X -> 1.
+
+proc(load, X, 1), X -> 1
+:- proc(increment, X, 1), X -> 1.
+
+proc(load, X, 2), X -> 1
+:- proc(increment, X, 1), X -> 1.
+
+proc(load, X, 3), X -> 1
+:- proc(increment, X, 1), X -> 1.
+
+
+proc(load, X, 0), X -> 2
+:- proc(increment, X, 2), X -> 2.
+
+proc(load, X, 1), X -> 2
+:- proc(increment, X, 2), X -> 2.
+
+proc(load, X, 2), X -> 2
+:- proc(increment, X, 2), X -> 2.
+
+proc(load, X, 3), X -> 2
+:- proc(increment, X, 2), X -> 2.
+
+
+proc(load, X, 0), X -> 3
+:- proc(increment, X, 3), X -> 3.
+
+proc(load, X, 1), X -> 3
+:- proc(increment, X, 3), X -> 3.
+
+proc(load, X, 2), X -> 3
+:- proc(increment, X, 3), X -> 3.
+
+proc(load, X, 3), X -> 3
+:- proc(increment, X, 3), X -> 3.
+
+
+
+% increment the local variable
+
+proc(increment, X, 0)
+:- proc(store, X, 1).
+
+proc(increment, X, 1) 
+:- proc(store, X, 2).
+
+proc(increment, X, 2) 
+:- proc(store, X, 3).
+
+proc(increment, X, 3) 
+:- proc(store, X, 4).
+
+
+
+% store the global variable
+
+proc(store, X, 0), X -> 0
+:- proc(halt, X, 0), X -> 0.
+
+proc(store, X, 1), X -> 0
+:- proc(halt, X, 1), X -> 1.
+
+proc(store, X, 2), X -> 0
+:- proc(halt, X, 2), X -> 2.
+
+proc(store, X, 3), X -> 0
+:- proc(halt, X, 3), X -> 3.
+
+
+proc(store, X, 0), X -> 1
+:- proc(halt, X, 0), X -> 0.
+
+proc(store, X, 1), X -> 1
+:- proc(halt, X, 1), X -> 1.
+
+proc(store, X, 2), X -> 1
+:- proc(halt, X, 2), X -> 2.
+
+proc(store, X, 3), X -> 1
+:- proc(halt, X, 3), X -> 3.
+
+
+proc(store, X, 0), X -> 2
+:- proc(halt, X, 0), X -> 0.
+
+proc(store, X, 1), X -> 2
+:- proc(halt, X, 1), X -> 1.
+
+proc(store, X, 2), X -> 2
+:- proc(halt, X, 2), X -> 2.
+
+proc(store, X, 3), X -> 2
+:- proc(halt, X, 3), X -> 3.
+
+
+proc(store, X, 0), X -> 3
+:- proc(halt, X, 0), X -> 0.
+
+proc(store, X, 1), X -> 3
+:- proc(halt, X, 1), X -> 1.
+
+proc(store, X, 2), X -> 3
+:- proc(halt, X, 2), X -> 2.
+
+proc(store, X, 3), X -> 3
+:- proc(halt, X, 3), X -> 3.

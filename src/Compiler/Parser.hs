@@ -87,7 +87,13 @@ parseAtomBody :: Parser (String, [LinkLit])
 parseAtomBody = liftA2 (,) atomName $ parens (commaSep parseLink) <|> return []
 
 parseLink :: Parser LinkLit
-parseLink = LinkLit <$> linkName <|> uncurry AtomLit <$> parseAtomBody <|> IntLit <$> integer
+parseLink =
+  LinkLit
+    <$> linkName
+    <|> uncurry AtomLit
+    <$> parseAtomBody
+    <|> IntLit
+    <$> integer
 
 parseProc :: Parser [ProcLit]
 parseProc =
@@ -102,7 +108,8 @@ parseProc =
     <$> parseAtomBody
     <|> (: [])
     .   AliasLit Nothing
-    .   IntLit <$> integer
+    .   IntLit
+    <$> integer
     <|> parens parseLine
 
 readExpr :: String -> Either ParseError [ProcLit]

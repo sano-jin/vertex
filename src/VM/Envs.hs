@@ -26,7 +26,7 @@ module VM.Envs
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
-import           VM.Heap                       (HAddr)
+import           VM.Heap                        ( HAddr )
 
 
 data Envs = Envs
@@ -80,7 +80,8 @@ addLocalLink2Addr matchingAddr matchedHAddr = addMatchedLocalAddrs matchedHAddr
 updateLocalLink2Addr :: (M.Map Addr HAddr -> M.Map Addr HAddr) -> Envs -> Envs
 updateLocalLink2Addr f envs = envs { localLink2Addr = f $ localLink2Addr envs }
 
-updateFreeLink2Addr :: (M.Map String HAddr -> M.Map String HAddr) -> Envs -> Envs
+updateFreeLink2Addr
+  :: (M.Map String HAddr -> M.Map String HAddr) -> Envs -> Envs
 updateFreeLink2Addr f envs = envs { freeLink2Addr = f $ freeLink2Addr envs }
 
 
@@ -88,5 +89,6 @@ addFreeLink2Addr :: String -> HAddr -> Envs -> Envs
 addFreeLink2Addr linkName matchedHAddr =
   updateFreeLink2Addr (M.insert linkName matchedHAddr)
 
-updateFreeAddr2Indeg :: (M.Map HAddr Indeg -> M.Map HAddr Indeg) -> Envs -> Envs
+updateFreeAddr2Indeg
+  :: (M.Map HAddr Indeg -> M.Map HAddr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs = envs { freeAddr2Indeg = f $ freeAddr2Indeg envs }

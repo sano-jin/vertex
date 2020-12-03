@@ -30,7 +30,8 @@ state2DGraph (State heap _) = heap2DGraph heap
 -- | Shows the state.
 --   Pritty print the heap and the rules.
 showState :: State -> String
-showState (State heap rules) = show heap ++ showRules rules
+showState (State heap rules) = show heap
+  -- ++ showRules rules
 
 -- | Shows the state.
 --   Print all the addresses and the nodes in the heap.
