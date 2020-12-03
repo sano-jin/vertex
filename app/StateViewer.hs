@@ -1,17 +1,9 @@
 module Main where
 
 import           Graphics.Gloss
-import           Graphics.Gloss.Interface.IO.Game
 import           Vis.DGVis
 import           Vis.DGraph
 import           System.Environment
-import           Compiler.Compiler              ( compile )
-import           Compiler.Normalize             ( normalize )
-import           VM.VM                          ( State(..)
-                                                , initializeHeap
-                                                , reduce
-                                                , state2DGraph
-                                                )
 import           System.Random
 import           ND                             ( readAndVisND )
 
@@ -36,7 +28,7 @@ displayStates g dGraph = simulate
   white
   24
   (randamizeDGraph (windowWidth * 0.3) (windowHeight * 0.3) g dGraph)
-  (\(_, dGraph) -> dGraph2Picture dGraph)
-  (\_ timeDiff (g', dGraph) -> (g', updateDGraph timeDiff dGraph))
+  (dGraph2Picture . snd)
+  (\_ timeDiff (g', oldDGraph) -> (g', updateDGraph timeDiff oldDGraph))
 
 
