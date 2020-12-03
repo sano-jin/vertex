@@ -93,17 +93,42 @@ heap2ProcVals (Heap _ mapHAddr2IndegNode) =
 hSize :: Heap -> Int
 hSize (Heap _ mapHAddr2IndegNode) = M.size mapHAddr2IndegNode
 
-showHeapNode :: HAddr -> IndegNode -> String
-showHeapNode hAddr (indeg, NAtom atomName links) =
+
+
+showLinkedHeapNode :: Heap -> HAddr -> (Heap, String)
+showLinkedHeapNode oldHeap hAddr =
+  case hSafeLookup hAddr oldHeap of
+    Nothing -> (oldHeap, "L" ++ show hAddr)
+    Just (1, NAtom atomName links) ->
+      let (newHeap, args) = mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
+          stringArgs =
+            if null args then ""
+            else "(" ++ intercalate ", " args ++ ")"
+          in
+        (newHeap, atomName ++ stringArgs)
+    Just (1, NInd link) ->
+      showLinkedHeapNode (hDelete hAddr oldHeap) link
+    Just (1, NInt i) ->
+      (hDelete hAddr oldHeap, show i)
+    Just _ -> (oldHeap, "L" ++ show hAddr)
+
+showHeapNode :: HAddr -> Heap -> IndegNode -> (Heap, String)
+showHeapNode hAddr oldHeap (indeg, NAtom atomName links) =
   let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
-      args          = if not $ null links
-        then "(" ++ intercalate ", " (map (("L" ++) . show) links) ++ ")"
-        else ""
-  in  incommingLink ++ atomName ++ args
-showHeapNode hAddr (indeg, NInd link) =
-  if indeg > 0 then "L" ++ show hAddr ++ " -> L" ++ show link else ""
-showHeapNode hAddr (indeg, NInt i) =
-  if indeg > 0 then "L" ++ show hAddr ++ " -> " ++ show i else show i
+      (newHeap, args) = mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
+      stringArgs =
+        if null args then ""
+        else "(" ++ intercalate ", " args ++ ")"
+  in
+    (newHeap, incommingLink ++ atomName ++ stringArgs)
+showHeapNode hAddr oldHeap (indeg, NInt i) =
+  let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
+  in
+    (hDelete hAddr oldHeap, incommingLink ++ show i)
+showHeapNode hAddr oldHeap (indeg, node) =
+  let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
+      (newHeap, str) = showLinkedHeapNode oldHeap hAddr
+  in  (newHeap, incommingLink ++ str)
 
 
 -- | (This should) pritty print the heap.
@@ -111,10 +136,15 @@ showHeapNode hAddr (indeg, NInt i) =
 --   This just shows the node and the address of the nodes in the heap in order.
 --   This function is a instance of the `show`.
 showHeap :: Heap -> String
-showHeap (Heap _ mapHAddr2IndegNode) =
-  concatMap ((++ ". ") . uncurry showHeapNode)
-    . M.toAscList
-    $ mapHAddr2IndegNode
+showHeap oldHeap =
+  let loop (heap, strs) =
+        case hFindMin heap of
+          Nothing -> reverse strs
+          Just (minHAddr, minIndegNode) ->
+            let (newHeap, newStr) = showHeapNode minHAddr heap minIndegNode
+            in  loop (newHeap, newStr : strs)
+  in
+    concatMap (++ ". ") $ loop (oldHeap, [])
 
 
 -- | Show heap with addresses.
@@ -146,10 +176,20 @@ toAtomList (Heap _ mapHAddr2IndegNode) = map fst $ M.toList mapHAddr2IndegNode
 hLookup :: HAddr -> Heap -> IndegNode
 hLookup hAddr (Heap _ mapHAddr2IndegNode) = mapHAddr2IndegNode M.! hAddr
 
+-- | safe lookup
+hSafeLookup :: HAddr -> Heap -> Maybe IndegNode
+hSafeLookup hAddr (Heap _ mapHAddr2IndegNode) = M.lookup hAddr mapHAddr2IndegNode 
+
 -- | delete
 hDelete :: HAddr -> Heap -> Heap
 hDelete hAddr (Heap freeAddrs mapHAddr2IndegNode) =
   Heap (hAddr : freeAddrs) (M.delete hAddr mapHAddr2IndegNode)
+
+-- | Map.findMin
+hFindMin :: Heap -> Maybe (HAddr, IndegNode)
+hFindMin (Heap _ mapHAddr2IndegNode) =
+  if M.null mapHAddr2IndegNode then Nothing
+  else Just $ M.findMin mapHAddr2IndegNode
 
 setIndeg :: HAddr -> Indeg -> Heap -> Heap
 setIndeg hAddr indeg (Heap freeAddrs mapHAddr2IndegNode) =

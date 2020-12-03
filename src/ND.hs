@@ -16,6 +16,7 @@ import           Control.Monad
 -- import           Control.Applicative
 import           Data.Tuple.Extra
 import qualified Data.Map.Strict               as M
+import qualified Data.Set                      as S
 import           Vis.DGraph                     ( DGraph
                                                 , map2DGraph
                                                 )
@@ -54,19 +55,24 @@ readAndRunND state2String input = case normalize =<< compile input of
           .   showEnds state2String
 
 
-data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
+data Path = Path Int [(Int, State)] [((Int, Int), Rule)] 
 -- ^ The arguments are
--- the number of the states,
--- the list of the state id and the states
--- and the list of the tuples : [(
--- (the id of the before state, the id of the consequent state)
--- , the rule that was applied to reduce
--- )]
+--   the number of the states,
+--   the list of the state id and the states
+--   and the list of the tuples : [(
+--   (the id of the before state, the id of the consequent state)
+--   , the rule that was applied to reduce
+--   )]
 
 -- | The initial path
 initialPath :: State -> Path
 initialPath state = Path 1 [(0, state)] []
 
+
+path2TerminalStates :: Path -> [(Int, State)]
+path2TerminalStates (Path _ states transitions)
+  = let nonTerminals = S.fromList $ map (fst . fst) transitions
+    in filter (flip S.notMember nonTerminals . fst) states 
 
 addState2Path
   :: Int -> Path -> (State, Rule) -> (Path, Maybe (Int, (State, Rule)))
@@ -86,33 +92,52 @@ addState2Path oldStateId (Path stateN states transitions) (newState, appliedRule
       )
 
 
+showAllStates :: (State -> String) -> Path -> String
+showAllStates state2String path@(Path stateN states transitions) =
+  let terminalStates = path2TerminalStates path in
+    "State(s):\n"
+    ++ unlines
+    (reverse $ map
+     (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
+     states
+    )
+    ++ "\nTerminal state id(s):\n"
+    ++ unlines
+    (reverse $ map
+      (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
+      terminalStates
+    )
+  ++ "\nTransiton(s):\n"
+  ++ unlines
+  ((reverse . map
+     (\((prev, next), rule) ->
+         show prev
+         ++ " ~> "
+         ++ show next
+         ++ " with a rule \""
+         ++ show rule
+         ++ "\"."
+     )
+   )
+    transitions
+  )
+  ++ "'# of States'(stored)  = " ++ show stateN ++ ".\n"
+  ++ "'# of States'(end)     = " ++ show (length terminalStates) ++ ".\n"
+  ++ "'# of Transitions'     = " ++ show (length transitions) ++ ".\n"
+  
+
 showEnds :: (State -> String) -> Path -> String
-showEnds state2String (Path stateN states transitions) =
-  "\nEnded with state number: "
-    ++ show stateN
-    ++ ".\n"
-    ++ "\nstates:\n"
-    ++ unlines
-         (reverse $ map
-           (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
-           states
-         )
-    ++ "\ntransitions: "
-    ++ show (length transitions)
-    ++ "\n"
-    ++ unlines
-         ((reverse . map
-            (\((prev, next), rule) ->
-              show prev
-                ++ " ~> "
-                ++ show next
-                ++ " with a rule \""
-                ++ show rule
-                ++ "\"."
-            )
-          )
-           transitions
-         )
+showEnds state2String path@(Path stateN states transitions) 
+  = let terminalStates = path2TerminalStates path in ""
+      ++ "'# of States'(stored)  = " ++ show stateN ++ ".\n"
+      ++ "'# of States'(end)     = " ++ show (length terminalStates) ++ ".\n"
+      ++ "'# of Transitions'     = " ++ show (length transitions) ++ ".\n"
+      ++ "\nTermianl state(s):\n"
+      ++ unlines
+      (reverse $ map
+       (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
+       terminalStates
+      )
 
 
 runND :: (State -> String) -> Int -> Path -> State -> IO Path
@@ -127,7 +152,7 @@ runND state2String oldStateID oldPath oldState =
           )
           transitions
         >> if null transitions
-             then return newPath
+             then return newPath 
              else
                let runND' path (oldStateId, (state, _)) =
                      runND state2String oldStateId path state
