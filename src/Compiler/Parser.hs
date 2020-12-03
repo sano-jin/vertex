@@ -7,10 +7,7 @@ module Compiler.Parser
 import           Compiler.Syntax                ( LinkLit(..)
                                                 , ProcLit(..)
                                                 )
-import           Control.Monad
-import           Control.Applicative            ( liftA2
-                                                , (<*)
-                                                )
+import           Control.Applicative            ( liftA2 )
 import           Data.Functor.Identity
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
@@ -41,6 +38,9 @@ dot, turnstile, arrow :: Parser String
 dot = Token.dot lexer
 turnstile = Token.lexeme lexer $ string ":-"
 arrow = Token.lexeme lexer $ string "->"
+
+integer :: Parser Integer
+integer = Token.integer lexer
 
 whiteSpace :: Parser ()
 whiteSpace = Token.whiteSpace lexer
@@ -87,7 +87,7 @@ parseAtomBody :: Parser (String, [LinkLit])
 parseAtomBody = liftA2 (,) atomName $ parens (commaSep parseLink) <|> return []
 
 parseLink :: Parser LinkLit
-parseLink = LinkLit <$> linkName <|> uncurry AtomLit <$> parseAtomBody
+parseLink = LinkLit <$> linkName <|> uncurry AtomLit <$> parseAtomBody <|> IntLit <$> integer
 
 parseProc :: Parser [ProcLit]
 parseProc =
@@ -100,6 +100,9 @@ parseProc =
     .   AliasLit Nothing
     .   uncurry AtomLit
     <$> parseAtomBody
+    <|> (: [])
+    .   AliasLit Nothing
+    .   IntLit <$> integer
     <|> parens parseLine
 
 readExpr :: String -> Either ParseError [ProcLit]

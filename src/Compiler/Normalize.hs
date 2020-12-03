@@ -8,6 +8,7 @@ import           Compiler.Process
 import           Control.Monad.Except
 import           Data.List
 import qualified Data.Set                      as S
+import           Data.Maybe
 
 -- | Normalize the indirection from local link to local link
 substituteAddr :: Addr -> Addr -> Addr -> Addr
@@ -18,7 +19,7 @@ normalizeLocal2LocalLinkVal fromAddr toAddr (LocalLinkVal addr) =
   LocalLinkVal $ substituteAddr fromAddr toAddr addr
 normalizeLocal2LocalLinkVal fromAddr toAddr (AtomVal atomName links) =
   AtomVal atomName $ map (normalizeLocal2LocalLinkVal fromAddr toAddr) links
-normalizeLocal2LocalLinkVal _ _ freeLinkVal = freeLinkVal
+normalizeLocal2LocalLinkVal _ _ freeLinkOrInt = freeLinkOrInt
 
 normalizeLocal2LocalAliasVal :: (Addr, Indeg) -> Addr -> ProcVal -> ProcVal
 normalizeLocal2LocalAliasVal (fromAddr, fromIndeg) toAddr (LocalAliasVal indeg addr linkVal)
@@ -48,7 +49,7 @@ normalizeLocal2FreeLinkVal fromAddr toLinkName (LocalLinkVal addr) =
   if fromAddr == addr then FreeLinkVal toLinkName else LocalLinkVal addr
 normalizeLocal2FreeLinkVal fromAddr toLinkName (AtomVal atomName links) =
   AtomVal atomName $ map (normalizeLocal2FreeLinkVal fromAddr toLinkName) links
-normalizeLocal2FreeLinkVal _ _ freeLinkVal = freeLinkVal
+normalizeLocal2FreeLinkVal _ _ freeLinkOrInt = freeLinkOrInt
 
 normalizeLocal2FreeAliasVal :: Addr -> String -> ProcVal -> ProcVal
 normalizeLocal2FreeAliasVal fromAddr toLinkName (LocalAliasVal indeg addr linkVal)
@@ -88,19 +89,12 @@ normalizeFree2LocalIndirection procVals =
     _ -> error "should not reach here"
 
 
-filterMap :: (a -> Maybe b) -> [a] -> [b]
-filterMap f (h : t) = case f h of
-  Just h' -> h' : filterMap f t
-  Nothing -> filterMap f t
-filterMap _ [] = []
-
-
 getLocalEffectiveAddr :: ProcVal -> Maybe Addr
 getLocalEffectiveAddr (LocalAliasVal _ addr _) = Just addr
 getLocalEffectiveAddr _                        = Nothing
 
 collectLocalEffectiveAddrs :: [ProcVal] -> S.Set Addr
-collectLocalEffectiveAddrs = S.fromList . filterMap getLocalEffectiveAddr
+collectLocalEffectiveAddrs = S.fromList . mapMaybe getLocalEffectiveAddr
 
 collectNotSerialAddrOfLinkVal :: S.Set Addr -> LinkVal -> S.Set Addr
 collectNotSerialAddrOfLinkVal effectiveLocalAddrs (LocalLinkVal addr) =
@@ -130,7 +124,7 @@ collectNotSerialAddrOfProcVal effectiveLocalAddrs freeAliasVal@(FreeAliasVal _ p
 collectNotSerialAddrsOfProcVals :: [ProcVal] -> [(S.Set Addr, ProcVal)]
 collectNotSerialAddrsOfProcVals procVals =
   let effectiveLocalAddrs = collectLocalEffectiveAddrs procVals
-  in  filterMap (collectNotSerialAddrOfProcVal effectiveLocalAddrs) procVals
+  in  mapMaybe (collectNotSerialAddrOfProcVal effectiveLocalAddrs) procVals
 
 normalizeProcVals :: [ProcVal] -> ThrowsCompileError [ProcVal]
 normalizeProcVals procVals =
@@ -146,8 +140,8 @@ normalizeProcVals procVals =
 
 normalizeRule :: Rule -> ThrowsCompileError Rule
 normalizeRule (Rule lhs rhs rhsRules) = do
-  lhs'      <- normalizeProcVals lhs
-  rhs'      <- normalizeProcVals rhs
+  lhs'      <- normalizeProcVals  lhs
+  rhs'      <- normalizeProcVals  rhs
   rhsRules' <- mapM normalizeRule rhsRules
   return $ Rule lhs' rhs' rhsRules'
 
