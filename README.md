@@ -155,11 +155,15 @@ Also, feel free to take a look at the [Slide](https://github.com/sano-jin/vertex
 
 - `dhli`
   - the ordinary (one-way) execution if you put no option.
+    - E.g. `stack exec dhli -- example/sample.dhl`
   - put `--nd` for the non-deterministic execution 
+    - E.g. `stack exec dhli -- example/nd1.dhl`
 - `dhlvis`
   - visualizes the graph rewriting process in the ordinary execution.
+    - E.g. `stack exec dhlvis -- example/cube.dhl`
 - `stateViewer`
   - visualizes the state space (all possible states and the transitions).
+    - E.g. `stack exec stateViewer -- example/nd1.dhl`
 
 ## Development
 
