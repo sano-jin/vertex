@@ -150,6 +150,17 @@ See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get m
 
 Also, feel free to take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
 
+
+## Tools in a nutshell
+
+- `dhli`
+  - the ordinary (one-way) execution if you put no option.
+  - put `--nd` for the non-deterministic execution 
+- `dhlvis`
+  - visualizes the graph rewriting process in the ordinary execution.
+- `stateViewer`
+  - visualizes the state space (all possible states and the transitions).
+
 ## Development
 
 ### Test
