@@ -4,7 +4,7 @@
 
 *This is an experimental project*
 
-Directed HyperLMNtal (DHLMNtal) is a derived calculus model of LMNtal.
+Directed HyperLMNtal (DHLMNtal) is a derived calculus model of [LMNtal](https://www.ueda.info.waseda.ac.jp/lmntal/index.php).
 It is designed to be able to deal with hypergraphs representing structures and pointers easily
 without having dangling pointers.
 
