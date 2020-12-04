@@ -38,7 +38,7 @@ DHLMNtal program is consists of graphs. Graphs are consists of Atoms (= nodes) a
 Separate atoms with commas.
 
 For example, you may write like this.
-```
+```Prolog
 \X.(a(X), X -> b)
 ```
 
@@ -69,7 +69,7 @@ Notice the rule remains and tries to rewrite graphs until it fails.
 You can use period to separate graphs and rules.
 
 Rewrite the former program as the following
-```
+```Prolog
 a(b).
 X -> b :- X -> c.
 ```
@@ -90,7 +90,7 @@ stack exec dhlvis -- test1.dhl
 ```
 
 The output will be the following.
-```
+```Prolog
 0: 
 a(b). 
 
@@ -115,7 +115,7 @@ You can use `--nd` (non-deterministic) option to construct the state space (all 
 This can be applied to the not-terminating program.
 
 For example, `example/nd1.dhl` is a following program.
-```
+```Prolog
 a.
 
 a :- b.
@@ -126,9 +126,8 @@ e :- f.
 f :- a.
 ```
 
-Run this as the following.
 ```bash
-stack exec dhlvis  -- example/nd1.dhl --nd
+stack exec dhli  -- example/nd1.dhl --nd
 ```
 
 Also, you can visualize the state space.
