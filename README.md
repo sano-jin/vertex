@@ -52,9 +52,18 @@ stack exec dhlvis -- test1.dhl
 
 Press ESC to terminate.
 
+
+There also are several abbreveation schemes for convenience.
+
+For example, `a(b)` is as same as the former `\X.(a(X), X -> b)`.
+Since you can embed the atom where the outgoing link should occur
+and omit the link creation if the outgoing link and the incomming link of the atom are the same
+and there is no other occurrence in the link creation
+(i.e. `\Y.(a(Y), Y -> b)` can be written as `a(b)`).
+
 ### Rules
 
-Besides the graphs, you can write the (rewriting) *rule* `<left hand side:subgraph to match> :- <right hand-side: subgraph to yields>`.
+Besides the graphs, you can write the (rewriting) *rules* `<left hand side:subgraph to match> :- <right hand-side: subgraph to yields>`.
 The rule will rewrite the graph to its right hand-side if it's left hand-side mathces.
 Notice the rule remains and tries to rewrite graphs until it fails.
 
@@ -62,7 +71,7 @@ You can use period to separate graphs and rules.
 
 Rewrite the former program as the following
 ```
-\X(a(X), X -> b).
+a(b).
 X -> b :- X -> c.
 ```
 
