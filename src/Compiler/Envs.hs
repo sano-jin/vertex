@@ -5,6 +5,8 @@ module Compiler.Envs
   , updateLocalMapAddrIndeg
   , updateLocalEnv
   , updateFreeTailEnv
+  , addFreeTail
+  , addFreeHead
   , updateAddrSeed
   , nullEnvs
   , incrAddrSeed
@@ -56,13 +58,15 @@ updateLocalMapAddrIndeg f envs =
 updateFreeTailEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
 updateFreeTailEnv f envs = envs { freeTailEnv = f $ freeTailEnv envs }
 
-{--|
+addFreeTail :: String -> Envs -> Envs
+addFreeTail = updateFreeTailEnv . S.insert
+
 updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
 updateFreeHeadEnv f envs
   = envs { freeHeadEnv = f $ freeHeadEnv envs }
-|--}
 
-
+addFreeHead :: String -> Envs -> Envs
+addFreeHead = updateFreeHeadEnv . S.insert
 
 updateAddrSeed :: (Int -> Int) -> Envs -> Envs
 updateAddrSeed f envs = envs { addrSeed = f $ addrSeed envs }
