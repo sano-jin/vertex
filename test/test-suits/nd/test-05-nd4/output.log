@@ -1,0 +1,22 @@
+0: a. a. 
+1: a. b. 
+2: a. c. 
+3: a. d. 
+4: b. b. 
+5: c. b. 
+6: d. b. 
+7: c. c. 
+8: d. c. 
+9: d. d. 
+
+'# of States'(stored)  = 10.
+'# of States'(end)     = 5.
+'# of Transitions'     = 13.
+
+Termianl state(s):
+4: b. b. 
+5: c. b. 
+6: d. b. 
+7: c. c. 
+8: d. c. 
+
