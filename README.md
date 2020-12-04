@@ -81,7 +81,7 @@ and visualize it.
 stack exec dhlvis -- test1.dhl
 ```
 
-![The graphical image of the test1.dhl](https://github.com/sano-jin/vertex/blob/develop/doc/dhlvis_sample1-1.png)
+![The graphical image of the test1.dhl](https://github.com/sano-jin/vertex/blob/develop/doc/dhlvis_sample1-2.png)
 
 Press SPACE to reduce (rewrite) 1 step.
 
