@@ -148,7 +148,7 @@ You can easily see that the transitions are forming a cycle and there is no term
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
 [This pdf](https://github.com/sano-jin/vertex/blob/master/doc/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
 
-Also, feel free to take a look at the [Slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
+Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
 
 
 ## Tools in a nutshell
@@ -174,6 +174,5 @@ Run this test to obtain more detailed information about the state of the heap, e
 stack test --test-arguments "example/sample.dhl"
 ```
 
-
-
+Also, see [here](https://github.com/sano-jin/vertex/tree/master/test/test-suits) to get more information about testing this.
 
