@@ -1,0 +1,3 @@
+Error : Parse error at "vertex" (line 1, column 3):
+unexpected 'a'
+expecting "(", ",", ":-", "." or end of input

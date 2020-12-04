@@ -1,0 +1,10 @@
+0: a(L6, L4). a(L5, L6). a(L4, L5). L6 -> link. L5 -> link. L4 -> link. 
+1: a(L3, L2). a(L3, L1). a(L1, L2). L3 -> link. L2 -> link. L1 -> link. 
+
+'# of States'(stored)  = 2.
+'# of States'(end)     = 1.
+'# of Transitions'     = 1.
+
+Termianl state(s):
+1: a(L3, L2). a(L3, L1). a(L1, L2). L3 -> link. L2 -> link. L1 -> link. 
+
