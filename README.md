@@ -142,7 +142,7 @@ stack exec stateViewer  -- example/nd1.dhl --nd
 
 ![stateViewer_nd1](https://github.com/sano-jin/vertex/blob/develop/doc/stateViewer_nd1.png)
 
-You can easily know that the transitions are forming a cycle and there is no terminal state.
+You can easily see that the transitions are forming a cycle and there is no terminal state.
 
 ### For more informations
 See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
