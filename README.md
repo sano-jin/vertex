@@ -29,7 +29,7 @@ DHLMNtal program is consists of graphs. Graphs are consists of Atoms (= nodes) a
   - E.g. `X`, `Y`, ...
 - Atoms
   - An atom has an *incomming link*, its name and 0 or more *outgoing links*.
-    Denote them as `<The incomming link> "->" <the name of the atom> "(" <the outgoing links> ")"`.
+    Denote them as `<the incomming link> "->" <the name of the atom> "(" <the outgoing links> ")"`.
     - The name can be an identifier starting from small lettes.
     - You can omit the parentheses if there is no outging link and
     - you can omit the incomming link if the link doesn't appear other than it.
@@ -62,7 +62,7 @@ and there is no other occurrence in the link creation.
 
 ### Rules
 
-Besides the graphs, you can write the (rewriting) *rules* `<left hand side:subgraph to match> :- <right hand-side: subgraph to yields>`.
+Besides the graphs, you can write the (rewriting) *rules* `<left hand side: subgraph to match> :- <right hand-side: subgraph to yield>`.
 The rule will rewrite the graph to its right hand-side if it's left hand-side mathces.
 Notice the rule remains and tries to rewrite graphs until it fails.
 
@@ -137,7 +137,7 @@ Also, you can visualize the state space.
 Run `stateViewer` as below.
 
 ```bash
-stack exec stateViewer  -- example/nd1.dhl --nd
+stack exec stateViewer  -- example/nd1.dhl
 ```
 
 ![stateViewer_nd1](https://github.com/sano-jin/vertex/blob/develop/doc/stateViewer_nd1.png)
