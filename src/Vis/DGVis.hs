@@ -17,11 +17,11 @@ import           Vis.DGraph                     ( randamizeDGraph
 import qualified Data.Map.Strict               as M
 import           Vis.Geom
 
-diameter :: Float
-diameter = 10
+radius :: Float
+radius = 10
 
 circleNode :: Picture
-circleNode = circleSolid diameter
+circleNode = circleSolid radius
 
 dGraph2Picture :: DGraph String Float -> Picture
 dGraph2Picture dGraph = Pictures
@@ -41,7 +41,7 @@ arrow start end =
 
 dNode2PictureNode :: DNode String Float -> Picture
 dNode2PictureNode node@(Node a _ (pos, _)) = applyV2 translate pos
-  $ Pictures [color (aquamarine) $ circleNode, scale 0.2 0.2 $ text a]
+  $ Pictures [color aquamarine $ circleNode, scale 0.2 0.2 $ text a]
 
 dNode2PictureArrow :: DGraph String Float -> DNode String Float -> Picture
 dNode2PictureArrow dGraph node@(Node _ _ (pos, _)) =
