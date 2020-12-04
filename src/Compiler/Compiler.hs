@@ -52,7 +52,7 @@ data CompileError = IsNotSerial String
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
 
 
--- | functions for showing errors
+-- | Functions for showing errors.
 showCompileError :: CompileError -> String
 showCompileError (IsNotSerial name) = "link '" ++ name ++ "' is not serial"
 showCompileError (IsNotFunctional name) =
@@ -78,7 +78,7 @@ showCompileError (IsNotSerialAfterNormalization errors) =
       ++ show procVal
       ++ "' is not serial"
 
--- | A helper function for updating a list of tuples
+-- | A helper function for updating a list of tuples.
 updateAssocList
   :: Eq key => (value -> value) -> key -> [(key, value)] -> [(key, value)]
 updateAssocList f key (h@(k, v) : t) =
@@ -87,22 +87,23 @@ updateAssocList _ _ [] = []
 
 
 -- | Check if the links are the local link or not.
--- If it is a local link, then increse its indegree in the environment
+--   If it is a local link, then increse its indegree in the environment
 compilePointingToLit :: Envs -> LinkLit -> (Envs, LinkVal)
 compilePointingToLit envs (LinkLit linkName) =
   case lookup linkName $ localEnv envs of
-    Nothing        -> (envs, FreeLinkVal linkName)
+    Nothing        -> (addFreeHead linkName envs, FreeLinkVal linkName)
     Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
 compilePointingToLit envs (AtomLit atomName links) =
   second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
 compilePointingToLit envs (IntLit i) = (envs, IntVal i)  
 
 -- | Check if the incoming link is the local link or not.
--- Also, check the "functional condition",
--- which specifies that the head of the same link should not have appeared in the process
--- Notice the indegree of the local link are not set correctly for this time.
--- Here, initially, we just set it to be 0.
--- It will be correctly set after checking all the process appears on left/right hand-side of the rules or at the top-level process.
+--   Also, check the "functional condition",
+--   which specifies that the head of the same link should not have appeared in the process
+--   Notice the indegree of the local link are not set correctly for this time.
+--   Here, initially, we just set it to be 0.
+--   It will be correctly set after checking all the process
+--   appears on left/right hand-side of the rules or at the top-level process.
 compileProcLit :: Envs -> ProcLit -> ThrowsCompileError (Envs, Procs)
 compileProcLit envs (AliasLit (Just linkName) pointingTo) =
   case lookup linkName $ localEnv envs of
@@ -110,7 +111,7 @@ compileProcLit envs (AliasLit (Just linkName) pointingTo) =
       then throwError $ IsNotFunctional linkName
       else
         let (envs', pointingToVal) = compilePointingToLit
-              (updateFreeTailEnv (S.insert linkName) envs)
+              (addFreeTail linkName envs)
               pointingTo
         in  return (envs', ([FreeAliasVal linkName pointingToVal], []))
     Just (_, True) -> throwError $ IsNotFunctional linkName
@@ -129,15 +130,15 @@ compileProcLit envs (AliasLit Nothing pointingTo) =
 
 
 -- | A Rule `(P :- Q)` has several conditions.
--- - There should be no rules on `Q`,
---   otherwise thrors the "RuleOnLHS" error.
--- - `fl(P)` must be a superset of `fl(Q)`,
---   otherwise thrors the "NewFreeLinksOnRHS" error.
--- - For any free tail link `X` in P,
---   there must be a free tail link `X` that has the same name in `Q`,
---   otherwise thrors the "NotRedirectedLinks" error.
--- Also, this sets the indeg of all the local links appears in the processes on the left/right hand-sides
-
+--   - There should be no rules on `Q`,
+--     otherwise thrors the "RuleOnLHS" error.
+--   - `fl(P)` must be a superset of `fl(Q)`,
+--     otherwise thrors the "NewFreeLinksOnRHS" error.
+--   - For any free tail link `X` in P,
+--     there must be a free tail link `X` that has the same name in `Q`,
+--     otherwise thrors the "NotRedirectedLinks" error.
+--   Also, this sets the indeg of all the local links
+--   appears in the processes on the left/right hand-sides
 compileProcLit envs (RuleLit lhs rhs)
   = do (lhsEnvs, (lhsProcs, lhsRules)) <- compileProcLits nullEnvs lhs
        if not $ null lhsRules
@@ -162,12 +163,12 @@ compileProcLit envs (RuleLit lhs rhs)
                 else return (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
 
 
--- | handles the link creation
--- firstly add the new local link to the environment,
--- check the child processes,
--- then check whether the _head_ of the link appears or not if the indeg is bigger than zero.
--- If there is no _head_, throws the "IsNotSerial" error.
--- Drops the newly created link from the environment before returning the result
+-- | Handles the link creation.
+--   firstly add the new local link to the environment,
+--   check the child processes,
+--   then check whether the _head_ of the link appears or not if the indeg is bigger than zero.
+--   If there is no _head_, throws the "IsNotSerial" error.
+--   Drops the newly created link from the environment before returning the result
 compileProcLit envs (CreationLit linkName procs)
   = let addr = addrSeed envs
         envs' =
@@ -181,7 +182,7 @@ compileProcLit envs (CreationLit linkName procs)
            then throwError $ IsNotSerial linkName
            else return (updateLocalEnv (drop 1) _envs, procsAndRules)
 
--- | set indeg of the local links
+-- | Set indeg of the local links.
 setIndeg :: Envs -> ProcVal -> ProcVal
 setIndeg envs (LocalAliasVal _ addr pointingTo) =
   LocalAliasVal (localMapAddrIndeg envs M.! addr) addr pointingTo
@@ -193,12 +194,12 @@ setIndegs envs = map (setIndeg envs)
 zipConcatBoth :: [([a], [b])] -> ([a], [b])
 zipConcatBoth = bimap concat concat . unzip
 
--- | check the processes
+-- | Check the processes.
 compileProcLits :: Envs -> [ProcLit] -> ThrowsCompileError (Envs, Procs)
 compileProcLits envs =
   fmap (second zipConcatBoth) . monadicMapAccumL compileProcLit envs
 
--- | check the top-level process
+-- | Check the top-level process.
 compile :: String -> ThrowsCompileError Procs
 compile input
   = case Parser.readExpr input of
