@@ -58,8 +58,7 @@ There also are several abbreveation schemes for convenience.
 For example, `a(b)` is as same as the former `\X.(a(X), X -> b)`.
 Since you can embed the atom where the outgoing link should occur
 and omit the link creation if the outgoing link and the incomming link of the atom are the same
-and there is no other occurrence in the link creation
-(i.e. `\Y.(a(Y), Y -> b)` can be written as `a(b)`).
+and there is no other occurrence in the link creation.
 
 ### Rules
 
