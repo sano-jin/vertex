@@ -1,0 +1,56 @@
+0: b. l. l. l. l. r. r. r. r. 
+1: s. l. l. l. l. r. r. r. 
+2: s. l. l. l. r. r. r. r. 
+3: r. l. l. l. l. r. r. b. 
+4: r. l. l. l. l. r. s. 
+5: r. l. l. l. s. r. r. 
+6: r. l. l. l. l. r. b. 
+7: r. l. l. l. l. s. 
+8: r. l. l. l. s. r. 
+9: r. l. l. l. l. b. 
+10: s. l. l. l. l. 
+11: r. l. l. l. s. 
+12: l. l. l. l. b. 
+13: l. l. l. s. 
+14: l. l. l. b. 
+15: l. l. s. 
+16: l. l. b. 
+17: l. s. 
+18: l. b. 
+19: s. 
+20: r. l. l. l. b. 
+21: r. l. l. s. 
+22: r. l. l. b. 
+23: r. l. s. 
+24: r. l. b. 
+25: r. s. 
+26: r. b. 
+27: r. l. l. l. r. b. 
+28: r. l. l. s. r. 
+29: r. l. l. r. b. 
+30: r. l. s. r. 
+31: r. l. r. b. 
+32: r. s. r. 
+33: r. r. b. 
+34: r. l. l. l. r. r. b. 
+35: r. l. l. s. r. r. 
+36: r. l. l. r. r. b. 
+37: r. l. s. r. r. 
+38: r. l. r. r. b. 
+39: r. s. r. r. 
+40: r. r. r. b. 
+41: r. l. l. l. r. r. r. b. 
+42: r. l. l. s. r. r. r. 
+43: r. l. l. r. r. r. b. 
+44: r. l. s. r. r. r. 
+45: r. l. r. r. r. b. 
+46: r. s. r. r. r. 
+47: r. r. r. r. b. 
+
+'# of States'(stored)  = 48.
+'# of States'(end)     = 1.
+'# of Transitions'     = 78.
+
+Termianl state(s):
+19: s. 
+
