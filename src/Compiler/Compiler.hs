@@ -52,6 +52,8 @@ data CompileError = IsNotSerial String
                   | FreeLinksOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
+                  | NotInjectiveProcessContext ProcLit
+                  | TypeConstraintsOnRHS (S.Set LinkLit) ProcLit
 
 
 -- | Functions for showing errors.
@@ -59,16 +61,20 @@ showCompileError :: CompileError -> String
 showCompileError (IsNotSerial name) = "link '" ++ name ++ "' is not serial"
 showCompileError (IsNotFunctional name) =
   "link '" ++ name ++ "' is not functional"
-showCompileError (RuleOnLHS rule) = "Rule on LHS in " ++ showProc rule
+showCompileError (RuleOnLHS rule) = "Rule on LHS in " ++ show rule
 showCompileError (NewFreeLinksOnRHS links rule) =
-  "New free link(s) " ++ showSet links ++ " appeard on RHS of " ++ showProc rule
+  "New free link(s) " ++ showSet links ++ " appeard on RHS of " ++ show rule
 showCompileError (NotRedirectedLinks links rule) =
   "Not redirected free tail link(s) "
     ++ showSet links
     ++ " appeard on RHS of "
-    ++ showProc rule
+    ++ show rule
 showCompileError (FreeLinksOnTopLevel links) =
   "Free link(s) " ++ showSet links ++ " appeard on the top level process"
+showCompileError (NotInjectiveProcessContext pCtx) =
+  "Not injective process context \"" ++ show pCtx ++ "\""
+showCompileError (TypeConstraintsOnRHS pCtxs rule) =
+  "Type constraints " ++ show pCtxs ++ " appeared on RHS of " ++ show rule
 showCompileError (IsNotSerialAfterNormalization errors) =
   intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
  where
@@ -98,7 +104,9 @@ compilePointingToLit envs (LinkLit linkName) =
     Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
 compilePointingToLit envs (AtomLit atomName links) =
   second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
-compilePointingToLit envs (IntLit i) = (envs, IntVal i)  
+compilePointingToLit envs (DataLit dataAtom) = (envs, DataVal dataAtom)  
+compilePointingToLit envs (ProcessContextLit name maybeType)
+  = (envs, ProcessContextVal name maybeType)  
 
 -- | Check if the incoming link is the local link or not.
 --   Also, check the "functional condition",
@@ -142,12 +150,13 @@ compileProcLit envs (AliasLit Nothing pointingTo) =
 --     otherwise thrors the "NotRedirectedLinks" error.
 --   Also, this sets the indeg of all the local links
 --   appears in the processes on the left/right hand-sides
-compileProcLit envs (RuleLit lhs rhs)
+compileProcLit envs ruleLit@(RuleLit maybeName lhs guard rhs)
   = do (lhsEnvs, (lhsProcs, lhsRules)) <- compileProcLits nullEnvs lhs
        if not $ null lhsRules
-         then throwError $ RuleOnLHS $ RuleLit lhs rhs
+         then throwError $ RuleOnLHS ruleLit
          else
-         do (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
+         do (guardEnvs, (guardProcs, guardRules)) <- compileProcLits nullEnvs guard
+            (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
             let lhsProcs'             = setIndegs lhsEnvs lhsProcs
                 rhsProcs'             = setIndegs rhsEnvs rhsProcs
                 freeTailLinksOnLHS    = freeTailEnv lhsEnvs
@@ -160,10 +169,10 @@ compileProcLit envs (RuleLit lhs rhs)
                 notRedirectedLinks    = freeTailLinksOnLHS S.\\ freeTailLinksOnRHS
               in
               if not $ S.null newFreeLinksOnRHS
-              then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS $ RuleLit lhs rhs
+              then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS ruleLit
               else if not $ S.null notRedirectedLinks
-                then throwError $ NotRedirectedLinks notRedirectedLinks $ RuleLit lhs rhs
-                else return (envs, ([], [Rule lhsProcs' rhsProcs' rhsRules]))
+                then throwError $ NotRedirectedLinks notRedirectedLinks ruleLit
+                else return (envs, ([], [Rule maybeName lhsProcs' guardProcs rhsProcs' rhsRules]))
 
 
 -- | Handles the link creation.

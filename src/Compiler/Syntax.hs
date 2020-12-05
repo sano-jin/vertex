@@ -33,6 +33,9 @@ data LinkLit = LinkLit String
              | ProcessContextLit String (Maybe Type)
                -- ^ $p : type
 
+instance Show LinkLit where
+  show = showLink
+  
 data DataAtom = IntAtom Integer
               | StringAtom String
               deriving (Eq)
@@ -63,6 +66,9 @@ data ProcLit = AliasLit (Maybe String) LinkLit
              | CreationLit String [ProcLit]
                -- ^ \X.(P1,..,Pn)
 
+instance Show ProcLit where
+  show = showProc
+  
 -- | Show the top level processes
 showBlock :: [ProcLit] -> String
 showBlock = intercalate ". " . map showProc
