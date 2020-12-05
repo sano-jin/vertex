@@ -15,11 +15,12 @@ commentary with @some markup@.
 module Compiler.Syntax
   ( showBlock
   , showProc
-  , LinkLit(..)
-  , ProcLit(..)
+  , LinkLit  (..)
+  , ProcLit  (..)
+  , Type     (..)
+  , DataAtom (..)
   ) where
-import           Data.List
-
+import           Data.List  ( intercalate )
 
 -- | Links are denoted as the variable starting from the capital lettes
 --   or an embedded atom if the indegree of the pointing atom is 1.
@@ -27,9 +28,19 @@ data LinkLit = LinkLit String
                -- ^ X
              | AtomLit String [LinkLit]
                -- ^ p(X1,...,Xm)
-             | IntLit  Integer
-               -- ^ N :: int(N)
+             | DataLit DataAtom
+               -- ^ N : int(N)
+             | ProcessContextLit String (Maybe Type)
+               -- ^ $p : type
 
+data DataAtom = IntAtom Integer
+              | StringAtom String
+              
+data Type = TypeInt
+          | TypeString
+          | TypeUnary
+
+          
 -- | A process can be
 --   an Atom (aliasing from link)
 --   a rule
@@ -69,7 +80,12 @@ showLinkList args = "(" ++ unwordsList args ++ ")"
 
 -- | Show the given link or the embedded atom
 showLink :: LinkLit -> String
-showLink (LinkLit name     ) = name
-showLink (AtomLit name args) = name ++ showLinkList args
-showLink (IntLit i         ) = show i
-
+showLink (LinkLit name     )        = name
+showLink (AtomLit name args)        = name ++ showLinkList args
+showLink (DataLit (IntAtom i))      = show i
+showLink (DataLit (StringAtom str)) = show str
+showLink (ProcessContextLit name maybeType)
+  = "$" ++ name ++ maybe ""  ((":" ++) . showType) maybeType
+    where showType TypeInt    = "int"
+          showType TypeString = "string"
+          showType TypeUnary  = "unary"

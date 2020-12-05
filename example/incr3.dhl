@@ -15,7 +15,6 @@ init{
 }
 ```
 
-
 Also, this can be written in LMNtal as following.
 ```
 proc(load, 0).

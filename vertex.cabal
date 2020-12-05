@@ -30,6 +30,7 @@ library
       Compiler.Normalize
       Compiler.Parser
       Compiler.Process
+      Compiler.SpecParser
       Compiler.Syntax
       ND
       Repl

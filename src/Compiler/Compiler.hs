@@ -67,7 +67,6 @@ showCompileError (NotRedirectedLinks links rule) =
     ++ showProc rule
 showCompileError (FreeLinksOnTopLevel links) =
   "Free link(s) " ++ showSet links ++ " appeard on the top level process"
-showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
 showCompileError (IsNotSerialAfterNormalization errors) =
   intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
  where
@@ -77,6 +76,7 @@ showCompileError (IsNotSerialAfterNormalization errors) =
       ++ "' in '"
       ++ show procVal
       ++ "' is not serial"
+showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
 
 -- | A helper function for updating a list of tuples.
 updateAssocList
