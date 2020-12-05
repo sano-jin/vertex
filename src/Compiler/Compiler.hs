@@ -24,6 +24,8 @@ import qualified Compiler.Parser               as Parser
 import           Compiler.Process
 import           Compiler.Syntax                ( LinkLit(..)
                                                 , ProcLit(..)
+                                                , Type     (..)
+                                                , DataAtom (..)
                                                 , showProc
                                                 )
 import           Control.Monad.Except
@@ -77,6 +79,7 @@ showCompileError (IsNotSerialAfterNormalization errors) =
       ++ show procVal
       ++ "' is not serial"
 showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
+
 
 -- | A helper function for updating a list of tuples.
 updateAssocList

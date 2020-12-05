@@ -35,10 +35,21 @@ data LinkLit = LinkLit String
 
 data DataAtom = IntAtom Integer
               | StringAtom String
+              deriving (Eq)
               
+instance Show DataAtom where
+  show (IntAtom i)      = show i
+  show (StringAtom str) = show str
+
 data Type = TypeInt
           | TypeString
           | TypeUnary
+          deriving (Eq)
+
+instance Show Type where
+  show TypeInt    = "int"
+  show TypeString = "string"
+  show TypeUnary  = "unary"
 
           
 -- | A process can be
@@ -47,8 +58,8 @@ data Type = TypeInt
 --   or a link creation.
 data ProcLit = AliasLit (Maybe String) LinkLit
                -- ^ X -> p(X1,...,Xm)
-             | RuleLit  [ProcLit] [ProcLit]
-               -- ^ P :- P
+             | RuleLit (Maybe String) [ProcLit] [ProcLit] [ProcLit]
+               -- ^ name @@ P :- P | P
              | CreationLit String [ProcLit]
                -- ^ \X.(P1,..,Pn)
 
@@ -60,7 +71,11 @@ showBlock = intercalate ". " . map showProc
 showProc :: ProcLit -> String
 showProc (AliasLit (Just p) to) = showLink (LinkLit p) ++ " -> " ++ showLink to
 showProc (AliasLit Nothing to) = showLink to
-showProc (RuleLit lhs rhs) = showProcSet lhs ++ " :- " ++ showProcSet rhs
+showProc (RuleLit maybeName lhs guard rhs) =
+  let name     = maybe "" (++ " @@ ") maybeName
+      guardStr = if null guard then "" else showProcSet guard ++ " | "
+  in
+    name ++ showProcSet lhs ++ " :- " ++ guardStr ++ showProcSet rhs
 showProc (CreationLit link procs) = "\\" ++ link ++ "." ++ if length procs == 1
   then showProcSet procs
   else "(" ++ showProcSet procs ++ ")"
@@ -69,8 +84,8 @@ showProc (CreationLit link procs) = "\\" ++ link ++ "." ++ if length procs == 1
 showProcSet :: [ProcLit] -> String
 showProcSet = intercalate ", " . map showProc_
  where
-  showProc_ r@(RuleLit _ _) = "(" ++ showProc r ++ ")"
-  showProc_ others          = showProc others
+  showProc_ r@(RuleLit _ _ _ _) = "(" ++ showProc r ++ ")"
+  showProc_ others              = showProc others
 
 -- | Show the list of links of the atom
 showLinkList :: [LinkLit] -> String
@@ -82,10 +97,7 @@ showLinkList args = "(" ++ unwordsList args ++ ")"
 showLink :: LinkLit -> String
 showLink (LinkLit name     )        = name
 showLink (AtomLit name args)        = name ++ showLinkList args
-showLink (DataLit (IntAtom i))      = show i
-showLink (DataLit (StringAtom str)) = show str
+showLink (DataLit dataAtom )        = show dataAtom
 showLink (ProcessContextLit name maybeType)
-  = "$" ++ name ++ maybe ""  ((":" ++) . showType) maybeType
-    where showType TypeInt    = "int"
-          showType TypeString = "string"
-          showType TypeUnary  = "unary"
+  = "$" ++ name ++ maybe ""  ((":" ++) . show) maybeType
+

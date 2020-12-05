@@ -24,11 +24,11 @@ languageDef
              , Token.commentLine     = "%"
              , Token.identStart      = letter
              , Token.identLetter     = alphaNum <|> char '_' <|> char '\''
-             , Token.opStart         = oneOf "+-*:=/><"
-             , Token.opLetter        = oneOf "+-*:=/><"
+             , Token.opStart         = oneOf "+-*:=/><@|"
+             , Token.opLetter        = oneOf "+-*:=/><@|"
              , Token.reservedNames   = []
              , Token.reservedOpNames =
-                 ["+", ":", ":=", "*", "=", "/=", "<=", ">=", "<", ">"]
+                 ["+", ":", ":=", "*", "=", "/=", "<=", ">=", "<", ">", "@@", "->", "\\", "|"]
              }
 
 lexer :: Token.GenTokenParser String u Identity
@@ -37,38 +37,37 @@ lexer = Token.makeTokenParser languageDef
 
 parens :: Parser a -> Parser a
 parens = Token.parens lexer
--- reserevedOP = Token.reservedOp lexer
--- comma       = Token.comma      lexer
 
-dot, turnstile, arrow :: Parser String
+dot :: Parser String
 dot       = Token.dot lexer
-turnstile = Token.lexeme lexer $ string ":-"
-arrow     = Token.lexeme lexer $ string "->"
 
 integer :: Parser Integer
 integer = Token.integer lexer
 
-whiteSpace, colon, assign :: Parser ()
+whiteSpace, colon, assign, backslash, dollar, atat, turnstile, arrow, bar :: Parser ()
 whiteSpace = Token.whiteSpace lexer
 colon      = reserved ":"
 assign     = reserved ":="
+backslash  = reserved "\\"
+dollar     = reserved "$"
+atat       = reserved "@@"
+turnstile  = reserved ":-"
+arrow      = reserved "->"
+bar        = reserved "|"
 
-backslash, dollar :: Parser Char
-backslash = Token.lexeme lexer $ char '\\'
-dollar    = Token.lexeme lexer $ char '$'
-
-commaSep, commaSep1 :: Parser a -> Parser [a]
+commaSep :: Parser a -> Parser [a]
 commaSep  = Token.commaSep lexer
-commaSep1 = Token.commaSep1 lexer
 
 reserved :: String -> Parser ()
 reserved = Token.reservedOp lexer
 
 atomName :: Parser String
-atomName = Token.lexeme lexer $ liftA2 (:) lower $ many $ alphaNum <|> char '_' <|> char '\''
+atomName = Token.lexeme lexer
+           $ liftA2 (:) lower $ many $ alphaNum <|> char '_' <|> char '\''
 
 linkName :: Parser String
-linkName = Token.lexeme lexer $ liftA2 (:) upper $ many $ alphaNum <|> char '_' <|> char '\''
+linkName = Token.lexeme lexer
+           $ liftA2 (:) (upper <|> char '_') $ many $ alphaNum <|> char '_' <|> char '\''
 
 stringLit :: Parser String
 stringLit = Token.stringLiteral lexer
@@ -82,15 +81,18 @@ parseBlock = concat <$> sepEndBy1 parseLine dot
 
 parseLine :: Parser [ProcLit]
 parseLine = do
-  x <- parseList <|> return []
-  (do
-      y <- turnstile >> (parseList <|> return [])
-      return [RuleLit x y]
-    )
-    <|> return x
+  maybeRuleName <- optionMaybe $ try $ atomName <* atat
+  x <- parseList
+  (do y <- turnstile >> parseList
+      ((:[]) . RuleLit maybeRuleName x y <$> (bar >> parseList)
+        ) <|> return [RuleLit maybeRuleName x [] y]
+    ) <|> case maybeRuleName of
+            Just ruleName
+              -> unexpected $ "rule name \"" ++ ruleName ++ "\""
+            _ -> return x
 
 parseList :: Parser [ProcLit]
-parseList = concat <$> commaSep1 parseCreates
+parseList = concat <$> commaSep parseCreates
 
 parseCreates :: Parser [ProcLit]
 parseCreates = do
@@ -162,8 +164,8 @@ parseProc =
   )
   <|> (do link <- parseAtom0
           case link of
-            LinkLit linkName
-              -> unexpected $ "link \"" ++ linkName ++ "\""
+            LinkLit linkNameStr
+              -> unexpected $ "link \"" ++ linkNameStr ++ "\""
             _ -> return [AliasLit Nothing link])
   <|> parens parseLine
 
