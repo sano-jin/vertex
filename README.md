@@ -162,7 +162,7 @@ Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex
   - visualizes the graph rewriting process in the ordinary execution.
     - E.g. `stack exec dhlvis -- example/cube.dhl`
 - `stateViewer`
-  - visualizes the state space (all possible states and the transitions).
+  - visualizes the state transition space (all possible states and the transitions).
     - E.g. `stack exec stateViewer -- example/nd1.dhl`
 
 ## Development
