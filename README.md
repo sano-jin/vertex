@@ -62,7 +62,7 @@ and there is no other occurrence in the link creation.
 
 ### Rules
 
-Besides the graphs, you can write the (rewriting) *rules* `<left hand side: subgraph to match> :- <right hand-side: subgraph to yield>`.
+Besides the graphs, you can write the (rewriting) *rules* `<left hand side: subgraph to match> ":-" <right hand-side: subgraph to yield>`.
 The rule will rewrite the graph to its right hand-side if it's left hand-side mathces.
 Notice the rule remains and tries to rewrite graphs until it fails.
 
