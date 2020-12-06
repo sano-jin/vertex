@@ -25,11 +25,13 @@ source-repository head
 
 library
   exposed-modules:
+      Compiler.CheckGuard
       Compiler.Compiler
       Compiler.Envs
       Compiler.Normalize
       Compiler.Parser
       Compiler.Process
+      Compiler.SpecCompiler
       Compiler.SpecParser
       Compiler.Syntax
       ND

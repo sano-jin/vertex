@@ -1,11 +1,11 @@
-{-# LANGUAGE Safe #-}
+-- {-# LANGUAGE Safe #-}
 
 module Compiler.Normalize
   ( normalize
   ) where
 import           Compiler.Compiler
 import           Compiler.Process
-import           Control.Monad.Except
+import           Control.Monad.Except          hiding ( guard )
 import           Data.List
 import qualified Data.Set                      as S
 import           Data.Maybe
@@ -19,7 +19,7 @@ normalizeLocal2LocalLinkVal fromAddr toAddr (LocalLinkVal addr) =
   LocalLinkVal $ substituteAddr fromAddr toAddr addr
 normalizeLocal2LocalLinkVal fromAddr toAddr (AtomVal atomName links) =
   AtomVal atomName $ map (normalizeLocal2LocalLinkVal fromAddr toAddr) links
-normalizeLocal2LocalLinkVal _ _ freeLinkOrInt = freeLinkOrInt
+normalizeLocal2LocalLinkVal _ _ freeLinkOrData = freeLinkOrData
 
 normalizeLocal2LocalAliasVal :: (Addr, Indeg) -> Addr -> ProcVal -> ProcVal
 normalizeLocal2LocalAliasVal (fromAddr, fromIndeg) toAddr (LocalAliasVal indeg addr linkVal)
@@ -139,11 +139,11 @@ normalizeProcVals procVals =
         else throwError $ IsNotSerialAfterNormalization notSerials
 
 normalizeRule :: Rule -> ThrowsCompileError Rule
-normalizeRule (Rule lhs rhs rhsRules) = do
+normalizeRule (Rule maybeName lhs guard rhs rhsRules) = do
   lhs'      <- normalizeProcVals lhs
   rhs'      <- normalizeProcVals rhs
   rhsRules' <- mapM normalizeRule rhsRules
-  return $ Rule lhs' rhs' rhsRules'
+  return $ Rule maybeName lhs' guard rhs' rhsRules'
 
 normalize :: Procs -> ThrowsCompileError Procs
 normalize (procVals, rules) = do

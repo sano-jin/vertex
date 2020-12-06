@@ -14,7 +14,11 @@ commentary with @some markup@.
 module Compiler.Compiler
   ( compile
   , ThrowsCompileError
-  , CompileError(IsNotSerialAfterNormalization)
+  , CompileError( IsNotSerialAfterNormalization
+                , NotInjectiveProcessContext
+                , TypeConstraintsOnRHS
+                , UnexpectedOpOnGuard 
+                )
   ) where
 import           Compiler.Envs
 import qualified Compiler.Parser               as Parser
@@ -24,9 +28,8 @@ import qualified Compiler.Parser               as Parser
 import           Compiler.Process
 import           Compiler.Syntax                ( LinkLit(..)
                                                 , ProcLit(..)
-                                                , Type     (..)
-                                                , DataAtom (..)
-                                                , showProc
+                                                , Type   (..)
+                                                -- , DataAtom (..)
                                                 )
 import           Control.Monad.Except
 import           Data.Bifunctor                 ( bimap )
@@ -43,6 +46,12 @@ type ThrowsCompileError = Either CompileError
 instance Show CompileError where
   show = showCompileError
 
+
+
+
+
+
+
 -- | type for denoting compile errors
 data CompileError = IsNotSerial String
                   | IsNotFunctional String
@@ -52,9 +61,14 @@ data CompileError = IsNotSerial String
                   | FreeLinksOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
-                  | NotInjectiveProcessContext ProcLit
-                  | TypeConstraintsOnRHS (S.Set LinkLit) ProcLit
-
+                  | NotInjectiveProcessContext LinkVal Rule
+                    -- ^ checked in the Compiler.CheckGuard
+                  | TypeConstraintsOnRHS (S.Set Type) Rule
+                    -- ^ checked in the Compiler.CheckGuard
+                  | UnexpectedOpOnGuard LinkVal Rule
+                    -- ^ checked in the Compiler.CheckGuard
+                  | LinkOnGuard ProcLit
+                  | RuleOnGuard ProcLit [Rule]
 
 -- | Functions for showing errors.
 showCompileError :: CompileError -> String
@@ -71,10 +85,19 @@ showCompileError (NotRedirectedLinks links rule) =
     ++ show rule
 showCompileError (FreeLinksOnTopLevel links) =
   "Free link(s) " ++ showSet links ++ " appeard on the top level process"
-showCompileError (NotInjectiveProcessContext pCtx) =
-  "Not injective process context \"" ++ show pCtx ++ "\""
-showCompileError (TypeConstraintsOnRHS pCtxs rule) =
-  "Type constraints " ++ show pCtxs ++ " appeared on RHS of " ++ show rule
+showCompileError (NotInjectiveProcessContext pCtx rule) =
+  "Not injective process context \"" ++ show pCtx ++ "\" in the rule \""
+  ++ show rule ++ "\""
+showCompileError (TypeConstraintsOnRHS types rule) =
+  "Type constraints " ++ showSet (S.map show types) ++ " appeared on RHS of " ++ show rule
+showCompileError (UnexpectedOpOnGuard unexpectedOp rule) =
+  "Unexpected op \"" ++ show unexpectedOp ++ "\" appeared on the guard of the rule \""
+  ++ show rule ++ "\""
+showCompileError (LinkOnGuard rule) =
+  "Link(s) appeared on the guard of \"" ++ show rule ++ "\""
+showCompileError (RuleOnGuard rule rules) =
+  "Rule(s) \"" ++ intercalate ", " (map show rules)
+  ++ "\" appeared on the guard of \"" ++ show rule ++ "\""
 showCompileError (IsNotSerialAfterNormalization errors) =
   intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
  where
@@ -150,29 +173,36 @@ compileProcLit envs (AliasLit Nothing pointingTo) =
 --     otherwise thrors the "NotRedirectedLinks" error.
 --   Also, this sets the indeg of all the local links
 --   appears in the processes on the left/right hand-sides
-compileProcLit envs ruleLit@(RuleLit maybeName lhs guard rhs)
+compileProcLit envs ruleLit@(RuleLit maybeName lhs guardLit rhs)
   = do (lhsEnvs, (lhsProcs, lhsRules)) <- compileProcLits nullEnvs lhs
        if not $ null lhsRules
          then throwError $ RuleOnLHS ruleLit
          else
-         do (guardEnvs, (guardProcs, guardRules)) <- compileProcLits nullEnvs guard
-            (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
-            let lhsProcs'             = setIndegs lhsEnvs lhsProcs
-                rhsProcs'             = setIndegs rhsEnvs rhsProcs
-                freeTailLinksOnLHS    = freeTailEnv lhsEnvs
-                freeTailLinksOnRHS    = freeTailEnv rhsEnvs
-                freeHeadLinksOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailLinksOnLHS
-                freeHeadLinksOnRHS    = freeHeadEnv rhsEnvs S.\\ freeTailLinksOnRHS
-                newTailFreeLinksOnRHS = freeTailLinksOnRHS S.\\ freeTailLinksOnLHS
-                newHeadFreeLinksOnRHS = freeHeadLinksOnRHS S.\\ freeHeadLinksOnLHS
-                newFreeLinksOnRHS     = S.union newTailFreeLinksOnRHS newHeadFreeLinksOnRHS
-                notRedirectedLinks    = freeTailLinksOnLHS S.\\ freeTailLinksOnRHS
-              in
-              if not $ S.null newFreeLinksOnRHS
-              then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS ruleLit
-              else if not $ S.null notRedirectedLinks
-                then throwError $ NotRedirectedLinks notRedirectedLinks ruleLit
-                else return (envs, ([], [Rule maybeName lhsProcs' guardProcs rhsProcs' rhsRules]))
+         do (guardEnvs, (guardProcs, guardRules)) <- compileProcLits nullEnvs guardLit
+            if hasLink guardEnvs
+              then throwError $ LinkOnGuard ruleLit
+              else if not $ null guardRules then throwError $ RuleOnGuard ruleLit guardRules
+              else do (rhsEnvs, (rhsProcs, rhsRules)) <- compileProcLits nullEnvs rhs
+                      let lhsProcs'             = setIndegs lhsEnvs lhsProcs
+                          rhsProcs'             = setIndegs rhsEnvs rhsProcs
+                          freeTailLinksOnLHS    = freeTailEnv lhsEnvs
+                          freeTailLinksOnRHS    = freeTailEnv rhsEnvs
+                          freeHeadLinksOnLHS    = freeHeadEnv lhsEnvs S.\\ freeTailLinksOnLHS
+                          freeHeadLinksOnRHS    = freeHeadEnv rhsEnvs S.\\ freeTailLinksOnRHS
+                          newTailFreeLinksOnRHS = freeTailLinksOnRHS S.\\ freeTailLinksOnLHS
+                          newHeadFreeLinksOnRHS = freeHeadLinksOnRHS S.\\ freeHeadLinksOnLHS
+                          newFreeLinksOnRHS     =
+                            S.union newTailFreeLinksOnRHS newHeadFreeLinksOnRHS
+                          notRedirectedLinks    = freeTailLinksOnLHS S.\\ freeTailLinksOnRHS
+                        in
+                        if not $ S.null newFreeLinksOnRHS
+                        then throwError $ NewFreeLinksOnRHS newFreeLinksOnRHS ruleLit
+                        else if not $ S.null notRedirectedLinks
+                        then throwError $ NotRedirectedLinks notRedirectedLinks ruleLit
+                        else return ( envs
+                                    , ( []
+                                      , [Rule maybeName lhsProcs' guardProcs rhsProcs' rhsRules]
+                                      ))
 
 
 -- | Handles the link creation.

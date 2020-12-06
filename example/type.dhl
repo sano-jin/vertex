@@ -11,8 +11,14 @@ $p :- a.
 
 ahoge @@ a :- hoge, hoge  | b.
 
-hoge @@ fuga.
+hoge @@ fuga :- fuga.
 
 ah'hoge.
 X' -> $p'.
+
+"hoge\n$hoau".
+
+'[]'.
+
+X -> $hoge:int := fuga.
 

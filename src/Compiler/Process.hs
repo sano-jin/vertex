@@ -16,9 +16,9 @@ module Compiler.Process
   ) where
 import           Data.List
 import qualified Data.Set                      as S
-import           Compiler.Syntax       ( Type     (..)
-                                       , DataAtom (..)
-                                       )
+import           Compiler.Syntax                ( Type(..)
+                                                , DataAtom(..)
+                                                )
 
 type Addr = Int
 type Indeg = Int
@@ -36,14 +36,15 @@ data LinkVal = FreeLinkVal String
                -- ^ $p : type
              deriving(Eq)
 
+instance Show LinkVal where
+  show = showLinkVal
+
 data ProcVal = LocalAliasVal Indeg Addr LinkVal
                -- ^ \X. ... X -> p(X1,...,Xm)
              | FreeAliasVal AtomName LinkVal
                -- ^ X -> p(X1,...,Xm)
              deriving(Eq)
 
-instance Show LinkVal where
-  show = showLinkVal
 instance Show ProcVal where
   show = showProcVal
 
@@ -68,8 +69,8 @@ showLinkVal (AtomVal atomName links) = if null links
   then atomName
   else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
 showLinkVal (DataVal dataAtom) = show dataAtom
-showLinkVal (ProcessContextVal name maybeType)
-  = "$" ++ name ++ maybe ""  ((":" ++) . show) maybeType
+showLinkVal (ProcessContextVal name maybeType) =
+  "$" ++ name ++ maybe "" ((":" ++) . show) maybeType
 
 
 -- | Show indegree if the indegree is bigger than 0.
@@ -96,30 +97,33 @@ instance Show Rule where
   show = showRule
 
 showRule :: Rule -> String
-showRule (Rule maybeName lhs rhs guard rules) =
-  let sep       = if null rhs || null rules then "" else ", "
-      name      = maybe "" (++ " @@ ") maybeName
-      guardStr  = if null guard then "" else showProcVals guard ++ " | "
+showRule (Rule maybeName lhs guard rhs rules) =
+  let sep      = if null rhs || null rules then "" else ", "
+      name     = maybe "" (++ " @@ ") maybeName
+      guardStr = if null guard then "" else showProcVals guard ++ " | "
   in  name
-      ++ showProcVals lhs
-      ++ " :- "
-      ++ guardStr
-      ++ showProcVals rhs
-      ++ sep
-      ++ showSubRules rules
+        ++ showProcVals lhs
+        ++ " :- "
+        ++ guardStr
+        ++ showProcVals rhs
+        ++ sep
+        ++ showSubRules rules
 
 showRuleForDebugging :: Rule -> String
-showRuleForDebugging (Rule maybeName lhs rhs guard rules) =
-  let sep       = if null rhs || null rules then "" else ", "
-      name      = maybe "" (++ " @@ ") maybeName
-      guardStr  = if null guard then "" else showProcValsForDebugging guard ++ " | "
-  in  name
-      ++ showProcValsForDebugging lhs
-      ++ " :- "
-      ++ guardStr
-      ++ showProcValsForDebugging rhs
-      ++ sep
-      ++ showSubRulesForDebugging rules
+showRuleForDebugging (Rule maybeName lhs guard rhs rules) =
+  let
+    sep  = if null rhs || null rules then "" else ", "
+    name = maybe "" (++ " @@ ") maybeName
+    guardStr =
+      if null guard then "" else showProcValsForDebugging guard ++ " | "
+  in
+    name
+    ++ showProcValsForDebugging lhs
+    ++ " :- "
+    ++ guardStr
+    ++ showProcValsForDebugging rhs
+    ++ sep
+    ++ showSubRulesForDebugging rules
 
 paren :: String -> String
 paren str = "(" ++ str ++ ")"

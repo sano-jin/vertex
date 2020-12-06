@@ -15,12 +15,12 @@ commentary with @some markup@.
 module Compiler.Syntax
   ( showBlock
   , showProc
-  , LinkLit  (..)
-  , ProcLit  (..)
-  , Type     (..)
-  , DataAtom (..)
+  , LinkLit(..)
+  , ProcLit(..)
+  , Type(..)
+  , DataAtom(..)
   ) where
-import           Data.List  ( intercalate )
+import           Data.List                      ( intercalate )
 
 -- | Links are denoted as the variable starting from the capital lettes
 --   or an embedded atom if the indegree of the pointing atom is 1.
@@ -35,26 +35,26 @@ data LinkLit = LinkLit String
 
 instance Show LinkLit where
   show = showLink
-  
+
 data DataAtom = IntAtom Integer
               | StringAtom String
               deriving (Eq)
-              
+
 instance Show DataAtom where
-  show (IntAtom i)      = show i
+  show (IntAtom    i  ) = show i
   show (StringAtom str) = show str
 
 data Type = TypeInt
           | TypeString
           | TypeUnary
-          deriving (Eq)
+          deriving (Eq, Ord)
 
 instance Show Type where
   show TypeInt    = "int"
   show TypeString = "string"
   show TypeUnary  = "unary"
 
-          
+
 -- | A process can be
 --   an Atom (aliasing from link)
 --   a rule
@@ -68,7 +68,7 @@ data ProcLit = AliasLit (Maybe String) LinkLit
 
 instance Show ProcLit where
   show = showProc
-  
+
 -- | Show the top level processes
 showBlock :: [ProcLit] -> String
 showBlock = intercalate ". " . map showProc
@@ -76,12 +76,11 @@ showBlock = intercalate ". " . map showProc
 -- | Show the procLit
 showProc :: ProcLit -> String
 showProc (AliasLit (Just p) to) = showLink (LinkLit p) ++ " -> " ++ showLink to
-showProc (AliasLit Nothing to) = showLink to
+showProc (AliasLit Nothing  to) = showLink to
 showProc (RuleLit maybeName lhs guard rhs) =
   let name     = maybe "" (++ " @@ ") maybeName
       guardStr = if null guard then "" else showProcSet guard ++ " | "
-  in
-    name ++ showProcSet lhs ++ " :- " ++ guardStr ++ showProcSet rhs
+  in  name ++ showProcSet lhs ++ " :- " ++ guardStr ++ showProcSet rhs
 showProc (CreationLit link procs) = "\\" ++ link ++ "." ++ if length procs == 1
   then showProcSet procs
   else "(" ++ showProcSet procs ++ ")"
@@ -101,9 +100,9 @@ showLinkList args = "(" ++ unwordsList args ++ ")"
 
 -- | Show the given link or the embedded atom
 showLink :: LinkLit -> String
-showLink (LinkLit name     )        = name
-showLink (AtomLit name args)        = name ++ showLinkList args
-showLink (DataLit dataAtom )        = show dataAtom
-showLink (ProcessContextLit name maybeType)
-  = "$" ++ name ++ maybe ""  ((":" ++) . show) maybeType
+showLink (LinkLit name     ) = name
+showLink (AtomLit name args) = name ++ showLinkList args
+showLink (DataLit dataAtom ) = show dataAtom
+showLink (ProcessContextLit name maybeType) =
+  "$" ++ name ++ maybe "" ((":" ++) . show) maybeType
 
