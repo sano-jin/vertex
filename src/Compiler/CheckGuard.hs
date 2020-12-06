@@ -24,22 +24,115 @@ import           Control.Monad.Except           hiding ( guard )
 import qualified Data.Set                      as S
 -- import           Data.Tuple.Extra
 import           Compiler.Compiler
--- import           Control.Monad hiding ( guard )
+import           Control.Monad hiding ( guard )
+import           Control.Applicative
 
 
-collectTypesLinkVal :: LinkVal -> S.Set Type
-collectTypesLinkVal (ProcessContextVal _ (Just type_)) = S.singleton type_
-collectTypesLinkVal (AtomVal _ links) = S.unions $ map collectTypesLinkVal links
-collectTypesLinkVal _ = S.empty
+-- | Check the injectivity and collect process contexts on the LHS of the rule. 
+checkInjectivityLinkVal :: S.Set String -> LinkVal -> ThrowsCompileError (S.Set String)
+checkInjectivityLinkVal pCtxNames linkVal@(ProcessContextVal name _) 
+  = if S.member name pCtxNames
+    then throwError $ NotInjectiveProcessContext linkVal
+    else return $ S.insert name pCtxNames 
+checkInjectivityLinkVal pCtxNames (AtomVal _ links)
+  = foldM checkInjectivityLinkVal pCtxNames links
+checkInjectivityLinkVal pCtxNames _ = return pCtxNames
 
-collectTypesProcVal :: ProcVal -> S.Set Type
-collectTypesProcVal (LocalAliasVal _ _ linkVal) = collectTypesLinkVal linkVal
-collectTypesProcVal (FreeAliasVal _ linkVal) = collectTypesLinkVal linkVal
+checkInjectivityProcVal :: S.Set String -> ProcVal -> ThrowsCompileError (S.Set String)
+checkInjectivityProcVal pCtxNames (LocalAliasVal _ _ linkVal)
+  = checkInjectivityLinkVal pCtxNames linkVal
+checkInjectivityProcVal pCtxNames (FreeAliasVal _ linkVal)
+  = checkInjectivityLinkVal pCtxNames linkVal
 
-collectTypesProcVals :: [ProcVal] -> S.Set Type
-collectTypesProcVals procVals = S.unions $ map collectTypesProcVal procVals
+checkInjectivityProcVals :: [ProcVal] -> ThrowsCompileError (S.Set String)
+checkInjectivityProcVals = foldM checkInjectivityProcVal S.empty 
 
 
+
+
+-- | Check the boundness and the op on the guard of the rule
+isGuardOp :: String -> Bool
+isGuardOp op
+  = S.member op $ S.fromList [ "+"
+                             , "-"
+                             , "*"
+                             , "/"
+                             , "="
+                             , "/="
+                             , "<="
+                             , ">="
+                             , "<"
+                             , ">"
+                             ]
+
+extractNameOfPCtx :: LinkVal -> ThrowsCompileError String
+extractNameOfPCtx (ProcessContextVal name Nothing) = return name
+extractNameOfPCtx linkVal = throwError $ UnexpectedOpOnGuard linkVal
+
+checkOpLinkVal :: S.Set String -> LinkVal -> ThrowsCompileError (S.Set String)
+checkOpLinkVal pCtxNames pCtx@(ProcessContextVal name Nothing)
+  = if S.member name pCtxNames then return pCtxNames
+    else throwError $ UnboundProcessContext pCtx
+checkOpLinkVal pCtxNames linkVal@(AtomVal atomName links@[_, _])
+  = if isGuardOp atomName then foldM checkOpLinkVal pCtxNames links
+    else throwError $ UnexpectedOpOnGuard linkVal
+checkOpLinkVal pCtxNames (DataVal _) = return pCtxNames
+checkOpLinkVal _ linkVal = throwError $ UnexpectedOpOnGuard linkVal
+
+checkOpProcVal :: S.Set String -> ProcVal -> ThrowsCompileError (S.Set String)
+checkOpProcVal pCtxNames (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]))
+  = if isGuardOp atomName then foldM checkOpLinkVal pCtxNames links
+    else if atomName == ":="
+         then liftA2 S.insert (extractNameOfPCtx l) $ checkOpLinkVal pCtxNames r
+         else throwError $ UnexpectedOpOnGuard linkVal
+checkOpProcVal pCtxNames (LocalAliasVal _ _ linkVal)
+  = throwError $ UnexpectedOpOnGuard linkVal
+checkOpProcVal _ procVal
+  = error
+  $  "No link should appear in the guard \""
+  ++ show procVal
+  ++ "\" , which should have already checked in the compilation process. "
+
+checkOpProcVals :: [ProcVal] -> S.Set String -> ThrowsCompileError (S.Set String)
+checkOpProcVals procVals pCtxNames = foldM checkOpProcVal pCtxNames procVals
+
+
+-- | Check the boundness and the type constraints on the RHS of the rule
+collectTypesLinkVal :: S.Set String -> LinkVal -> ThrowsCompileError ()
+collectTypesLinkVal pCtxNames pCtx@(ProcessContextVal _ (Just type_))
+  = throwError $ TypeConstraintsOnRHS pCtx
+collectTypesLinkVal pCtxNames pCtx@(ProcessContextVal name Nothing)
+  = if S.member name pCtxNames then return ()
+    else throwError $ UnboundProcessContext pCtx
+collectTypesLinkVal pCtxNames (AtomVal _ links)
+  = mapM_ (collectTypesLinkVal pCtxNames) links
+collectTypesLinkVal pCtxNames _ = return ()
+
+collectTypesProcVal :: S.Set String -> ProcVal -> ThrowsCompileError ()
+collectTypesProcVal pCtxNames (LocalAliasVal _ _ linkVal)
+  = collectTypesLinkVal pCtxNames linkVal
+collectTypesProcVal pCtxNames (FreeAliasVal _ linkVal)
+  = collectTypesLinkVal pCtxNames linkVal
+
+collectTypesProcVals :: [ProcVal] -> S.Set String-> ThrowsCompileError ()
+collectTypesProcVals procVals pCtxNames
+  = mapM_ (collectTypesProcVal pCtxNames) procVals
+
+
+
+checkRule :: Rule -> ThrowsCompileError ()
+checkRule rule@(Rule _ lhs guard rhs rhsRules)
+ = checkInjectivityProcVals lhs
+   >>= checkOpProcVals guard
+   >>= collectTypesProcVals rhs         
+
+checkRules :: Procs -> ThrowsCompileError Procs
+checkRules (procVals, rules)
+  = (procVals, rules) <$ mapM_ checkRule rules
+
+
+
+{--|
 
 collectPCtxsLinkVal :: LinkVal -> S.Set String
 collectPCtxsLinkVal (ProcessContextVal name _) = S.singleton name
@@ -55,84 +148,5 @@ collectPCtxsProcVals procVals = S.unions $ map collectPCtxsProcVal procVals
 
 
 
-checkInjectivityLinkVal :: S.Set String -> LinkVal -> Either LinkVal (S.Set String)
-checkInjectivityLinkVal pCtxNames linkVal@(ProcessContextVal name _) 
-  = if S.member name pCtxNames then throwError linkVal
-    else return $ S.insert name pCtxNames 
-checkInjectivityLinkVal pCtxNames (AtomVal _ links)
-  = foldM checkInjectivityLinkVal pCtxNames links
-checkInjectivityLinkVal pCtxNames _ = return pCtxNames
+|--}
 
-checkInjectivityProcVal :: S.Set String -> ProcVal -> Either LinkVal (S.Set String)
-checkInjectivityProcVal pCtxNames (LocalAliasVal _ _ linkVal)
-  = checkInjectivityLinkVal pCtxNames linkVal
-checkInjectivityProcVal pCtxNames (FreeAliasVal _ linkVal)
-  = checkInjectivityLinkVal pCtxNames linkVal
-
-checkInjectivityProcVals :: [ProcVal] -> Either LinkVal (S.Set String)
-checkInjectivityProcVals procVals = foldM checkInjectivityProcVal S.empty procVals
-
-
-
-isGuardOp :: String -> Bool
-isGuardOp op
-  = S.member op $ S.fromList [ "+"
-                             , "-"
-                             , "*"
-                             , "/"
-                             , "="
-                             , "/="
-                             , "<="
-                             , ">="
-                             , "<"
-                             , ">"
-                             ]
-
-
-checkOpLinkVal :: LinkVal -> Either LinkVal ()
-checkOpLinkVal (ProcessContextVal _ _) = return ()
-checkOpLinkVal linkVal@(AtomVal atomName links@[_, _])
-  = (if isGuardOp atomName then return ()
-     else throwError linkVal)
-    >> mapM_ checkOpLinkVal links
-checkOpLinkVal (DataVal _) = return ()
-checkOpLinkVal linkVal = throwError linkVal
-
-checkOpProcVal :: ProcVal -> Either LinkVal ()
-checkOpProcVal (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[_, _]))
-  = (if isGuardOp atomName || atomName == ":=" then return ()
-     else throwError linkVal)
-    >> mapM_ checkOpLinkVal links
-checkOpProcVal (LocalAliasVal _ _ linkVal) = throwError linkVal
-checkOpProcVal procVal
-  = error
-  $  "No link should appear in the guard \""
-  ++ show procVal
-  ++ "\" , which should have already checked in the compilation process. "
-
-checkOpProcVals :: [ProcVal] -> Either LinkVal ()
-checkOpProcVals procVals = mapM_ checkOpProcVal procVals
-
-checkRule :: Rule -> ThrowsCompileError Rule
-checkRule rule@(Rule _ lhs guard rhs rhsRules)
- = case checkInjectivityProcVals lhs of
-     Left notInjectiveLinkVal ->
-       throwError $ NotInjectiveProcessContext notInjectiveLinkVal rule
-     Right _ ->
-       let typeConstraintsOnRHS = collectTypesProcVals rhs
-           newProcessContextsOnRHS = collectPCtxsProcVals rhs
-                                     S.\\ collectPCtxsProcVals lhs
-       in
-       if not $ S.null typeConstraintsOnRHS 
-       then throwError $ TypeConstraintsOnRHS typeConstraintsOnRHS rule
-       else if not $ S.null newProcessContextsOnRHS
-       then throwError $ NewProcessContextsOnRHS newProcessContextsOnRHS rule
-       else case checkOpProcVals guard of
-              Left unexpectedOp ->
-                throwError $ UnexpectedOpOnGuard unexpectedOp rule
-              Right _ -> rule <$ mapM_ checkRule rhsRules
-         
-
-checkRules :: Procs -> ThrowsCompileError Procs
-checkRules (procVals, rules)
-  = (procVals, rules) <$ mapM_ checkRule rules

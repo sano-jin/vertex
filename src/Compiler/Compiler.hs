@@ -18,7 +18,7 @@ module Compiler.Compiler
                 , NotInjectiveProcessContext
                 , TypeConstraintsOnRHS
                 , UnexpectedOpOnGuard
-                , NewProcessContextsOnRHS
+                , UnboundProcessContext
                 )
   ) where
 import           Compiler.Envs
@@ -62,15 +62,15 @@ data CompileError = IsNotSerial String
                   | FreeLinksOnTopLevel (S.Set String)
                   | ParseError Parser.ParseError
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
-                  | NotInjectiveProcessContext LinkVal Rule
+                  | NotInjectiveProcessContext LinkVal
                     -- ^ checked in the Compiler.CheckGuard
-                  | TypeConstraintsOnRHS (S.Set Type) Rule
+                  | TypeConstraintsOnRHS LinkVal
                     -- ^ checked in the Compiler.CheckGuard
-                  | UnexpectedOpOnGuard LinkVal Rule
+                  | UnexpectedOpOnGuard LinkVal
                     -- ^ checked in the Compiler.CheckGuard
                   | LinkOnGuard ProcLit
                   | RuleOnGuard ProcLit [Rule]
-                  | NewProcessContextsOnRHS (S.Set String) Rule
+                  | UnboundProcessContext LinkVal
 
 -- | Functions for showing errors.
 showCompileError :: CompileError -> String
@@ -87,21 +87,17 @@ showCompileError (NotRedirectedLinks links rule) =
     ++ show rule
 showCompileError (FreeLinksOnTopLevel links) =
   "Free link(s) " ++ showSet links ++ " appeard on the top level process"
-showCompileError (NotInjectiveProcessContext pCtx rule) =
-  "Not injective process context \"" ++ show pCtx ++ "\" in the rule \""
-  ++ show rule ++ "\""
-showCompileError (TypeConstraintsOnRHS types rule) =
-  "Type constraints " ++ showSet (S.map show types) ++ " appeared on RHS of " ++ show rule
-showCompileError (UnexpectedOpOnGuard unexpectedOp rule) =
-  "Unexpected op \"" ++ show unexpectedOp ++ "\" appeared on the guard of the rule \""
-  ++ show rule ++ "\""
+showCompileError (NotInjectiveProcessContext pCtx) =
+  "Not injective process context \"" ++ show pCtx ++ "\""
+showCompileError (TypeConstraintsOnRHS pCtx) =
+  "Type constraints " ++ show pCtx ++ " appeared on RHS"
+showCompileError (UnexpectedOpOnGuard unexpectedOp) =
+  "Unexpected op \"" ++ show unexpectedOp ++ "\""
 showCompileError (LinkOnGuard rule) =
   "Link(s) appeared on the guard of \"" ++ show rule ++ "\""
 showCompileError (RuleOnGuard rule rules) =
   "Rule(s) \"" ++ intercalate ", " (map show rules)
   ++ "\" appeared on the guard of \"" ++ show rule ++ "\""
-showCompileError (NewProcessContextsOnRHS pCtxs rule) =
-  "New process contexts " ++ showSet pCtxs ++ " appeared on RHS of the " ++ show rule
 showCompileError (IsNotSerialAfterNormalization errors) =
   intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
  where
@@ -111,6 +107,8 @@ showCompileError (IsNotSerialAfterNormalization errors) =
       ++ "' in '"
       ++ show procVal
       ++ "' is not serial"
+showCompileError (UnboundProcessContext pCtx)
+  = "Unbound process context " ++ show pCtx
 showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
 
 
