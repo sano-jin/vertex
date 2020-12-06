@@ -33,6 +33,7 @@ module VM.Heap
   , initTestHeap -- Should be eliminated
   ) where
 import           Compiler.Process
+import           Compiler.Syntax               (DataAtom)
 import           Data.List
 import qualified Data.Map.Strict               as M
 import           Data.Tuple.Extra
@@ -47,7 +48,7 @@ heap2DGraph (Heap _ mapHAddr2IndegNode) =
  where
   translateNode (NAtom atomName links) = (atomName, map hAddr2Int links)
   translateNode (NInd link           ) = ("->", [hAddr2Int link])
-  translateNode (NInt i              ) = (show i, [])
+  translateNode (NData dataAtom       ) = (show dataAtom, [])
 
 
 data HAddr = HAddr Int
@@ -64,7 +65,7 @@ data Node = NAtom AtomName [HAddr]
             -- ^ NAtom SymbolAtomName [Link]
           | NInd HAddr
             -- ^ Indirect to Addr
-          | NInt Integer
+          | NData DataAtom
           deriving(Eq, Show)
 
 type IndegNode = (Indeg, Node)
@@ -83,8 +84,8 @@ heapNode2ProcVal (HAddr addr) (indeg, NAtom atomName links) =
     links
 heapNode2ProcVal (HAddr addr) (indeg, NInd link) =
   LocalAliasVal indeg addr $ LocalLinkVal $ hAddr2Int link
-heapNode2ProcVal (HAddr addr) (indeg, NInt i) =
-  LocalAliasVal indeg addr $ IntVal i
+heapNode2ProcVal (HAddr addr) (indeg, NData dataAtom) =
+  LocalAliasVal indeg addr $ DataVal dataAtom
 
 heap2ProcVals :: Heap -> [ProcVal]
 heap2ProcVals (Heap _ mapHAddr2IndegNode) =
@@ -105,7 +106,7 @@ showLinkedHeapNode oldHeap hAddr = case hSafeLookup hAddr oldHeap of
           if null args then "" else "(" ++ intercalate ", " args ++ ")"
     in  (newHeap, atomName ++ stringArgs)
   Just (1, NInd link) -> showLinkedHeapNode (hDelete hAddr oldHeap) link
-  Just (1, NInt i   ) -> (hDelete hAddr oldHeap, show i)
+  Just (1, NData dataAtom) -> (hDelete hAddr oldHeap, show dataAtom)
   Just _              -> (oldHeap, "L" ++ show hAddr)
 
 showHeapNode :: HAddr -> Heap -> IndegNode -> (Heap, String)
@@ -117,10 +118,10 @@ showHeapNode hAddr oldHeap (indeg, NAtom atomName links) =
     stringArgs = if null args then "" else "(" ++ intercalate ", " args ++ ")"
   in
     (newHeap, incommingLink ++ atomName ++ stringArgs)
-showHeapNode hAddr oldHeap (indeg, NInt i) =
+showHeapNode hAddr oldHeap (indeg, NData dataAtom) =
   let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
-  in  (hDelete hAddr oldHeap, incommingLink ++ show i)
-showHeapNode hAddr oldHeap (indeg, node) =
+  in  (hDelete hAddr oldHeap, incommingLink ++ show dataAtom)
+showHeapNode hAddr oldHeap (indeg, _) =
   let incommingLink  = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
       (newHeap, str) = showLinkedHeapNode oldHeap hAddr
   in  (newHeap, incommingLink ++ str)

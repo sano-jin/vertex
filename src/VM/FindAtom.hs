@@ -15,6 +15,7 @@ module VM.FindAtom
   ) where
 import           Control.Monad.Except           ( foldM )
 import           Compiler.Process
+import           Compiler.Syntax               
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
 import qualified Data.Set                      as S
@@ -54,7 +55,7 @@ checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(AtomVal _ _, hAddr) =
     then Nothing
        -- non-injective matching
     else checkLinkVal heap maybeIndeg envs linkValAddr
-checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(IntVal _, hAddr) =
+checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(DataVal _, hAddr) =
   if S.member hAddr $ matchedLocalAddrs envs
     then Nothing
        -- non-injective matching
@@ -93,19 +94,19 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
           foldM (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
       else
         Nothing
-    (_, NInt _) -> Nothing
+    (_, NData _) -> Nothing
     _           -> error "indirection traversing is not implemented yet"
-checkLinkVal heap maybeIndeg envs (IntVal int, hAddr) =
+checkLinkVal heap maybeIndeg envs (DataVal dataAtom, hAddr) =
   case hLookup hAddr heap of
-    (hIndeg, NInt hInt) ->
+    (hIndeg, NData hDataAtom) ->
       if (  isNothing maybeIndeg
            -- this integer atom was the head of the free link
          || maybeIndeg
          == Just hIndeg
            -- or the head of the local link with a certain indegree.
          )
-           && int
-           == hInt
+           && dataAtom
+           == hDataAtom
         then Just $ if isNothing maybeIndeg
           then envs
           else addMatchedLocalAddrs hAddr envs

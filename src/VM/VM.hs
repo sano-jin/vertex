@@ -47,7 +47,7 @@ showStateForDebugging (State heap rules) =
 
 -- | Execute rule and returns the new heap, the newly created rules and the applied rule.
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
-execRule heap rule@(Rule lhs rhs rhsRules) = do
+execRule heap rule@(Rule maybeName lhs guards rhs rhsRules) = do
   envs <- findAtoms lhs heap
   return (push heap rhs envs, rhsRules, rule)
 
@@ -90,18 +90,4 @@ initializeHeap :: [ProcVal] -> Heap
 initializeHeap procVals = push initialHeap procVals nullEnvs
 
 
-{--|
-showTransition :: Maybe (State, Rule) -> String
-showTransition (Just (state, rule))
-  = show state ++ "\n with a rule " ++ showRule rule
-showTransition Nothing
- = "halted"
-|--}
-
-{--|
--- | adds rules to the state
-addRules2State :: [Rule] -> State -> State
-addRules2State rules2Add (State heap rules)
-  = State heap (rules ++ rules2Add)
-|--}
 

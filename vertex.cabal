@@ -31,8 +31,6 @@ library
       Compiler.Normalize
       Compiler.Parser
       Compiler.Process
-      Compiler.SpecCompiler
-      Compiler.SpecParser
       Compiler.Syntax
       ND
       Repl
@@ -115,6 +113,8 @@ test-suite vertex-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Spec.SpecCompiler
+      Spec.SpecParser
       Paths_vertex
   hs-source-dirs:
       test
