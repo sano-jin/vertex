@@ -17,7 +17,8 @@ module Compiler.Compiler
   , CompileError( IsNotSerialAfterNormalization
                 , NotInjectiveProcessContext
                 , TypeConstraintsOnRHS
-                , UnexpectedOpOnGuard 
+                , UnexpectedOpOnGuard
+                , NewProcessContextsOnRHS
                 )
   ) where
 import           Compiler.Envs
@@ -69,6 +70,7 @@ data CompileError = IsNotSerial String
                     -- ^ checked in the Compiler.CheckGuard
                   | LinkOnGuard ProcLit
                   | RuleOnGuard ProcLit [Rule]
+                  | NewProcessContextsOnRHS (S.Set String) Rule
 
 -- | Functions for showing errors.
 showCompileError :: CompileError -> String
@@ -98,6 +100,8 @@ showCompileError (LinkOnGuard rule) =
 showCompileError (RuleOnGuard rule rules) =
   "Rule(s) \"" ++ intercalate ", " (map show rules)
   ++ "\" appeared on the guard of \"" ++ show rule ++ "\""
+showCompileError (NewProcessContextsOnRHS pCtxs rule) =
+  "New process contexts " ++ showSet pCtxs ++ " appeared on RHS of the " ++ show rule
 showCompileError (IsNotSerialAfterNormalization errors) =
   intercalate "\n" $ map showIsNotSerialAfterNormalizationError errors
  where

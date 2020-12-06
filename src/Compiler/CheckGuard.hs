@@ -41,6 +41,20 @@ collectTypesProcVals procVals = S.unions $ map collectTypesProcVal procVals
 
 
 
+collectPCtxsLinkVal :: LinkVal -> S.Set String
+collectPCtxsLinkVal (ProcessContextVal name _) = S.singleton name
+collectPCtxsLinkVal (AtomVal _ links) = S.unions $ map collectPCtxsLinkVal links
+collectPCtxsLinkVal _ = S.empty
+
+collectPCtxsProcVal :: ProcVal -> S.Set String
+collectPCtxsProcVal (LocalAliasVal _ _ linkVal) = collectPCtxsLinkVal linkVal
+collectPCtxsProcVal (FreeAliasVal _ linkVal) = collectPCtxsLinkVal linkVal
+
+collectPCtxsProcVals :: [ProcVal] -> S.Set String
+collectPCtxsProcVals procVals = S.unions $ map collectPCtxsProcVal procVals
+
+
+
 checkInjectivityLinkVal :: S.Set String -> LinkVal -> Either LinkVal (S.Set String)
 checkInjectivityLinkVal pCtxNames linkVal@(ProcessContextVal name _) 
   = if S.member name pCtxNames then throwError linkVal
@@ -105,9 +119,14 @@ checkRule rule@(Rule _ lhs guard rhs rhsRules)
      Left notInjectiveLinkVal ->
        throwError $ NotInjectiveProcessContext notInjectiveLinkVal rule
      Right _ ->
-       let typeConstraintsOnRHS = collectTypesProcVals rhs in
+       let typeConstraintsOnRHS = collectTypesProcVals rhs
+           newProcessContextsOnRHS = collectPCtxsProcVals rhs
+                                     S.\\ collectPCtxsProcVals lhs
+       in
        if not $ S.null typeConstraintsOnRHS 
        then throwError $ TypeConstraintsOnRHS typeConstraintsOnRHS rule
+       else if not $ S.null newProcessContextsOnRHS
+       then throwError $ NewProcessContextsOnRHS newProcessContextsOnRHS rule
        else case checkOpProcVals guard of
               Left unexpectedOp ->
                 throwError $ UnexpectedOpOnGuard unexpectedOp rule

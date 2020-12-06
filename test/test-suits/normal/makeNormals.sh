@@ -34,4 +34,5 @@ test append                  \
 "append(cons(a, cons(b, nil)), cons(c, nil)).
 R -> append(cons(H, T), L) :- R -> cons(H, append(T, L)).
 R -> append(nil, L) :- R -> nil."
-
+test processContext1        \
+"a(\$p) :- \$p' := \$p + 1 | b(\$p'). a(1)."

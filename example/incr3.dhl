@@ -52,6 +52,7 @@ proc(store, Y), x(X)
 
 % Load the global variable
 
+load @@ 
 proc(load, X, 0), X -> 0
 :- proc(incr, X, 0), X -> 0.
 
