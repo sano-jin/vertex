@@ -124,11 +124,12 @@ checkRule :: Rule -> ThrowsCompileError ()
 checkRule rule@(Rule _ lhs guard rhs rhsRules)
  = checkInjectivityProcVals lhs
    >>= checkOpProcVals guard
-   >>= collectTypesProcVals rhs         
+   >>= collectTypesProcVals rhs
+   >> mapM_ checkRule rhsRules
 
 checkRules :: Procs -> ThrowsCompileError Procs
-checkRules (procVals, rules)
-  = (procVals, rules) <$ mapM_ checkRule rules
+checkRules procs@(_, rules)
+  = procs <$ mapM_ checkRule rules
 
 
 
