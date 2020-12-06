@@ -110,9 +110,9 @@ Rules can rewrite graph as long as they matches, they are not ordered.
 
 For example, the resulting graph of `a. a :- b. a :- c` can be `b` or `c`.
 
-You can use `--nd` (non-deterministic) option to construct the state space (all possible states and reduction).
+You can use `--nd` (non-deterministic) option to construct the state transition space (all possible states and reduction).
 
-This can be applied to the not-terminating program.
+This can be also applied to the not-terminating program.
 
 For example, `example/nd1.dhl` is a following program.
 ```
@@ -132,7 +132,7 @@ stack exec dhli  -- example/nd1.dhl --nd
 ```
 
 
-Also, you can visualize the state space.
+Also, you can visualize the state transition space.
 
 Run `stateViewer` as below.
 
