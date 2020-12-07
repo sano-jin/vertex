@@ -255,8 +255,14 @@ checkRule (Rule maybeName lhs guard rhs rhsRules) =
                 >>= checkMultipleUtypedProcessContexts
                 >>= collectTypesProcVals rhs
      newRhsRules <- mapM checkRule rhsRules
-     return $ Rule maybeName ( lhs) guard rhs newRhsRules
--- setInferedTypeProcVals pCtxEnv
+     return $
+       Rule
+       maybeName
+       (setInferedTypeProcVals pCtxEnv lhs)
+       guard
+       rhs
+       newRhsRules
+
 checkRules :: Procs -> ThrowsCompileError Procs
 checkRules (procVals, rules) = ((,) procVals) <$> mapM checkRule rules
 
