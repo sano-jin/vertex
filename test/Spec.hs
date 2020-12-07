@@ -10,7 +10,7 @@ import           VM.VM
 
 main :: IO ()
 main = do (f:args) <- getArgs
-          s   <- readFile f
+          s        <- readFile f
           case args of
             ["--nd"]
               -> readAndRunND showStateForDebugging s

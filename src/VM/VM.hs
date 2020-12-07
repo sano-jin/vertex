@@ -15,8 +15,8 @@ import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
-import           Vis.DGraph                     ( DGraph(..) )
-import qualified Data.Map.Strict               as M
+import           Vis.DGraph                     ( DGraph )
+-- import qualified Data.Map.Strict               as M
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.
@@ -30,7 +30,7 @@ state2DGraph (State heap _) = heap2DGraph heap
 -- | Shows the state.
 --   Pritty print the heap and the rules.
 showState :: State -> String
-showState (State heap rules) = show heap
+showState (State heap _) = show heap
   -- ++ showRules rules
 
 -- | Shows the state.
@@ -47,7 +47,7 @@ showStateForDebugging (State heap rules) =
 
 -- | Execute rule and returns the new heap, the newly created rules and the applied rule.
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
-execRule heap rule@(Rule maybeName lhs guards rhs rhsRules) = do
+execRule heap rule@(Rule _ lhs _ rhs rhsRules) = do
   envs <- findAtoms lhs heap
   return (push heap rhs envs, rhsRules, rule)
 

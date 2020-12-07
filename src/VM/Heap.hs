@@ -138,7 +138,7 @@ showHeap oldHeap =
           [] -> reverse strs
           h : t ->
             let (minHAddr, _) = foldl
-                  (\ai1@(a1, i1) ai2@(a2, i2) -> if i1 < i2 then ai1 else ai2)
+                  (\ai1@(_, i1) ai2@(_, i2) -> if i1 < i2 then ai1 else ai2)
                   h
                   t
                 (newHeap, newStr) =
@@ -186,11 +186,13 @@ hDelete :: HAddr -> Heap -> Heap
 hDelete hAddr (Heap freeAddrs mapHAddr2IndegNode) =
   Heap (hAddr : freeAddrs) (M.delete hAddr mapHAddr2IndegNode)
 
+{--|
 -- | Map.findMin
 hFindMin :: Heap -> Maybe (HAddr, IndegNode)
 hFindMin (Heap _ mapHAddr2IndegNode) = if M.null mapHAddr2IndegNode
   then Nothing
   else Just $ M.findMin mapHAddr2IndegNode
+|--}
 
 setIndeg :: HAddr -> Indeg -> Heap -> Heap
 setIndeg hAddr indeg (Heap freeAddrs mapHAddr2IndegNode) =

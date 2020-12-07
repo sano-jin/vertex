@@ -47,7 +47,10 @@ pushLinkVal _ localEnv heap (LocalLinkVal addr) =
 pushLinkVal envs localEnv oldHeap (AtomVal atomName links) =
   let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
   in  hAlloc newHeap (1, NAtom atomName hLinks)
-pushLinkVal _ _ oldHeap (DataVal dataAtom) = hAlloc oldHeap (1, NData dataAtom)
+pushLinkVal _ _ oldHeap (DataVal dataAtom)
+  = hAlloc oldHeap (1, NData dataAtom)
+pushLinkVal _ _ _ (ProcessContextVal _ _)
+  = error "process context is not implemented yet"
 
 
 -- | Pushes the atom.
@@ -57,11 +60,12 @@ pushProcVal envs localEnv oldHeap (LocalAliasVal indeg addr headingAtom) =
   let (newHeap, hAddr) = pushLinkVal envs localEnv oldHeap headingAtom
   in  (setIndeg hAddr indeg newHeap, Just (addr, hAddr))
 pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links))
-  = let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
+  = let (newHeap, hLinks) =
+          mapAccumL (pushLinkVal envs localEnv) oldHeap links
         hAddr             = freeLink2Addr envs M.! linkName
         indeg             = getIndeg hAddr newHeap
     in  (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
-pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (DataVal dataAtom)) =
+pushProcVal envs _ oldHeap (FreeAliasVal linkName (DataVal dataAtom)) =
   let hAddr = freeLink2Addr envs M.! linkName
       indeg = getIndeg hAddr oldHeap
   in  (hReplace hAddr (indeg, NData dataAtom) oldHeap, Nothing)

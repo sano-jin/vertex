@@ -131,7 +131,7 @@ angleH (V2 x y) | y == 0          = if x > 0 then 0 else pi
                 | y > 0           = A $ atan (x / y)
                 | y < 0 && x >= 0 = A $ atan (x / y) + pi
                 | y < 0 && x < 0  = A $ atan (x / y) - pi
-
+angleH (V2 _ _) = error "could not match"
 
 -- | 'angleP p1 p2 p3' computes the (unsigned) angle of p1-p2-p3
 --   (/i.e./ the angle at p2 made by rays to p1 and p3).  The result

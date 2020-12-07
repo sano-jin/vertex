@@ -19,13 +19,10 @@ import           Compiler.Syntax                ( Type(..)
                                                 , DataAtom(..)
                                                 )
 import           Control.Monad.Except    hiding ( guard )
--- import           Data.Bifunctor                 ( bimap )
--- import           Data.List
 import qualified Data.Set                      as S
 import           Data.Tuple.Extra
 import qualified Data.Map.Strict               as M
 import           Compiler.Compiler
-import           Control.Monad           hiding ( guard )
 import           Control.Applicative
 import           Data.Maybe
 
@@ -79,9 +76,6 @@ isIntOp op =
   S.member op $ S.fromList ["+", "-", "*", "/", "<=", ">=", "<", ">"]
 
 
-isGuardOp :: String -> Bool
-isGuardOp op = isIntOp op || isPolymorphicOp op
-
 extractPCtxName :: LinkVal -> ThrowsCompileError String
 extractPCtxName (ProcessContextVal name Nothing) = return name
 extractPCtxName linkVal@(ProcessContextVal _ (Just _)) =
@@ -100,7 +94,7 @@ checkOpLinkVal pCtxEnv pCtx@(ProcessContextVal name maybeType) =
         unifyType pCtx pCtxEnv (maybeType2Ty name maybeType) ty
       return (M.insert name unifiedType newPCtxEnv, unifiedType)
     Nothing -> throwError $ UnboundProcessContext pCtx
-checkOpLinkVal pCtxEnv atomVal@(AtomVal atomName links@[l, r]) =
+checkOpLinkVal pCtxEnv atomVal@(AtomVal atomName [l, r]) =
   checkBinaryOp atomVal pCtxEnv l r
   =<< if isIntOp atomName
     then return TyInt
@@ -157,7 +151,7 @@ checkBinaryOp linkVal pCtxEnv left right inferedType = do
   unifyType linkVal newPCtxEnv newTy inferedType
   
 checkOpProcVal :: PCtxEnv -> ProcVal -> ThrowsCompileError PCtxEnv
-checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]))
+checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
   = if atomName == ":="
     then do
       leftPCtxName <- extractPCtxName l
@@ -176,7 +170,7 @@ checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]
                 else throwError $ UnexpectedOpOnGuard linkVal
             )
         
-checkOpProcVal pCtxEnv (LocalAliasVal _ _ linkVal) =
+checkOpProcVal _ (LocalAliasVal _ _ linkVal) =
   throwError $ UnexpectedOpOnGuard linkVal
 checkOpProcVal _ procVal =
   error
@@ -190,7 +184,7 @@ checkOpProcVals procVals pCtxEnv = foldM checkOpProcVal pCtxEnv procVals
 
 -- | Check the free occurence and the type constraints on the RHS of the rule
 collectTypesLinkVal :: PCtxEnv -> LinkVal -> ThrowsCompileError PCtxEnv
-collectTypesLinkVal pCtxEnv pCtx@(ProcessContextVal _ (Just type_)) =
+collectTypesLinkVal _ pCtx@(ProcessContextVal _ (Just _)) =
   throwError $ UnexpectedTypeConstraint pCtx
 collectTypesLinkVal pCtxEnv pCtx@(ProcessContextVal name Nothing) =
   if M.member name pCtxEnv

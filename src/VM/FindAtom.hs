@@ -15,7 +15,7 @@ module VM.FindAtom
   ) where
 import           Control.Monad.Except           ( foldM )
 import           Compiler.Process
-import           Compiler.Syntax               
+-- import           Compiler.Syntax               
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
 import qualified Data.Set                      as S
