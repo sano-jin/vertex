@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module ND
   ( readAndRunND
   , readAndVisND
@@ -29,7 +30,7 @@ path2DGraph (Path _ states transitions) =
     $ foldr
         (\(before, after) -> M.adjust (second $ (:) after) before)
         ( M.fromList
-        $ map (second $ flip (,) [] . (\(State heap _) -> show heap)) states
+        $ map (second $ (, []) . (\(State heap _) -> show heap)) states
         )
     $ map fst transitions
 

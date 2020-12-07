@@ -35,13 +35,13 @@ triangle = polygon [(-8, 0), (0, 15), (8, 0)]
 arrow :: V2 Float -> V2 Float -> Picture
 arrow start end =
   let vec  = end ^-^ start
-      end2 = end ^-^ (direct 30.0 vec)
+      end2 = end ^-^ direct 30.0 vec
       head = applyV2 translate end2 $ rotate (toDeg $ angleH vec) triangle
   in  color (greyN 0.7) $ Pictures [line [pos2Tup start, pos2Tup end2], head]
 
 dNode2PictureNode :: DNode String Float -> Picture
 dNode2PictureNode node@(Node a _ (pos, _)) = applyV2 translate pos
-  $ Pictures [color aquamarine $ circleNode, scale 0.2 0.2 $ text a]
+  $ Pictures [color aquamarine circleNode, scale 0.2 0.2 $ text a]
 
 dNode2PictureArrow :: DGraph String Float -> DNode String Float -> Picture
 dNode2PictureArrow dGraph node@(Node _ _ (pos, _)) =

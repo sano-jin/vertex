@@ -70,9 +70,8 @@ reduce (State heap rules) = do
 --   Currently, this does not check the equivalence of the rules.
 --   This is surely NOT efficient at all.
 isStateEq :: State -> State -> Bool
-isStateEq (State heap1 _) (State heap2 _) = if hSize heap1 == hSize heap2
-  then isJust $ findAtoms (heap2ProcVals heap1) heap2
-  else False
+isStateEq (State heap1 _) (State heap2 _) =
+  (hSize heap1 == hSize heap2) && isJust (findAtoms (heap2ProcVals heap1) heap2)
 
 -- | Runs the program and returns the all possible next states.
 --   This is for the non-deterministic execution.

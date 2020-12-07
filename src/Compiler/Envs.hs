@@ -88,6 +88,6 @@ incrLocalIndeg addr = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)
 -- | Currently this does not check whether the envs has the local links.
 hasLink :: Envs -> Bool
 hasLink envs = -- trace ("debug trace " ++ show envs)
-  ( not $ M.null $ M.filter (/= 0) $ localMapAddrIndeg envs)
-  || (not $ S.null $ freeTailEnv envs)
-  || (not $ S.null $ freeHeadEnv envs)
+  not (M.null $ M.filter (/= 0) $ localMapAddrIndeg envs)
+  || not (S.null $ freeTailEnv envs)
+  || not (S.null $ freeHeadEnv envs)

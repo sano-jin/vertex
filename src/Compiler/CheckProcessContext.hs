@@ -144,15 +144,18 @@ checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]
       if M.member leftPCtxName pCtxEnv
         then throwError $ ShadowingProcessContext linkVal
         else
-          (uncurry (M.insert leftPCtxName) . swap) <$> checkOpLinkVal pCtxEnv r
+          uncurry (M.insert leftPCtxName) . swap
+          <$> checkOpLinkVal pCtxEnv r
     else
       fst
-        <$> (checkBinaryOp linkVal pCtxEnv l r =<< if isPolymorphicOp atomName
+        <$> (checkBinaryOp linkVal pCtxEnv l r
+             =<< if isPolymorphicOp atomName
               then return Nothing
               else if isIntOp atomName
                 then return $ Just TypeInt
                 else throwError $ UnexpectedOpOnGuard linkVal
             )
+        
 checkOpProcVal pCtxEnv (LocalAliasVal _ _ linkVal) =
   throwError $ UnexpectedOpOnGuard linkVal
 checkOpProcVal _ procVal =

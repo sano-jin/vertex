@@ -51,7 +51,7 @@ heap2DGraph (Heap _ mapHAddr2IndegNode) =
   translateNode (NData dataAtom       ) = (show dataAtom, [])
 
 
-data HAddr = HAddr Int
+newtype HAddr = HAddr Int
   deriving (Eq, Ord)
 -- ^ The address on the heap.
 instance Show HAddr where
@@ -79,9 +79,8 @@ instance Show Heap where
 
 heapNode2ProcVal :: HAddr -> (Indeg, Node) -> ProcVal
 heapNode2ProcVal (HAddr addr) (indeg, NAtom atomName links) =
-  LocalAliasVal indeg addr $ AtomVal atomName $ map LocalLinkVal $ map
-    hAddr2Int
-    links
+  LocalAliasVal indeg addr $ AtomVal atomName
+  $ map (LocalLinkVal . hAddr2Int) links
 heapNode2ProcVal (HAddr addr) (indeg, NInd link) =
   LocalAliasVal indeg addr $ LocalLinkVal $ hAddr2Int link
 heapNode2ProcVal (HAddr addr) (indeg, NData dataAtom) =

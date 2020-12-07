@@ -139,8 +139,8 @@ angleH (V2 x y) | y == 0          = if x > 0 then 0 else pi
 angleP :: Floating s => P2 s -> P2 s -> P2 s -> Angle s
 angleP x y z = A $ acos (dot a b / (norm a * norm b))
  where
-  a = (x ^-^ y)
-  b = (z ^-^ y)
+  a = x ^-^ y
+  b = z ^-^ y
 
 -- | 'signedAngleP p1 p2 p3' computes the /signed/ angle p1-p2-p3
 --   (/i.e./ the angle at p2 made by rays to p1 and p3), in the range

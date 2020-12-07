@@ -61,14 +61,14 @@ integer = Token.integer lexer
 whiteSpace, colon, assign, backslash, dollar, atat, turnstile, arrow, bar
   :: Parser ()
 whiteSpace = Token.whiteSpace lexer
-colon = reserved ":"
-assign = reserved ":="
-backslash = reserved "\\"
-dollar = reserved "$"
-atat = reserved "@@"
-turnstile = reserved ":-"
-arrow = reserved "->"
-bar = reserved "|"
+colon      = reserved ":"
+assign     = reserved ":="
+backslash  = reserved "\\"
+dollar     = reserved "$"
+atat       = reserved "@@"
+turnstile  = reserved ":-"
+arrow      = reserved "->"
+bar        = reserved "|"
 
 commaSep :: Parser a -> Parser [a]
 commaSep = Token.commaSep lexer
@@ -79,8 +79,8 @@ reserved = Token.reservedOp lexer
 atomName, linkName, stringLit :: Parser String
 atomName =
   Token.lexeme lexer
-    $   (liftA2 (:) lower $ many $ alphaNum <|> char '_' <|> char '\'')
-    <|> (liftA2 (:) (char '\'') $ (++ "\'") <$> manyTill anyChar (char '\''))
+    $   liftA2 (:) lower (many $ alphaNum <|> char '_' <|> char '\'')
+    <|> liftA2 (:) (char '\'') ((++ "\'") <$> manyTill anyChar (char '\''))
 
 linkName =
   Token.lexeme lexer
@@ -124,7 +124,7 @@ parseAtom0 =
   try
       (do
         pCtx  <- parseProcessContext
-        atom4 <- (assign >> parseAtom4)
+        atom4 <- assign >> parseAtom4
         return $ AtomLit ":=" [pCtx, atom4]
       )
     <|> parseAtom4
@@ -158,7 +158,7 @@ parseAtom5 = chainl1 parseAtom7 $ parseBinaryOp "+" <|> parseBinaryOp "-"
 parseAtom7 = chainl1 parseAtom10 $ parseBinaryOp "*" <|> parseBinaryOp "/"
 
 parseAtom10 =
-  (liftA2 AtomLit atomName $ parens (commaSep parseAtom0) <|> return [])
+  liftA2 AtomLit atomName (parens (commaSep parseAtom0) <|> return [])
     <|> parseProcessContext
     <|> parseData
     <|> LinkLit
@@ -181,14 +181,12 @@ parseData = DataLit <$> (IntAtom <$> integer <|> StringAtom <$> stringLit)
 
 parseProc =
   try (parens parseLine)
-    <|> (try
-          (do
-            from <- linkName
-            to   <- arrow >> parseAtom0
-            return [AliasLit (Just from) to]
+  <|> try (do
+              from <- linkName
+              to   <- arrow >> parseAtom0
+              return [AliasLit (Just from) to]
           )
-        )
-    <|> (do
+  <|> (do
           link <- parseAtom0
           case link of
             LinkLit linkNameStr ->
