@@ -121,15 +121,10 @@ parseCreates = do
 parseAtom0, parseAtom4, parseAtom5, parseAtom7, parseAtom10, parseProcessContext, parseData
   :: Parser LinkLit
 parseAtom0 = 
-  (do
-      pCtx <- parseProcessContext
-      (do
+  try (do pCtx <- parseProcessContext 
           atom4 <- (assign >> parseAtom4)
           return $ AtomLit ":=" [pCtx, atom4]
-        )
-        <|> return pCtx
-    )
-    <|> parseAtom4
+      ) <|> parseAtom4
 
 parseAtom4 = do
   left <- parseAtom5

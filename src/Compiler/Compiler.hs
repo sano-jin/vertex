@@ -16,9 +16,11 @@ module Compiler.Compiler
   , ThrowsCompileError
   , CompileError( IsNotSerialAfterNormalization
                 , NotInjectiveProcessContext
-                , TypeConstraintsOnRHS
+                , UnexpectedTypeConstraint
                 , UnexpectedOpOnGuard
                 , UnboundProcessContext
+                , MultipleUtypedProcessContexts
+                , ShadowingProcessContext
                 )
   ) where
 import           Compiler.Envs
@@ -64,13 +66,15 @@ data CompileError = IsNotSerial String
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
                   | NotInjectiveProcessContext LinkVal
                     -- ^ checked in the Compiler.CheckGuard
-                  | TypeConstraintsOnRHS LinkVal
+                  | UnexpectedTypeConstraint LinkVal
                     -- ^ checked in the Compiler.CheckGuard
                   | UnexpectedOpOnGuard LinkVal
                     -- ^ checked in the Compiler.CheckGuard
                   | LinkOnGuard ProcLit
                   | RuleOnGuard ProcLit [Rule]
                   | UnboundProcessContext LinkVal
+                  | MultipleUtypedProcessContexts (S.Set LinkVal)
+                  | ShadowingProcessContext LinkVal
 
 -- | Functions for showing errors.
 showCompileError :: CompileError -> String
@@ -89,8 +93,8 @@ showCompileError (FreeLinksOnTopLevel links) =
   "Free link(s) " ++ showSet links ++ " appeard on the top level process"
 showCompileError (NotInjectiveProcessContext pCtx) =
   "Not injective process context \"" ++ show pCtx ++ "\""
-showCompileError (TypeConstraintsOnRHS pCtx) =
-  "Type constraints " ++ show pCtx ++ " appeared on RHS"
+showCompileError (UnexpectedTypeConstraint pCtx) =
+  "Unexpected type constraint " ++ show pCtx
 showCompileError (UnexpectedOpOnGuard unexpectedOp) =
   "Unexpected op \"" ++ show unexpectedOp ++ "\""
 showCompileError (LinkOnGuard rule) =
@@ -109,6 +113,10 @@ showCompileError (IsNotSerialAfterNormalization errors) =
       ++ "' is not serial"
 showCompileError (UnboundProcessContext pCtx)
   = "Unbound process context " ++ show pCtx
+showCompileError (MultipleUtypedProcessContexts pCtxs)
+  = "Multiple untyped process contexts " ++ showSet (S.map show pCtxs)
+showCompileError (ShadowingProcessContext linkVal)
+  = "The shadowing of the process context is not implemented " ++ show linkVal
 showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
 
 

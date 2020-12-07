@@ -1,0 +1,1 @@
+a($p:string), $q:int :- $p = $q | b

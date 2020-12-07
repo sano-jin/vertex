@@ -30,7 +30,7 @@ type EnvSet = S.Set String
 
 
 
--- | A type for the Envirnment of pointes
+-- | A type for the Envirnment of links
 data Envs = Envs
   { localEnv          :: EnvList
                    -- ^ A mapping (list of tuple) from the local link names

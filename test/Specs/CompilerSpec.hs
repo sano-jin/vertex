@@ -1,3 +1,4 @@
+module CompilerSpec where
 -- | A Module for testing
 --   give as `stack test --test-arguments "sample.dhl"`
 --   stack ghc Syntax.hs Process.hs Compiler.hs Envs.hs Parser.hs CheckGuard.hs Normalize.hs SpecCompiler.hs -- -Wall

@@ -1,3 +1,4 @@
+module ParserSpec where
 -- | A Module for testing
 --   give as `stack test --test-arguments "sample.dhl"`
 

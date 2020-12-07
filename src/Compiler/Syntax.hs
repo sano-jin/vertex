@@ -38,7 +38,7 @@ instance Show LinkLit where
 
 data DataAtom = IntAtom Integer
               | StringAtom String
-              deriving (Eq)
+              deriving (Eq, Ord)
 
 instance Show DataAtom where
   show (IntAtom    i  ) = show i

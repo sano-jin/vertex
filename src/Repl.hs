@@ -2,7 +2,7 @@ module Repl
   ( readAndRun
   ) where
 import           Compiler.Compiler              ( compile )
-import           Compiler.CheckGuard
+import           Compiler.CheckProcessContext
 import           Compiler.Normalize             ( normalize )
 import           VM.VM                          ( State(..)
                                                 , initializeHeap

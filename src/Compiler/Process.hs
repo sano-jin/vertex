@@ -34,7 +34,7 @@ data LinkVal = FreeLinkVal String
                -- ^ N : int(N)
              | ProcessContextVal String (Maybe Type)
                -- ^ $p : type
-             deriving(Eq)
+             deriving(Eq, Ord)
 
 instance Show LinkVal where
   show = showLinkVal

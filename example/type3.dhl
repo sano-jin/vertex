@@ -1,0 +1,5 @@
+
+% a($p:string) :- $q := $p + 1 | b($q).
+
+a($p : string), b($q) :- $p = $q | b($p).
+
