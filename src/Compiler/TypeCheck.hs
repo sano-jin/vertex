@@ -1,5 +1,5 @@
 {-|
-Module      : Compiler.CheckProcessContext
+Module      : Compiler.TypeCheck
 Description : A compiler for the vertex language
 Copyright   : (c) sano, 2020
 License     : MIT
@@ -11,8 +11,8 @@ Here is a longer description of this module, containing some
 commentary with @some markup@.
 -}
 
-module Compiler.CheckProcessContext
-  ( checkRules
+module Compiler.TypeCheck
+  ( typeCheck
   ) where
 import           Compiler.Process
 import           Compiler.Syntax                ( Type(..)
@@ -263,6 +263,9 @@ checkRule (Rule maybeName lhs guard rhs rhsRules) =
        rhs
        newRhsRules
 
-checkRules :: Procs -> ThrowsCompileError Procs
-checkRules (procVals, rules) = ((,) procVals) <$> mapM checkRule rules
+typeCheck :: Procs -> ThrowsCompileError Procs
+typeCheck (procVals, rules)
+  = liftA2 (,)
+    (procVals <$ collectTypesProcVals procVals M.empty)
+    $ mapM checkRule rules
 
