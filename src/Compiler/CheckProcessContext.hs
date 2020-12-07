@@ -30,17 +30,29 @@ import           Control.Applicative
 import           Data.Maybe
 
 -- | A type for the Envirnment of process contexts
-type PCtxEnv = M.Map String (Maybe Type)
+data Ty = TyInt
+        | TyString
+        | TyUnary
+        | TyVar String
+        deriving(Eq, Ord)
+
+-- | A type environment
+type PCtxEnv = M.Map String Ty
                -- ^ A mapping from the names of the process contexts
                -- to their type 
 
+maybeType2Ty :: String -> Maybe Type -> Ty
+maybeType2Ty name Nothing        = TyVar name
+maybeType2Ty _ (Just TypeInt   ) = TyInt
+maybeType2Ty _ (Just TypeString) = TyString
+maybeType2Ty _ (Just TypeUnary ) = TyUnary
 
 -- | Check the injectivity and collect process contexts on the LHS of the rule. 
 checkInjectivityLinkVal :: PCtxEnv -> LinkVal -> ThrowsCompileError PCtxEnv
 checkInjectivityLinkVal pCtxEnv linkVal@(ProcessContextVal name maybeType) =
   if M.member name pCtxEnv
     then throwError $ NotInjectiveProcessContext linkVal
-    else return $ M.insert name maybeType pCtxEnv
+    else return $ M.insert name (maybeType2Ty name maybeType) pCtxEnv
 checkInjectivityLinkVal pCtxEnv (AtomVal _ links) =
   foldM checkInjectivityLinkVal pCtxEnv links
 checkInjectivityLinkVal pCtxEnv _ = return pCtxEnv
@@ -80,62 +92,70 @@ extractPCtxName linkVal =
 
 
 checkOpLinkVal
-  :: PCtxEnv -> LinkVal -> ThrowsCompileError (PCtxEnv, Maybe Type)
+  :: PCtxEnv -> LinkVal -> ThrowsCompileError (PCtxEnv, Ty)
 checkOpLinkVal pCtxEnv pCtx@(ProcessContextVal name maybeType) =
   case M.lookup name pCtxEnv of
-    Just maybeType' -> do
-      unifiedType <- unifyType pCtx maybeType maybeType'
-      return (M.insert name unifiedType pCtxEnv, unifiedType)
+    Just ty -> do
+      (newPCtxEnv, unifiedType) <-
+        unifyType pCtx pCtxEnv (maybeType2Ty name maybeType) ty
+      return (M.insert name unifiedType newPCtxEnv, unifiedType)
     Nothing -> throwError $ UnboundProcessContext pCtx
 checkOpLinkVal pCtxEnv atomVal@(AtomVal atomName links@[l, r]) =
-  checkBinaryOp atomVal pCtxEnv l r =<< if isIntOp atomName
-    then return $ Just TypeInt
+  checkBinaryOp atomVal pCtxEnv l r
+  =<< if isIntOp atomName
+    then return TyInt
     else throwError $ UnexpectedOpOnGuard atomVal
-checkOpLinkVal pCtxEnv (DataVal (IntAtom _)) = return (pCtxEnv, Just TypeInt)
+checkOpLinkVal pCtxEnv (DataVal (IntAtom _)) = return (pCtxEnv, TyInt)
 checkOpLinkVal pCtxEnv (DataVal (StringAtom _)) =
-  return (pCtxEnv, Just TypeString)
+  return (pCtxEnv, TyString)
 checkOpLinkVal _ linkVal = throwError $ UnexpectedOpOnGuard linkVal
 
+substitute :: String -> Ty -> PCtxEnv -> PCtxEnv
+substitute name ty pCtxEnv =
+  M.map subst pCtxEnv
+  where subst tyVar@(TyVar name2)
+          = if name == name2 then ty
+            else tyVar
+        subst ty2 = ty2
 
-unifyType
-  :: LinkVal -> Maybe Type -> Maybe Type -> ThrowsCompileError (Maybe Type)
-unifyType linkVal lMaybeType rMaybeType = case (lMaybeType, rMaybeType) of
-  (_         , Nothing   ) -> return lMaybeType
-  (Nothing   , _         ) -> return rMaybeType
-  (Just lType, Just rType) -> case (lType, rType) of
-    (TypeUnary , _         ) -> return $ Just rType
-    (_         , TypeUnary ) -> return $ Just lType
-    (TypeString, TypeString) -> return $ Just TypeString
-    (TypeInt   , TypeInt   ) -> return $ Just TypeInt
-    _                        -> throwError $ UnexpectedTypeConstraint linkVal
+unifyType ::
+  LinkVal -> PCtxEnv -> Ty -> Ty ->
+  ThrowsCompileError (PCtxEnv, Ty)
+unifyType linkVal pCtxEnv ty1 ty2
+  = if ty1 == ty2 then return (pCtxEnv, ty1)
+    else case (ty1, ty2) of
+           (TyVar name1, _) -> return (substitute name1 ty2 pCtxEnv, ty2)
+           (_, TyVar name2) -> return (substitute name2 ty1 pCtxEnv, ty1)
+           (TyUnary, _    ) -> return (pCtxEnv, ty2)
+           (_, TyUnary    ) -> return (pCtxEnv, ty1)
+           _                -> throwError $ UnexpectedTypeConstraint linkVal
 
 unifyEnvs :: LinkVal -> PCtxEnv -> PCtxEnv -> ThrowsCompileError PCtxEnv
 unifyEnvs linkVal leftPCtxEnv rightPCtxEnv = foldM addConstraint leftPCtxEnv
   $ M.toList rightPCtxEnv
  where
-  addConstraint pCtxEnv (pCtxName, maybeType) =
+  addConstraint pCtxEnv (pCtxName, ty1) =
     case M.lookup pCtxName pCtxEnv of
-      Nothing -> return $ M.insert pCtxName maybeType pCtxEnv
-      Just maybeType' ->
-        flip (M.insert pCtxName) pCtxEnv
-          <$> unifyType linkVal maybeType maybeType'
+      Nothing -> return $ M.insert pCtxName ty1 pCtxEnv
+      Just ty2 ->
+        do (newPCtxEnv, newTy) <-
+             unifyType linkVal pCtxEnv ty1 ty2
+           return $ M.insert pCtxName newTy newPCtxEnv
 
 checkBinaryOp
   :: LinkVal
   -> PCtxEnv
   -> LinkVal
   -> LinkVal
-  -> Maybe Type
-  -> ThrowsCompileError (PCtxEnv, Maybe Type)
+  -> Ty
+  -> ThrowsCompileError (PCtxEnv, Ty)
 checkBinaryOp linkVal pCtxEnv left right inferedType = do
-  (leftPCtxEnv , leftMaybeType ) <- checkOpLinkVal pCtxEnv left
-  (rightPCtxEnv, rightMaybeType) <- checkOpLinkVal pCtxEnv right
-  unifiedPCtxEnv                 <- unifyEnvs linkVal leftPCtxEnv rightPCtxEnv
-  unifiedType                    <-
-    unifyType linkVal inferedType
-      =<< unifyType linkVal leftMaybeType rightMaybeType
-  return (unifiedPCtxEnv, unifiedType)
-
+  (leftPCtxEnv , leftTy ) <- checkOpLinkVal pCtxEnv left
+  (rightPCtxEnv, rightTy) <- checkOpLinkVal pCtxEnv right
+  unifiedPCtxEnv          <- unifyEnvs linkVal leftPCtxEnv rightPCtxEnv
+  (newPCtxEnv, newTy)     <- unifyType linkVal unifiedPCtxEnv leftTy rightTy
+  unifyType linkVal newPCtxEnv newTy inferedType
+  
 checkOpProcVal :: PCtxEnv -> ProcVal -> ThrowsCompileError PCtxEnv
 checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]))
   = if atomName == ":="
@@ -150,9 +170,9 @@ checkOpProcVal pCtxEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName links@[l, r]
       fst
         <$> (checkBinaryOp linkVal pCtxEnv l r
              =<< if isPolymorphicOp atomName
-              then return Nothing
+              then return TyUnary
               else if isIntOp atomName
-                then return $ Just TypeInt
+                then return TyInt
                 else throwError $ UnexpectedOpOnGuard linkVal
             )
         
@@ -198,18 +218,45 @@ checkMultipleUtypedProcessContexts pCtxEnv =
         then throwError $ MultipleUtypedProcessContexts untypedProcessContexts
         else return pCtxEnv
  where
-  maybeProcessContextVal (_, Just _) = Nothing
-  maybeProcessContextVal (name, Nothing) =
-    Just $ ProcessContextVal name Nothing
+  maybeProcessContextVal (name, TyVar _)
+    = Just $ ProcessContextVal name Nothing
+  maybeProcessContextVal _ = Nothing
 
-checkRule :: Rule -> ThrowsCompileError ()
-checkRule rule@(Rule _ lhs guard rhs rhsRules) =
-  checkInjectivityProcVals lhs
-    >>= checkOpProcVals guard
-    >>= checkMultipleUtypedProcessContexts
-    >>= collectTypesProcVals rhs
-    >>  mapM_ checkRule rhsRules
 
+ty2MaybeType :: Ty -> Maybe Type
+ty2MaybeType TyInt     = Just TypeInt
+ty2MaybeType TyString  = Just TypeString
+ty2MaybeType TyUnary   = Just TypeUnary
+ty2MaybeType (TyVar _) = Nothing
+
+-- | Set the type of the process contexts to the infered type
+--   based on the given type environment.  
+setInferedTypeLinkVal :: PCtxEnv -> LinkVal -> LinkVal
+setInferedTypeLinkVal pCtxEnv (ProcessContextVal name _)
+  = ProcessContextVal name $ ty2MaybeType $ pCtxEnv M.! name
+setInferedTypeLinkVal pCtxEnv (AtomVal atomName links)
+  = AtomVal atomName $ map (setInferedTypeLinkVal pCtxEnv) links
+setInferedTypeLinkVal _ linkOrData = linkOrData
+
+setInferedTypeProcVal :: PCtxEnv -> ProcVal -> ProcVal
+setInferedTypeProcVal pCtxEnv (LocalAliasVal indeg fromAddr linkVal)
+  = LocalAliasVal indeg fromAddr $ setInferedTypeLinkVal pCtxEnv linkVal
+setInferedTypeProcVal pCtxEnv (FreeAliasVal linkName linkVal)
+  = FreeAliasVal linkName $ setInferedTypeLinkVal pCtxEnv linkVal
+
+setInferedTypeProcVals :: PCtxEnv -> [ProcVal] -> [ProcVal]
+setInferedTypeProcVals pCtxEnv procVals
+  = map (setInferedTypeProcVal pCtxEnv) procVals
+
+checkRule :: Rule -> ThrowsCompileError Rule
+checkRule (Rule maybeName lhs guard rhs rhsRules) =
+  do pCtxEnv <- checkInjectivityProcVals lhs
+                >>= checkOpProcVals guard
+                >>= checkMultipleUtypedProcessContexts
+                >>= collectTypesProcVals rhs
+     newRhsRules <- mapM checkRule rhsRules
+     return $ Rule maybeName ( lhs) guard rhs newRhsRules
+-- setInferedTypeProcVals pCtxEnv
 checkRules :: Procs -> ThrowsCompileError Procs
-checkRules procs@(_, rules) = procs <$ mapM_ checkRule rules
+checkRules (procVals, rules) = ((,) procVals) <$> mapM checkRule rules
 
