@@ -49,7 +49,6 @@ proc(store, Y), x(X)
 ).
 
 
-
 % Load the global variable
 
 load @@ 

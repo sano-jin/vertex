@@ -54,8 +54,7 @@ readAndRunND state2String input = case typeCheck =<< normalize =<< compile input
     in  putStrLn ("0: " ++ state2String initialState)
           >>  runND state2String 0 (initialPath initialState) initialState
           >>= putStrLn
---          .   showEnds state2String
-          . showAllStates state2String
+          .   showEnds state2String
 
 data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
 -- ^ The arguments are
@@ -159,11 +158,13 @@ showEnds state2String path@(Path stateN states transitions) =
 runND :: (State -> String) -> Int -> Path -> State -> IO Path
 runND state2String oldStateID oldPath oldState =
   let (newPath, transitions) = second catMaybes
-        $ mapAccumL (addState2Path oldStateID) oldPath (reduceND oldState)
+        $ mapAccumL (addState2Path oldStateID) oldPath
+        $ reduceND oldState
   in  mapM_
           ( putStrLn
-          . (\(stateId, (state, _)) ->
-              show stateId ++ ": " ++ state2String state
+          . (\(stateId, (state, rule)) ->
+               show stateId ++ ": "
+               ++ state2String state
             )
           )
           transitions

@@ -17,8 +17,6 @@ import           VM.Guard                       ( updateEnvsWithGuard )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
 import           Vis.DGraph                     ( DGraph )
--- import qualified Data.Map.Strict               as M
-
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.

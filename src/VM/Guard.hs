@@ -4,22 +4,19 @@ module VM.Guard
 import           Compiler.Process
 import           Compiler.Syntax
 -- import           Data.List
-import qualified Data.Map.Strict               as M
+-- import qualified Data.Map.Strict               as M
 import           VM.Envs                        ( Envs(..)
                                                 , insertPCtxName2Node
                                                 , lookupPCtxName2Node
                                                 )
 import           VM.Heap                        ( Node(..)
-                                                , HAddr
+                                                -- , HAddr
                                                 )
 
 -- import           Data.Maybe                     ( catMaybes )
 -- import           Data.Tuple.Extra               ( second )
 import           Control.Monad
 
-type LocalEnv = M.Map Addr HAddr
-                 -- ^ A map from the addresses in the procVal and linkVal
-                 --   to the addresses on the heap.
 
 binopInt :: Envs -> (Integer -> Integer -> Integer) -> LinkVal -> LinkVal -> Node
 binopInt envs f l r
@@ -35,7 +32,7 @@ eval envs (AtomVal "+" [l, r]) = binopInt envs (+) l r
 eval envs (AtomVal "-" [l, r]) = binopInt envs (-) l r 
 eval envs (AtomVal "*" [l, r]) = binopInt envs (*) l r 
 eval envs (AtomVal "/" [l, r]) = binopInt envs div l r 
-eval envs (DataVal dataAtom)   = NData dataAtom
+eval _     (DataVal dataAtom)   = NData dataAtom
 eval envs (ProcessContextVal name _) = lookupPCtxName2Node name envs
 eval _ linkVal = error $ "unexpected value when evaluating " ++ show linkVal
 
