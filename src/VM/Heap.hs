@@ -46,9 +46,9 @@ heap2DGraph (Heap _ mapHAddr2IndegNode) =
   map2DGraph $ M.map (translateNode . snd) $ M.mapKeys hAddr2Int
                                                        mapHAddr2IndegNode
  where
-  translateNode (NAtom atomName links) = (atomName, map hAddr2Int links)
-  translateNode (NInd link           ) = ("->", [hAddr2Int link])
-  translateNode (NData dataAtom       ) = (show dataAtom, [])
+  translateNode (NAtom atomName links) = (atomName     , map hAddr2Int links)
+  translateNode (NInd  link          ) = ("->"         , [hAddr2Int link]   )
+  translateNode (NData dataAtom      ) = (show dataAtom, []                 )
 
 
 newtype HAddr = HAddr Int

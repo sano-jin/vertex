@@ -38,3 +38,4 @@ test processContext1        \
 "a(\$p) :- \$p' := \$p + 1 | b(\$p'). a(1)."
 test intIsUnary "a(\$p:unary) :- \$q := \$p + 1 | b(\$q)"
 test noMultipleUntypedProcessContext "a(\$p), b(\$q:string), c(\$r) :- \$q = \$p |."
+test typeCheckOnGuard "a(\$p) :- \$p:string |."

@@ -73,7 +73,7 @@ data CompileError = IsNotSerial String
                   | LinkOnGuard ProcLit
                   | RuleOnGuard ProcLit [Rule]
                   | UnboundProcessContext LinkVal
-                  | MultipleUtypedProcessContexts (S.Set LinkVal)
+                  | MultipleUtypedProcessContexts [LinkVal]
                   | ShadowingProcessContext LinkVal
 
 -- | Functions for showing errors.
@@ -114,7 +114,7 @@ showCompileError (IsNotSerialAfterNormalization errors) =
 showCompileError (UnboundProcessContext pCtx)
   = "Unbound process context " ++ show pCtx
 showCompileError (MultipleUtypedProcessContexts pCtxs)
-  = "Multiple untyped process contexts " ++ showSet (S.map show pCtxs)
+  = "Multiple untyped process contexts " ++ intercalate ", " (map show pCtxs)
 showCompileError (ShadowingProcessContext linkVal)
   = "The shadowing of the process context is not implemented " ++ show linkVal
 showCompileError (ParseError parseError) = "Parse error at " ++ show parseError
