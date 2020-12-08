@@ -13,10 +13,12 @@ import           Data.Maybe
 import           GHC.Base
 import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
+import           VM.Guard                       ( updateEnvsWithGuard )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
 import           Vis.DGraph                     ( DGraph )
 -- import qualified Data.Map.Strict               as M
+
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.
@@ -47,9 +49,10 @@ showStateForDebugging (State heap rules) =
 
 -- | Execute rule and returns the new heap, the newly created rules and the applied rule.
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
-execRule heap rule@(Rule _ lhs _ rhs rhsRules) = do
+execRule heap rule@(Rule _ lhs guard rhs rhsRules) = do
   envs <- findAtoms lhs heap
-  return (push heap rhs envs, rhsRules, rule)
+  newEnvs <- updateEnvsWithGuard envs guard
+  return (push heap rhs newEnvs, rhsRules, rule)
 
 
 applyTillFail :: (a -> Maybe b) -> [a] -> Maybe b

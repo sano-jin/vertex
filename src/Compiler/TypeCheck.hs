@@ -208,10 +208,8 @@ checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
     else
       do (inferedTy, newTyEnv) <-
             if isPolymorphicOp atomName
-              then return $ maybeType2Ty tyEnv $ Just TypeUnary  -- Must be rewriiten
-              else if isIntOp atomName
-                then return $ maybeType2Ty tyEnv $ Just TypeInt
-                else throwError $ UnexpectedOpOnGuard linkVal
+            then return $ maybeType2Ty tyEnv $ Just TypeUnary
+            else throwError $ UnexpectedOpOnGuard linkVal
          fst <$> checkBinaryOp linkVal newTyEnv l r inferedTy
         
 checkOpProcVal tyEnv (LocalAliasVal 0 _ pCtx@(ProcessContextVal name maybeType@(Just _)))

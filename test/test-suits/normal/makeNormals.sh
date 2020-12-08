@@ -36,6 +36,11 @@ R -> append(cons(H, T), L) :- R -> cons(H, append(T, L)).
 R -> append(nil, L) :- R -> nil."
 test processContext1        \
 "a(\$p) :- \$p' := \$p + 1 | b(\$p'). a(1)."
-test intIsUnary "a(\$p:unary) :- \$q := \$p + 1 | b(\$q)"
+test intIsUnary "a(3). a(\$p:unary) :- \$q := \$p + 1 | b(\$q)"
 test noMultipleUntypedProcessContext "a(\$p), b(\$q:string), c(\$r) :- \$q = \$p |."
-test typeCheckOnGuard "a(\$p) :- \$p:string |."
+test typeCheckOnGuard "a(\"hoge\"). a(\$p) :- \$p:string | b."
+test eqInt "a(1, 2). a(\$p, \$q) :- \$p = \$q | b."
+test neqInt "a(1, 2). a(\$p, \$q) :- \$p /= \$q | b."
+test add "a(1, 2). a(\$p, \$q) :- \$r := \$p + \$q | b(\$r)."
+test sub "a(3, 1). a(\$p, \$q) :- \$r := \$p - \$q | b(\$r)."
+test mul "a(2, 3). a(\$p, \$q) :- \$r := \$p * \$q | b(\$r)."

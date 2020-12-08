@@ -133,9 +133,10 @@ checkLinkVal heap maybeIndeg envs (ProcessContextVal name (Just type_), hAddr) =
         isNodeSameType (NAtom _ []          ) TypeUnary  = True
         isNodeSameType (_                   ) _          = False
         
-checkLinkVal _ _ _  (ProcessContextVal _ Nothing, _)
-  = error $ "matching of the untyped process context is not implemented"
-  
+checkLinkVal _ _ _  pCtxVal@(ProcessContextVal _ Nothing, _)
+  = error $ "matching of the untyped process context is not implemented "
+    ++ show pCtxVal
+    
 checkLinkVal _ _ envs (LocalLinkVal matchingAddr, hAddr) =
   case lookupLocalLink2Addr matchingAddr envs of
     Nothing     -> Just $ addLocalLink2Addr matchingAddr hAddr envs
@@ -246,7 +247,3 @@ findAtoms :: [ProcVal] -> Heap -> Maybe Envs
 findAtoms procVals heap =
   let atomList = toAtomList heap
   in  findAtom (atomList, heap) atomList procVals nullEnvs
-
-
-
-

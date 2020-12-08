@@ -97,17 +97,16 @@ instance Show Rule where
   show = showRule
 
 showRule :: Rule -> String
-showRule (Rule maybeName lhs guard rhs rules) =
+showRule (Rule (Just name) _ _ _ _) = name
+showRule (Rule Nothing lhs guard rhs rules) =
   let sep      = if null rhs || null rules then "" else ", "
-      name     = maybe "" (++ " @@ ") maybeName
       guardStr = if null guard then "" else showProcVals guard ++ " | "
-  in  name
-        ++ showProcVals lhs
-        ++ " :- "
-        ++ guardStr
-        ++ showProcVals rhs
-        ++ sep
-        ++ showSubRules rules
+  in  showProcVals lhs
+      ++ " :- "
+      ++ guardStr
+      ++ showProcVals rhs
+      ++ sep
+      ++ showSubRules rules
 
 showRuleForDebugging :: Rule -> String
 showRuleForDebugging (Rule maybeName lhs guard rhs rules) =

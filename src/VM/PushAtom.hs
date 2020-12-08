@@ -55,9 +55,6 @@ pushLinkVal envs _ oldHeap (ProcessContextVal name _)
   = hAlloc oldHeap (1, lookupPCtxName2Node name envs)
 
 
-  -- error "process context is not implemented yet"
-
-
 -- | Pushes the atom.
 pushProcVal
   :: Envs -> LocalEnv -> Heap -> ProcVal -> (Heap, Maybe (Addr, HAddr))

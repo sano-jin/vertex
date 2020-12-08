@@ -1,0 +1,3 @@
+Error : Parse error at "vertex" (line 19, column 16):
+unexpected ":"
+expecting "$", lowercase letter, "'", integer, literal string, uppercase letter, "_" or "("
