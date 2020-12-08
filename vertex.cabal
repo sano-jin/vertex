@@ -31,6 +31,7 @@ library
       Compiler.Parser
       Compiler.Process
       Compiler.Syntax
+      Compiler.TypeCheck
       ND
       Repl
       Util.Util
@@ -39,6 +40,7 @@ library
       Vis.Geom
       VM.Envs
       VM.FindAtom
+      VM.Guard
       VM.Heap
       VM.PushAtom
       VM.VM
@@ -110,11 +112,9 @@ executable stateViewer
 
 test-suite vertex-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: test/Spec.hs
   other-modules:
       Paths_vertex
-  hs-source-dirs:
-      test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

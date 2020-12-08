@@ -1,0 +1,1 @@
+a("hoge"). a($p) :- $p:string | b.

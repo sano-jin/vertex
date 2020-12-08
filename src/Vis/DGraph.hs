@@ -73,7 +73,7 @@ randomizePosOfNode
 randomizePosOfNode width height g (Node a edges (_, vel)) =
   let (x, g' ) = randomR (-width * 0.5, width * 0.5) g
       (y, g'') = randomR (-height * 0.5, height * 0.5) g'
-  in  (g'', Node a edges $ (V2 x y, vel))
+  in  (g'', Node a edges (V2 x y, vel))
 
 -- | Randamize the position of the nodes of the given grap
 randamizeDGraph
@@ -152,7 +152,7 @@ updatePosAndVel timeDiff oldDGraph oldEnergy (Node a (inEdges, outEdges) (oldPos
 --   return the next (time-passed) graph
 updateDGraph :: (Eq s, Floating s) => s -> DGraph a s -> DGraph a s
 updateDGraph timeDiff (DGraph oldDGraph) =
-  DGraph $ snd $ M.mapAccum (updatePosAndVel timeDiff oldDGraph) 0 $ oldDGraph
+  DGraph $ snd $ M.mapAccum (updatePosAndVel timeDiff oldDGraph) 0 oldDGraph
 
 -- | Same as Map.elems
 elems :: DGraph a s -> [DNode a s]

@@ -1,32 +1,57 @@
 block = 
-    | line "." block
-    | line "."
-    | line
+    | {line "."}
 
 line = 
     | list ":-" list
     | list
 
 list =
-    | process "," list
-    | process
+    | {process ","} process
+    | Null
 
 creation =
-    | ( \(linkName " ") + "." ) * process    
+    | {"\" {linkName " "} + "." } process    
 
 process =
-    | atom              (* start from AtomName *)
-    | indirection       (* start from PointerName *)
-    | "(" line ")"      (* start from opening parentheses *)
+    | atom0             (* starting from AtomName *)
+      			(* the weakest operator precedence *)
+    | indirection       (* starting from PointerName *)
+    | "(" line ")"      (* starting from opening parentheses *)
 
-atom =
-    | AtomName "("  ")"
+atom0 = processContext ":=" atom4 | atom4
+atom4 = 
+    | atom5 "="  atom5
+    | atom5 "/=" atom5
+    | atom5 "<"  atom5
+    | atom5 ">"  atom5
+    | atom5 "<=" atom5
+    | atom5 ">=" atom5
+    | atom5 
+
+atom5 = 
+    | {atom7 "+"} atom7
+
+atom7 = 
+    | {atom10 "*"} atom10
+
+atom10 =
+    | AtomName "(" ")"
     | AtomName "(" linkList ")"
     | AtomName
+    | Integer
+    | processContext  
+
+processContext = "$" AtomName [ ":" type ]
+
+type =
+    | "int"
+    | "string"
+    | "ground"
+    | "unary"
 
 linkList =
-    | pointing_to "," linkList
-    | pointing_to
+    | {pointing_to ","} pointing_to
+    | Null
 
 pointing_to = 
     | atom

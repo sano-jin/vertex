@@ -4,7 +4,9 @@ module VM.PushAtom
 import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
-import           VM.Envs                        ( Envs(..) )
+import           VM.Envs                        ( Envs(..)
+                                                , lookupPCtxName2Node
+                                                )
 import           VM.Heap                        ( Heap
                                                 , Node(..)
                                                 , HAddr
@@ -47,7 +49,10 @@ pushLinkVal _ localEnv heap (LocalLinkVal addr) =
 pushLinkVal envs localEnv oldHeap (AtomVal atomName links) =
   let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
   in  hAlloc newHeap (1, NAtom atomName hLinks)
-pushLinkVal _ _ oldHeap (IntVal i) = hAlloc oldHeap (1, NInt i)
+pushLinkVal _ _ oldHeap (DataVal dataAtom)
+  = hAlloc oldHeap (1, NData dataAtom)
+pushLinkVal envs _ oldHeap (ProcessContextVal name _)
+  = hAlloc oldHeap (1, lookupPCtxName2Node name envs)
 
 
 -- | Pushes the atom.
@@ -57,14 +62,20 @@ pushProcVal envs localEnv oldHeap (LocalAliasVal indeg addr headingAtom) =
   let (newHeap, hAddr) = pushLinkVal envs localEnv oldHeap headingAtom
   in  (setIndeg hAddr indeg newHeap, Just (addr, hAddr))
 pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (AtomVal atomName links))
-  = let (newHeap, hLinks) = mapAccumL (pushLinkVal envs localEnv) oldHeap links
+  = let (newHeap, hLinks) =
+          mapAccumL (pushLinkVal envs localEnv) oldHeap links
         hAddr             = freeLink2Addr envs M.! linkName
         indeg             = getIndeg hAddr newHeap
     in  (hReplace hAddr (indeg, NAtom atomName hLinks) newHeap, Nothing)
-pushProcVal envs localEnv oldHeap (FreeAliasVal linkName (IntVal int)) =
+pushProcVal envs _ oldHeap (FreeAliasVal linkName (DataVal dataAtom)) =
   let hAddr = freeLink2Addr envs M.! linkName
       indeg = getIndeg hAddr oldHeap
-  in  (hReplace hAddr (indeg, NInt int) oldHeap, Nothing)
+  in  (hReplace hAddr (indeg, NData dataAtom) oldHeap, Nothing)
+pushProcVal envs _ oldHeap (FreeAliasVal linkName (ProcessContextVal name _)) =
+  let hAddr = freeLink2Addr envs M.! linkName
+      node  = lookupPCtxName2Node name envs
+      indeg = getIndeg hAddr oldHeap
+  in  (hReplace hAddr (indeg, node) oldHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
   let fromHAddr = freeLink2Addr envs M.! fromLinkName
       toHAddr   = freeLink2Addr envs M.! toLinkName

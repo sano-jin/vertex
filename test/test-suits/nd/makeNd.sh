@@ -194,3 +194,26 @@ proc(store, X, 2), X -> 3
 
 proc(store, X, 3), X -> 3
 :- proc(halt, X, 3), X -> 3."
+
+test incr3WithGuard        \
+"
+\X.(
+    proc(load, X, 0),
+    proc(load, X, 0),
+    proc(load, X, 0),
+    X -> 0
+).
+
+% Load the global variable
+proc(load, X, \$y:int), X -> \$x:int
+:- proc(incr, \$x, 0), X -> \$x.
+
+% Increment the local variable
+proc(incr, X, \$y)
+:- \$y' := \$y + 1 
+|  proc(store, X, \$y').
+
+% Store the global variable
+proc(store, X, $y:int), X -> $x:int
+:- proc(halt, X, $y:int), X -> $y:int.
+"

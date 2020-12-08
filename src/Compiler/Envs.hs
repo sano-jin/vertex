@@ -14,11 +14,12 @@ module Compiler.Envs
   , HasHead
   , EnvList
   , EnvSet
+  , hasLink
   ) where
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
-
+-- import           Debug.Trace
 
 type HasHead = Bool
 type EnvList = [(String, (Addr, HasHead))]
@@ -29,7 +30,7 @@ type EnvSet = S.Set String
 
 
 
--- | A type for the Envirnment of pointes
+-- | A type for the Envirnment of links
 data Envs = Envs
   { localEnv          :: EnvList
                    -- ^ A mapping (list of tuple) from the local link names
@@ -62,8 +63,7 @@ addFreeTail :: String -> Envs -> Envs
 addFreeTail = updateFreeTailEnv . S.insert
 
 updateFreeHeadEnv :: (EnvSet -> EnvSet) -> Envs -> Envs
-updateFreeHeadEnv f envs
-  = envs { freeHeadEnv = f $ freeHeadEnv envs }
+updateFreeHeadEnv f envs = envs { freeHeadEnv = f $ freeHeadEnv envs }
 
 addFreeHead :: String -> Envs -> Envs
 addFreeHead = updateFreeHeadEnv . S.insert
@@ -84,3 +84,10 @@ incrAddrSeed = updateAddrSeed (+ 1)
 
 incrLocalIndeg :: Addr -> Envs -> Envs
 incrLocalIndeg addr = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)
+
+-- | Currently this does not check whether the envs has the local links.
+hasLink :: Envs -> Bool
+hasLink envs = -- trace ("debug trace " ++ show envs)
+  not (M.null $ M.filter (/= 0) $ localMapAddrIndeg envs)
+  || not (S.null $ freeTailEnv envs)
+  || not (S.null $ freeHeadEnv envs)

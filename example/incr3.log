@@ -1,0 +1,194 @@
+0: proc(load, L10, 0). proc(load, L10, 0). proc(load, L10, 0). L10 -> 0. 
+0 ~> 1: load ~> 
+proc(load, L10, 0). proc(load, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+1 ~> 2: load ~> 
+proc(load, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+1 ~> 3: incr ~> 
+proc(load, L10, 0). proc(load, L10, 0). proc(store, L10, 1). L10 -> 0. 
+2 ~> 4: load ~> 
+proc(incr, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+2 ~> 5: incr ~> 
+proc(load, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+4 ~> 6: incr ~> 
+proc(incr, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+6 ~> 7: incr ~> 
+proc(incr, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+6 ~> 8: store ~> 
+proc(incr, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+7 ~> 9: incr ~> 
+proc(store, L10, 1). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+7 ~> 10: store ~> 
+proc(incr, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+9 ~> 11: store ~> 
+proc(store, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+11 ~> 12: store ~> 
+proc(store, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+12 ~> 13: store ~> 
+proc(halt, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+10 ~> 14: store ~> 
+proc(incr, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+5 ~> 15: incr ~> 
+proc(load, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+5 ~> 16: store ~> 
+proc(load, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+15 ~> 17: store ~> 
+proc(load, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+17 ~> 18: load ~> 
+proc(incr, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+17 ~> 19: store ~> 
+proc(load, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+18 ~> 20: incr ~> 
+proc(store, L10, 2). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+18 ~> 21: store ~> 
+proc(incr, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+20 ~> 22: store ~> 
+proc(store, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+20 ~> 23: store ~> 
+proc(halt, L10, 2). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+22 ~> 24: store ~> 
+proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+23 ~> 25: store ~> 
+proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+16 ~> 26: load ~> 
+proc(incr, L10, 1). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+26 ~> 27: incr ~> 
+proc(store, L10, 2). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+27 ~> 28: store ~> 
+proc(halt, L10, 2). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 2. 
+3 ~> 29: store ~> 
+proc(load, L10, 0). proc(load, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+29 ~> 30: load ~> 
+proc(load, L10, 0). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+30 ~> 31: load ~> 
+proc(incr, L10, 1). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+30 ~> 32: incr ~> 
+proc(load, L10, 0). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+31 ~> 33: incr ~> 
+proc(incr, L10, 1). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+33 ~> 34: incr ~> 
+proc(store, L10, 2). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+33 ~> 35: store ~> 
+proc(incr, L10, 1). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+34 ~> 36: store ~> 
+proc(store, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+36 ~> 37: store ~> 
+proc(halt, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+32 ~> 38: store ~> 
+proc(load, L10, 0). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+38 ~> 39: load ~> 
+proc(incr, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+39 ~> 40: incr ~> 
+proc(store, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+40 ~> 41: store ~> 
+proc(halt, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 3. 
+State(s):
+0: proc(load, L10, 0). proc(load, L10, 0). proc(load, L10, 0). L10 -> 0. 
+1: proc(load, L10, 0). proc(load, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+2: proc(load, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+3: proc(load, L10, 0). proc(load, L10, 0). proc(store, L10, 1). L10 -> 0. 
+4: proc(incr, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+5: proc(load, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+6: proc(incr, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+7: proc(incr, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+8: proc(incr, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+9: proc(store, L10, 1). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+10: proc(incr, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+11: proc(store, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+12: proc(store, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+13: proc(halt, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+14: proc(incr, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+15: proc(load, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+16: proc(load, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+17: proc(load, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+18: proc(incr, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+19: proc(load, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+20: proc(store, L10, 2). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+21: proc(incr, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+22: proc(store, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+23: proc(halt, L10, 2). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+24: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+25: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+26: proc(incr, L10, 1). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+27: proc(store, L10, 2). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+28: proc(halt, L10, 2). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 2. 
+29: proc(load, L10, 0). proc(load, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+30: proc(load, L10, 0). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+31: proc(incr, L10, 1). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+32: proc(load, L10, 0). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+33: proc(incr, L10, 1). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+34: proc(store, L10, 2). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+35: proc(incr, L10, 1). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+36: proc(store, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+37: proc(halt, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+38: proc(load, L10, 0). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+39: proc(incr, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+40: proc(store, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+41: proc(halt, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 3. 
+
+Terminal state(s):
+13: proc(halt, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+24: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+25: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+37: proc(halt, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+41: proc(halt, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 3. 
+
+Transiton(s):
+0 ~> 1 with a rule "load".
+1 ~> 2 with a rule "load".
+1 ~> 3 with a rule "incr".
+2 ~> 4 with a rule "load".
+2 ~> 5 with a rule "incr".
+4 ~> 6 with a rule "incr".
+6 ~> 7 with a rule "incr".
+6 ~> 8 with a rule "store".
+7 ~> 9 with a rule "incr".
+7 ~> 10 with a rule "store".
+9 ~> 11 with a rule "store".
+11 ~> 12 with a rule "store".
+12 ~> 13 with a rule "store".
+10 ~> 11 with a rule "incr".
+10 ~> 14 with a rule "store".
+14 ~> 12 with a rule "incr".
+8 ~> 10 with a rule "incr".
+5 ~> 6 with a rule "load".
+5 ~> 15 with a rule "incr".
+5 ~> 16 with a rule "store".
+15 ~> 7 with a rule "load".
+15 ~> 17 with a rule "store".
+17 ~> 18 with a rule "load".
+17 ~> 19 with a rule "store".
+18 ~> 20 with a rule "incr".
+18 ~> 21 with a rule "store".
+20 ~> 22 with a rule "store".
+20 ~> 23 with a rule "store".
+22 ~> 24 with a rule "store".
+23 ~> 25 with a rule "store".
+21 ~> 22 with a rule "incr".
+19 ~> 21 with a rule "load".
+16 ~> 26 with a rule "load".
+16 ~> 17 with a rule "incr".
+26 ~> 18 with a rule "incr".
+26 ~> 27 with a rule "incr".
+27 ~> 20 with a rule "incr".
+27 ~> 28 with a rule "store".
+28 ~> 23 with a rule "incr".
+3 ~> 5 with a rule "load".
+3 ~> 29 with a rule "store".
+29 ~> 30 with a rule "load".
+30 ~> 31 with a rule "load".
+30 ~> 32 with a rule "incr".
+31 ~> 33 with a rule "incr".
+33 ~> 34 with a rule "incr".
+33 ~> 35 with a rule "store".
+34 ~> 36 with a rule "store".
+36 ~> 37 with a rule "store".
+35 ~> 36 with a rule "incr".
+32 ~> 33 with a rule "load".
+32 ~> 38 with a rule "store".
+38 ~> 39 with a rule "load".
+39 ~> 40 with a rule "incr".
+40 ~> 41 with a rule "store".
+
+'# of States'(stored)  = 42.
+'# of States'(end)     = 5.
+'# of Transitions'     = 55.

@@ -1,0 +1,8 @@
+a(2).
+
+a($p) :- $q := $p + 1 | b($q).
+
+% a($p : string), b($q), c($r) :- $p = $q | b($p).
+
+% a("fuga"), "hoge".
+a($p), $q:unary :- $p:string, $q /= $p | b($p).

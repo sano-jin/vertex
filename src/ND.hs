@@ -1,8 +1,10 @@
+{-# LANGUAGE TupleSections #-}
 module ND
   ( readAndRunND
   , readAndVisND
   ) where
 import           Compiler.Compiler              ( compile )
+import           Compiler.TypeCheck             ( typeCheck )
 import           Compiler.Normalize             ( normalize )
 import           Compiler.Process               ( Rule )
 import           Data.List
@@ -29,13 +31,13 @@ path2DGraph (Path _ states transitions) =
     $ foldr
         (\(before, after) -> M.adjust (second $ (:) after) before)
         ( M.fromList
-        $ map (second $ flip (,) [] . (\(State heap _) -> show heap)) states
+        $ map (second $ (, []) . (\(State heap _) -> show heap)) states
         )
     $ map fst transitions
 
 readAndVisND
   :: Floating s => (State -> String) -> String -> IO (DGraph String s)
-readAndVisND state2String input = case normalize =<< compile input of
+readAndVisND state2String input = case typeCheck =<< normalize =<< compile input of
   Left err -> putStrLn ("Error : " ++ show err) >> error ""
   Right (procVals, rules) ->
     let initialState = State (initializeHeap procVals) rules
@@ -45,7 +47,7 @@ readAndVisND state2String input = case normalize =<< compile input of
 
 
 readAndRunND :: (State -> String) -> String -> IO ()
-readAndRunND state2String input = case normalize =<< compile input of
+readAndRunND state2String input = case typeCheck =<< normalize =<< compile input of
   Left err -> putStrLn ("Error : " ++ show err)
   Right (procVals, rules) ->
     let initialState = State (initializeHeap procVals) rules
@@ -53,7 +55,6 @@ readAndRunND state2String input = case normalize =<< compile input of
           >>  runND state2String 0 (initialPath initialState) initialState
           >>= putStrLn
           .   showEnds state2String
-
 
 data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
 -- ^ The arguments are
@@ -101,7 +102,7 @@ showAllStates state2String path@(Path stateN states transitions) =
                (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
                states
              )
-        ++ "\nTerminal state id(s):\n"
+        ++ "\nTerminal state(s):\n"
         ++ unlines
              (reverse $ map
                (\(stateId, state) -> show stateId ++ ": " ++ state2String state)
@@ -157,11 +158,13 @@ showEnds state2String path@(Path stateN states transitions) =
 runND :: (State -> String) -> Int -> Path -> State -> IO Path
 runND state2String oldStateID oldPath oldState =
   let (newPath, transitions) = second catMaybes
-        $ mapAccumL (addState2Path oldStateID) oldPath (reduceND oldState)
+        $ mapAccumL (addState2Path oldStateID) oldPath
+        $ reduceND oldState
   in  mapM_
           ( putStrLn
-          . (\(stateId, (state, _)) ->
-              show stateId ++ ": " ++ state2String state
+          . (\(stateId, (state, rule)) ->
+               show stateId ++ ": "
+               ++ state2String state
             )
           )
           transitions

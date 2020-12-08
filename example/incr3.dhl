@@ -15,7 +15,6 @@ init{
 }
 ```
 
-
 Also, this can be written in LMNtal as following.
 ```
 proc(load, 0).
@@ -50,57 +49,72 @@ proc(store, Y), x(X)
 ).
 
 
-
 % Load the global variable
 
+load @@ 
 proc(load, X, 0), X -> 0
 :- proc(incr, X, 0), X -> 0.
 
+load @@
 proc(load, X, 1), X -> 0
 :- proc(incr, X, 0), X -> 0.
 
+load @@
 proc(load, X, 2), X -> 0
 :- proc(incr, X, 0), X -> 0.
 
+load @@
 proc(load, X, 3), X -> 0
 :- proc(incr, X, 0), X -> 0.
 
 
+load @@
 proc(load, X, 0), X -> 1
 :- proc(incr, X, 1), X -> 1.
 
+load @@
 proc(load, X, 1), X -> 1
 :- proc(incr, X, 1), X -> 1.
 
+load @@
 proc(load, X, 2), X -> 1
 :- proc(incr, X, 1), X -> 1.
 
+load @@
 proc(load, X, 3), X -> 1
 :- proc(incr, X, 1), X -> 1.
 
 
+load @@
 proc(load, X, 0), X -> 2
 :- proc(incr, X, 2), X -> 2.
 
+load @@
 proc(load, X, 1), X -> 2
 :- proc(incr, X, 2), X -> 2.
 
+load @@
 proc(load, X, 2), X -> 2
 :- proc(incr, X, 2), X -> 2.
 
+load @@
 proc(load, X, 3), X -> 2
 :- proc(incr, X, 2), X -> 2.
 
 
+load @@
 proc(load, X, 0), X -> 3
 :- proc(incr, X, 3), X -> 3.
 
+load @@
 proc(load, X, 1), X -> 3
 :- proc(incr, X, 3), X -> 3.
 
+load @@
 proc(load, X, 2), X -> 3
 :- proc(incr, X, 3), X -> 3.
 
+load @@
 proc(load, X, 3), X -> 3
 :- proc(incr, X, 3), X -> 3.
 
@@ -108,15 +122,19 @@ proc(load, X, 3), X -> 3
 
 % Increment the local variable
 
+incr @@
 proc(incr, X, 0)
 :- proc(store, X, 1).
 
+incr @@
 proc(incr, X, 1) 
 :- proc(store, X, 2).
 
+incr @@
 proc(incr, X, 2) 
 :- proc(store, X, 3).
 
+incr @@
 proc(incr, X, 3) 
 :- proc(store, X, 4).
 
@@ -124,53 +142,69 @@ proc(incr, X, 3)
 
 % Store the global variable
 
+store @@
 proc(store, X, 0), X -> 0
 :- proc(halt, X, 0), X -> 0.
 
+store @@
 proc(store, X, 1), X -> 0
 :- proc(halt, X, 1), X -> 1.
 
+store @@
 proc(store, X, 2), X -> 0
 :- proc(halt, X, 2), X -> 2.
 
+store @@
 proc(store, X, 3), X -> 0
 :- proc(halt, X, 3), X -> 3.
 
 
+store @@
 proc(store, X, 0), X -> 1
 :- proc(halt, X, 0), X -> 0.
 
+store @@
 proc(store, X, 1), X -> 1
 :- proc(halt, X, 1), X -> 1.
 
+store @@
 proc(store, X, 2), X -> 1
 :- proc(halt, X, 2), X -> 2.
 
+store @@
 proc(store, X, 3), X -> 1
 :- proc(halt, X, 3), X -> 3.
 
 
+store @@
 proc(store, X, 0), X -> 2
 :- proc(halt, X, 0), X -> 0.
 
+store @@
 proc(store, X, 1), X -> 2
 :- proc(halt, X, 1), X -> 1.
 
+store @@
 proc(store, X, 2), X -> 2
 :- proc(halt, X, 2), X -> 2.
 
+store @@
 proc(store, X, 3), X -> 2
 :- proc(halt, X, 3), X -> 3.
 
 
+store @@
 proc(store, X, 0), X -> 3
 :- proc(halt, X, 0), X -> 0.
 
+store @@
 proc(store, X, 1), X -> 3
 :- proc(halt, X, 1), X -> 1.
 
+store @@
 proc(store, X, 2), X -> 3
 :- proc(halt, X, 2), X -> 2.
 
+store @@
 proc(store, X, 3), X -> 3
 :- proc(halt, X, 3), X -> 3.

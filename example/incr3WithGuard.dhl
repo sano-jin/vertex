@@ -1,0 +1,24 @@
+\X.(
+    proc(load, X, 0),
+    proc(load, X, 0),
+    proc(load, X, 0),
+    X -> 0
+).
+
+% Load the global variable
+load @@
+proc(load, X, $y:int), X -> $x:int
+:- proc(incr, X, $x), X -> $x.
+
+% Increment the local variable
+incr @@
+proc(incr, X, $y)
+:- $y' := $y + 1 
+|  proc(store, X, $y').
+
+% Store the local variable
+store @@
+proc(store, X, $y:int), X -> $x:int
+:- proc(halt, X, $y), X -> $y.
+
+
