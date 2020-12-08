@@ -13,10 +13,10 @@ import           Data.Maybe
 import           GHC.Base
 import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
+import           VM.Guard                       ( updateEnvsWithGuard )
 import           VM.Heap
 import           VM.PushAtom                    ( push )
-import           Vis.DGraph                     ( DGraph(..) )
-import qualified Data.Map.Strict               as M
+import           Vis.DGraph                     ( DGraph )
 
 data State = State Heap [Rule]
 -- ^ State is consists of tuple, the heap and the list of rules.
@@ -30,7 +30,7 @@ state2DGraph (State heap _) = heap2DGraph heap
 -- | Shows the state.
 --   Pritty print the heap and the rules.
 showState :: State -> String
-showState (State heap rules) = show heap
+showState (State heap _) = show heap
   -- ++ showRules rules
 
 -- | Shows the state.
@@ -47,9 +47,10 @@ showStateForDebugging (State heap rules) =
 
 -- | Execute rule and returns the new heap, the newly created rules and the applied rule.
 execRule :: Heap -> Rule -> Maybe (Heap, [Rule], Rule)
-execRule heap rule@(Rule lhs rhs rhsRules) = do
+execRule heap rule@(Rule _ lhs guard rhs rhsRules) = do
   envs <- findAtoms lhs heap
-  return (push heap rhs envs, rhsRules, rule)
+  newEnvs <- updateEnvsWithGuard envs guard
+  return (push heap rhs newEnvs, rhsRules, rule)
 
 
 applyTillFail :: (a -> Maybe b) -> [a] -> Maybe b
@@ -70,9 +71,8 @@ reduce (State heap rules) = do
 --   Currently, this does not check the equivalence of the rules.
 --   This is surely NOT efficient at all.
 isStateEq :: State -> State -> Bool
-isStateEq (State heap1 _) (State heap2 _) = if hSize heap1 == hSize heap2
-  then isJust $ findAtoms (heap2ProcVals heap1) heap2
-  else False
+isStateEq (State heap1 _) (State heap2 _) =
+  (hSize heap1 == hSize heap2) && isJust (findAtoms (heap2ProcVals heap1) heap2)
 
 -- | Runs the program and returns the all possible next states.
 --   This is for the non-deterministic execution.
@@ -90,18 +90,4 @@ initializeHeap :: [ProcVal] -> Heap
 initializeHeap procVals = push initialHeap procVals nullEnvs
 
 
-{--|
-showTransition :: Maybe (State, Rule) -> String
-showTransition (Just (state, rule))
-  = show state ++ "\n with a rule " ++ showRule rule
-showTransition Nothing
- = "halted"
-|--}
-
-{--|
--- | adds rules to the state
-addRules2State :: [Rule] -> State -> State
-addRules2State rules2Add (State heap rules)
-  = State heap (rules ++ rules2Add)
-|--}
 

@@ -15,9 +15,9 @@ module VM.FindAtom
   ) where
 import           Control.Monad.Except           ( foldM )
 import           Compiler.Process
+import           Compiler.Syntax               
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
-import qualified Data.Set                      as S
 import           GHC.Base                       ( (<|>) )
 import           VM.Envs                        ( Envs(..)
                                                 , addFreeLink2Addr
@@ -25,8 +25,13 @@ import           VM.Envs                        ( Envs(..)
                                                 , addMatchedLocalAddrs
                                                 , nullEnvs
                                                 , updateFreeAddr2Indeg
-                                                , updateFreeLink2Addr
-                                                , updateIncommingLinks
+                                                , insertPCtxName2Node
+                                                , isMatchedLocalHAddr
+                                                , isMatchedIncommingHAddr
+                                                , addIncommingLinks
+                                                , insertFreeAddr2Indeg
+                                                , lookupLocalLink2Addr
+                                                , lookupFreeLink2Addr
                                                 )
 import           VM.Heap                        ( AtomList
                                                 , Heap
@@ -50,17 +55,24 @@ insertIfNone key value = M.alter (Just . fromMaybe value) key
 checkEmbeddedLinkVal
   :: Heap -> Maybe Indeg -> Envs -> (LinkVal, HAddr) -> Maybe Envs
 checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(AtomVal _ _, hAddr) =
-  if S.member hAddr $ matchedLocalAddrs envs
-    then Nothing
-       -- non-injective matching
-    else checkLinkVal heap maybeIndeg envs linkValAddr
-checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(IntVal _, hAddr) =
-  if S.member hAddr $ matchedLocalAddrs envs
-    then Nothing
-       -- non-injective matching
-    else checkLinkVal heap maybeIndeg envs linkValAddr
+  if isMatchedLocalHAddr hAddr envs 
+  then Nothing -- non-injective matching
+  else checkLinkVal heap maybeIndeg envs linkValAddr
+checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(DataVal _, hAddr) =
+  if isMatchedLocalHAddr hAddr envs 
+  then Nothing -- non-injective matching
+  else checkLinkVal heap maybeIndeg envs linkValAddr
 checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr =
   checkLinkVal heap maybeIndeg envs linkValAddr
+
+
+-- | Check indeg when matching in "checkLinkVal".
+checkIndeg :: Maybe Indeg -> Indeg -> Bool
+checkIndeg Nothing _ = True
+  -- this atom was the head of the free link
+checkIndeg (Just indeg) hIndeg
+  = indeg == hIndeg
+    -- or the head of the local link with a certain indegree.
 
 -- | Check whether the given linkVal can match the heap or not.
 --   This is a bit loose matching compared with the `checkEmbeddedLinkVal`.
@@ -70,16 +82,9 @@ checkLinkVal :: Heap -> Maybe Indeg -> Envs -> (LinkVal, HAddr) -> Maybe Envs
 checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
   case hLookup hAddr heap of
     (hIndeg, NAtom hAtomName hLinks) ->
-      if (  isNothing maybeIndeg
-          -- this atom was the head of the free link
-         || maybeIndeg
-         == Just hIndeg
-          -- or the head of the local link with a certain indegree.
-         )
-         && atomName
-         == hAtomName
-         && length links
-         == length hLinks
+      if checkIndeg maybeIndeg hIndeg 
+         && atomName == hAtomName
+         && length links == length hLinks
       then
         let
           envs' = if isNothing maybeIndeg
@@ -93,42 +98,57 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
           foldM (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
       else
         Nothing
-    (_, NInt _) -> Nothing
+    (_, NData _) -> Nothing
     _           -> error "indirection traversing is not implemented yet"
-checkLinkVal heap maybeIndeg envs (IntVal int, hAddr) =
+checkLinkVal heap maybeIndeg envs (DataVal dataAtom, hAddr) =
   case hLookup hAddr heap of
-    (hIndeg, NInt hInt) ->
-      if (  isNothing maybeIndeg
-           -- this integer atom was the head of the free link
-         || maybeIndeg
-         == Just hIndeg
-           -- or the head of the local link with a certain indegree.
-         )
-           && int
-           == hInt
-        then Just $ if isNothing maybeIndeg
-          then envs
-          else addMatchedLocalAddrs hAddr envs
+    (hIndeg, NData hDataAtom) ->
+      if checkIndeg maybeIndeg hIndeg
+         && dataAtom == hDataAtom
+      then Just $ if isNothing maybeIndeg
+                  then envs
+                  else addMatchedLocalAddrs hAddr envs
                     -- If the maybeIndeg == Nothing, the incomming link is a free link
                     -- otherwise, it is a local link and it should be added
                     -- to the matchedLocalAddrs of envs
-        else Nothing
+      else Nothing
     (_, NAtom _ _) -> Nothing
     _              -> error "indirection traversing is not implemented yet"
-
-
+checkLinkVal heap maybeIndeg envs (ProcessContextVal name (Just type_), hAddr) =
+  case hLookup hAddr heap of
+    (hIndeg, node) ->
+      if checkIndeg maybeIndeg hIndeg
+         && isNodeSameType node type_
+      then
+        let newEnvs = insertPCtxName2Node name node envs in
+          Just $ if isNothing maybeIndeg then newEnvs
+                 else addMatchedLocalAddrs hAddr newEnvs
+                    -- If the maybeIndeg == Nothing, the incomming link is a free link
+                    -- otherwise, it is a local link and it should be added
+                    -- to the matchedLocalAddrs of envs
+      else Nothing
+  where isNodeSameType (NData (IntAtom _   )) TypeInt    = True
+        isNodeSameType (NData (StringAtom _)) TypeString = True
+        isNodeSameType (NData _             ) TypeUnary  = True
+        isNodeSameType (NAtom _ []          ) TypeUnary  = True
+        isNodeSameType (_                   ) _          = False
+        
+checkLinkVal _ _ _  pCtxVal@(ProcessContextVal _ Nothing, _)
+  = error $ "matching of the untyped process context is not implemented "
+    ++ show pCtxVal
+    
 checkLinkVal _ _ envs (LocalLinkVal matchingAddr, hAddr) =
-  case M.lookup matchingAddr $ localLink2Addr envs of
+  case lookupLocalLink2Addr matchingAddr envs of
     Nothing     -> Just $ addLocalLink2Addr matchingAddr hAddr envs
       -- Haven't matched yet
     Just hAddr' -> if hAddr' == hAddr then Just envs else Nothing
       -- non-functional matching of local links
 checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
-  if S.member hAddr $ matchedLocalAddrs envs
+  if isMatchedLocalHAddr hAddr envs
     then Nothing
        -- free link cannot match with the addresses
        -- that the local link had already matched.
-    else case M.lookup freeLinkName $ freeLink2Addr envs of
+    else case lookupFreeLink2Addr freeLinkName envs of
       Nothing ->
         -- the free link name was not matched before
         -- but may have matched with different names (non-injective matching)
@@ -142,8 +162,8 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
               then Nothing
               else
                 Just
-                . updateFreeLink2Addr (M.insert freeLinkName hAddr)
-                . updateFreeAddr2Indeg (M.insert hAddr indeg)
+                . addFreeLink2Addr freeLinkName hAddr
+                . insertFreeAddr2Indeg hAddr indeg
                 $ envs
       Just hAddr' -> if hAddr' /= hAddr
         then Nothing
@@ -156,7 +176,8 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
             -- it can be taken from the freeAddr2Indeg map.
           in  if indeg < 0
                 then Nothing
-                else Just . updateFreeAddr2Indeg (M.insert hAddr indeg) $ envs
+                else Just $ insertFreeAddr2Indeg hAddr indeg envs
+
 
 -- | findAtom's arguments are followings.
 --   The head of the atom list for next findAtom to traverse from the head if succeeded
@@ -167,61 +188,44 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
 findAtom :: (AtomList, Heap) -> AtomList -> [ProcVal] -> Envs -> Maybe Envs
 findAtom _ _ [] envs = Just envs
 findAtom _ _ (LocalAliasVal _ fromAddr (LocalLinkVal toAddr) : _) _ =
-  error
-    $  "Local to Local indirection \""
-    ++ show fromAddr
-    ++ " -> "
-    ++ show toAddr
-    ++ "\" is not normalized"
+  error $ "Local to Local indirection \""
+  ++ show fromAddr ++ " -> " ++ show toAddr ++ "\" is not normalized"
 findAtom _ _ (FreeAliasVal fromLinkName (LocalLinkVal toAddr) : _) _ =
-  error
-    $  "Free 2 Local indirection \""
-    ++ fromLinkName
-    ++ " -> "
-    ++ show toAddr
-    ++ "\" is not normalized"
+  error $ "Free 2 Local indirection \""
+  ++ fromLinkName ++ " -> " ++ show toAddr ++ "\" is not normalized"
 findAtom _ _ (LocalAliasVal _ fromAddr (FreeLinkVal toLinkName) : _) _ =
-  error
-    $  "Local 2 Local indirection \""
-    ++ show fromAddr
-    ++ " -> "
-    ++ toLinkName
-    ++ "\" is not normalized"
+  error $ "Local 2 Local indirection \""
+  ++ show fromAddr ++ " -> " ++ toLinkName ++ "\" is not normalized"
 findAtom _ _ (FreeAliasVal fromLinkName (FreeLinkVal toLinkName) : _) _ =
-  error
-    $  "Free 2 Free indirection on LHS is not implemented. \""
-    ++ fromLinkName
-    ++ " -> "
-    ++ toLinkName
-    ++ "\" is not normalized"
+  error $ "Free 2 Free indirection on LHS is not implemented. \""
+  ++ fromLinkName ++ " -> " ++ toLinkName ++ "\" is not normalized"
 findAtom (atomList, heap) (hAddr : tAtomList) procVal@(LocalAliasVal indeg matchingAddr atomVal : tProcVals) envs
-  = if S.member hAddr (incommingLinks envs)
+  = if isMatchedIncommingHAddr hAddr envs
        -- Has already matched
-       || case M.lookup matchingAddr $ localLink2Addr envs of
+       || case lookupLocalLink2Addr matchingAddr envs of
             Just hAddr' -> hAddr' /= hAddr
             Nothing     -> False
     then findAtom (atomList, heap) tAtomList procVal envs
          -- non-injective matching of atoms
     else
       let envs' =
-            updateIncommingLinks (S.insert hAddr)
+           addIncommingLinks hAddr
               . addLocalLink2Addr matchingAddr hAddr
               $ envs
       in  (   checkLinkVal heap (Just indeg) envs' (atomVal, hAddr)
           >>= findAtom (atomList, heap) atomList tProcVals
-          )
-            <|> findAtom (atomList, heap) tAtomList procVal envs
+          ) <|> findAtom (atomList, heap) tAtomList procVal envs
 findAtom (atomList, heap) (hAddr : tAtomList) procVal@(FreeAliasVal linkName atomVal : tProcVals) envs
-  = if S.member hAddr (incommingLinks envs)
+  = if isMatchedIncommingHAddr hAddr envs
        -- Has already matched
-       || case M.lookup linkName (freeLink2Addr envs) of
+       || case lookupFreeLink2Addr linkName envs of
             Just hAddr' -> hAddr' /= hAddr
             Nothing     -> False
     then findAtom (atomList, heap) tAtomList procVal envs
          -- non-injective matching of atoms
     else
       let envs' =
-            updateIncommingLinks (S.insert hAddr)
+            addIncommingLinks hAddr
               . addFreeLink2Addr linkName hAddr
               . updateFreeAddr2Indeg (insertIfNone hAddr (getIndeg hAddr heap))
               $ envs
@@ -243,7 +247,3 @@ findAtoms :: [ProcVal] -> Heap -> Maybe Envs
 findAtoms procVals heap =
   let atomList = toAtomList heap
   in  findAtom (atomList, heap) atomList procVals nullEnvs
-
-
-
-

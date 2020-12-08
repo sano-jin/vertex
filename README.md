@@ -62,7 +62,7 @@ and there is no other occurrence in the link creation.
 
 ### Rules
 
-Besides the graphs, you can write the (rewriting) *rules* `<left hand side: subgraph to match> :- <right hand-side: subgraph to yield>`.
+Besides the graphs, you can write the (rewriting) *rules* `<left hand side: subgraph to match> ":-" <right hand-side: subgraph to yield>`.
 The rule will rewrite the graph to its right hand-side if it's left hand-side mathces.
 Notice the rule remains and tries to rewrite graphs until it fails.
 
@@ -110,9 +110,9 @@ Rules can rewrite graph as long as they matches, they are not ordered.
 
 For example, the resulting graph of `a. a :- b. a :- c` can be `b` or `c`.
 
-You can use `--nd` (non-deterministic) option to construct the state space (all possible states and reduction).
+You can use `--nd` (non-deterministic) option to construct the state transition space (all possible states and reduction).
 
-This can be applied to the not-terminating program.
+This can be also applied to the not-terminating program.
 
 For example, `example/nd1.dhl` is a following program.
 ```
@@ -132,7 +132,7 @@ stack exec dhli  -- example/nd1.dhl --nd
 ```
 
 
-Also, you can visualize the state space.
+Also, you can visualize the state transition space.
 
 Run `stateViewer` as below.
 
@@ -162,7 +162,7 @@ Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex
   - visualizes the graph rewriting process in the ordinary execution.
     - E.g. `stack exec dhlvis -- example/cube.dhl`
 - `stateViewer`
-  - visualizes the state space (all possible states and the transitions).
+  - visualizes the state transition space (all possible states and the transitions).
     - E.g. `stack exec stateViewer -- example/nd1.dhl`
 
 ## Development

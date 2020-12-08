@@ -1,0 +1,34 @@
+\L10.(
+    store(L10, 1),
+    store(L10, 2),
+    L10 -> 1
+).
+
+
+% Store the local variable
+store @@
+store(X, $y:int), X -> $x:int
+:- halt(X, $y), X -> $y.
+
+
+
+/*
+% Store the global variable
+store @@
+store(X, 1), X -> 1
+:- halt(X, 1), X -> 1.
+
+store @@
+store(X, 2), X -> 1
+:- halt(X, 2), X -> 2.
+
+store @@
+store(X, 1), X -> 2
+:- halt(X, 1), X -> 1.
+
+store @@
+store(X, 2), X -> 2
+:- halt(X, 2), X -> 2.
+*/
+
+
