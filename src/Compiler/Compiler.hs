@@ -31,8 +31,6 @@ import qualified Compiler.Parser               as Parser
 import           Compiler.Process
 import           Compiler.Syntax                ( LinkLit(..)
                                                 , ProcLit(..)
-                                                , Type   (..)
-                                                -- , DataAtom (..)
                                                 )
 import           Control.Monad.Except
 import           Data.Bifunctor                 ( bimap )

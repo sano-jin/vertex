@@ -3,4 +3,5 @@
 
 % a($p : string), b($q), c($r) :- $p = $q | b($p).
 
-a($p), $q:unary :- $p:string, $q = $p | .
+a("fuga"), "hoge".
+a($p), $q:unary :- $p:string, $q = $p | b($p).

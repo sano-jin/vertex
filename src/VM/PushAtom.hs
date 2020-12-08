@@ -4,7 +4,9 @@ module VM.PushAtom
 import           Compiler.Process
 import           Data.List
 import qualified Data.Map.Strict               as M
-import           VM.Envs                        ( Envs(..) )
+import           VM.Envs                        ( Envs(..)
+                                                , lookupPCtxName2Node
+                                                )
 import           VM.Heap                        ( Heap
                                                 , Node(..)
                                                 , HAddr
@@ -49,8 +51,11 @@ pushLinkVal envs localEnv oldHeap (AtomVal atomName links) =
   in  hAlloc newHeap (1, NAtom atomName hLinks)
 pushLinkVal _ _ oldHeap (DataVal dataAtom)
   = hAlloc oldHeap (1, NData dataAtom)
-pushLinkVal _ _ _ (ProcessContextVal _ _)
-  = error "process context is not implemented yet"
+pushLinkVal envs _ oldHeap (ProcessContextVal name _)
+  = hAlloc oldHeap (1, lookupPCtxName2Node name envs)
+
+
+  -- error "process context is not implemented yet"
 
 
 -- | Pushes the atom.
@@ -69,6 +74,11 @@ pushProcVal envs _ oldHeap (FreeAliasVal linkName (DataVal dataAtom)) =
   let hAddr = freeLink2Addr envs M.! linkName
       indeg = getIndeg hAddr oldHeap
   in  (hReplace hAddr (indeg, NData dataAtom) oldHeap, Nothing)
+pushProcVal envs _ oldHeap (FreeAliasVal linkName (ProcessContextVal name _)) =
+  let hAddr = freeLink2Addr envs M.! linkName
+      node  = lookupPCtxName2Node name envs
+      indeg = getIndeg hAddr oldHeap
+  in  (hReplace hAddr (indeg, node) oldHeap, Nothing)
 pushProcVal envs _ heap (FreeAliasVal fromLinkName (FreeLinkVal toLinkName)) =
   let fromHAddr = freeLink2Addr envs M.! fromLinkName
       toHAddr   = freeLink2Addr envs M.! toLinkName

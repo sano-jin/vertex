@@ -22,30 +22,39 @@ module VM.Envs
   , updateFreeLink2Addr
   , addFreeLink2Addr
   , updateFreeAddr2Indeg
+  , insertPCtxName2Node
+  , lookupPCtxName2Node
   ) where
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
-import           VM.Heap                        ( HAddr )
+import           VM.Heap                        ( HAddr
+                                                , Node
+                                                )
 
 
 data Envs = Envs
   { incommingLinks    :: S.Set HAddr
-                   -- ^ A set of the addresseses of the matched incoming links on the heap.
+                      -- ^ A set of the addresseses of the matched incoming links on the heap.
   , matchedLocalAddrs :: S.Set HAddr
-                   -- ^ A set of the addresseses of the matched local links on the heap.
-                   --   Contains the addresses to the "embedded atom"s.
+                      -- ^ A set of the addresseses of the matched local links on the heap.
+                      --   Contains the addresses to the "embedded atom"s.
   , localLink2Addr    :: M.Map Addr HAddr
-                   -- ^ A map from local links on the LHS to the matched addresses on the heap.
-                   --   This does not contain the addresses to the "embedded atom"s on the LHS.
-                   --   Since the local links of them are not known
+                      -- ^ A map from local links on the LHS to the matched addresses on the heap.
+                      --   This does not contain the addresses to the "embedded atom"s on the LHS.
+                      --   Since the local links of them are not known.
   , freeLink2Addr     :: M.Map String HAddr
-                   -- ^ A map from free link names on the LHS to the matched addresses on the heap.
+                      -- ^ A map from free link names on the LHS
+                      --   to the matched addresses on the heap.
   , freeAddr2Indeg    :: M.Map HAddr Indeg
-                 -- ^ A map from the addresses on the heap which the free links have mathced
-                 --   to the indegrees that are left.
-                 --   That is, matching free links will consume the indegrees in this map
-                 --   Notice the indegrees should be kept as non-negative value
+                      -- ^ A map from the addresses on the heap which the free links have matched
+                      --   to the indegrees that are left.
+                      --   That is, matching free links will consume the indegrees in this map
+                      --   Notice the indegrees should be kept as non-negative value.
+  , pCtxName2Node     :: M.Map String Node
+                      -- ^ A map from the names of the process contexts
+                      --   to the matched addresses on the heap.
+    
   }
   deriving Show
 
@@ -56,6 +65,7 @@ nullEnvs = Envs { incommingLinks    = S.empty
                 , localLink2Addr    = M.empty
                 , freeLink2Addr     = M.empty
                 , freeAddr2Indeg    = M.empty
+                , pCtxName2Node     = M.empty
                 }
 
 updateIncommingLinks :: (S.Set HAddr -> S.Set HAddr) -> Envs -> Envs
@@ -80,8 +90,8 @@ addLocalLink2Addr matchingAddr matchedHAddr = addMatchedLocalAddrs matchedHAddr
 updateLocalLink2Addr :: (M.Map Addr HAddr -> M.Map Addr HAddr) -> Envs -> Envs
 updateLocalLink2Addr f envs = envs { localLink2Addr = f $ localLink2Addr envs }
 
-updateFreeLink2Addr
-  :: (M.Map String HAddr -> M.Map String HAddr) -> Envs -> Envs
+updateFreeLink2Addr ::
+  (M.Map String HAddr -> M.Map String HAddr) -> Envs -> Envs
 updateFreeLink2Addr f envs = envs { freeLink2Addr = f $ freeLink2Addr envs }
 
 
@@ -89,6 +99,16 @@ addFreeLink2Addr :: String -> HAddr -> Envs -> Envs
 addFreeLink2Addr linkName matchedHAddr =
   updateFreeLink2Addr (M.insert linkName matchedHAddr)
 
-updateFreeAddr2Indeg
-  :: (M.Map HAddr Indeg -> M.Map HAddr Indeg) -> Envs -> Envs
+updateFreeAddr2Indeg ::
+  (M.Map HAddr Indeg -> M.Map HAddr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs = envs { freeAddr2Indeg = f $ freeAddr2Indeg envs }
+
+
+insertPCtxName2Node :: String -> Node -> Envs -> Envs
+insertPCtxName2Node name node envs
+  = envs { pCtxName2Node = M.insert name node $ pCtxName2Node envs }
+
+lookupPCtxName2Node :: String -> Envs -> Node
+lookupPCtxName2Node name envs
+  = pCtxName2Node envs M.! name
+

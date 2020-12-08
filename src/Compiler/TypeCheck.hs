@@ -166,7 +166,7 @@ unifyType linkVal tyEnv ty1 ty2
            (_  , TyVar name2) -> return (substituteVar name2 ty1 tyEnv, ty1)
            (TyUnary name1, _) -> return (substituteUnary name1 ty2 tyEnv, ty2)
            (_, TyUnary name2) -> return (substituteUnary name2 ty1 tyEnv, ty1)
-           _                -> throwError $ UnexpectedTypeConstraint linkVal
+           _                  -> throwError $ UnexpectedTypeConstraint linkVal
 
 unifyEnvs :: LinkVal -> TyEnv -> TyEnv -> ThrowsCompileError TyEnv
 unifyEnvs linkVal leftTyEnv rightTyEnv = foldM addConstraint leftTyEnv
