@@ -12,18 +12,24 @@ commentary with @some markup@.
 -}
 
 module VM.Envs
-  ( Envs(..)
+  ( Envs ( matchedLocalAddrs
+         , freeLink2Addr
+         , freeAddr2Indeg
+         )
   , nullEnvs
-  , updateIncommingLinks
   , addMatchedLocalAddrs
-  , updateMatchedLocalAddrs
   , addLocalLink2Addr
-  , updateLocalLink2Addr
-  , updateFreeLink2Addr
+  , lookupLocalLink2Addr
+  , lookupFreeAddr2Indeg
+  , lookupFreeLink2Addr
   , addFreeLink2Addr
   , updateFreeAddr2Indeg
   , insertPCtxName2Node
   , lookupPCtxName2Node
+  , isMatchedLocalHAddr
+  , isMatchedIncommingHAddr
+  , addIncommingLinks
+  , insertFreeAddr2Indeg
   ) where
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
@@ -68,8 +74,19 @@ nullEnvs = Envs { incommingLinks    = S.empty
                 , pCtxName2Node     = M.empty
                 }
 
-updateIncommingLinks :: (S.Set HAddr -> S.Set HAddr) -> Envs -> Envs
-updateIncommingLinks f envs = envs { incommingLinks = f $ incommingLinks envs }
+addIncommingLinks :: HAddr -> Envs -> Envs
+addIncommingLinks hAddr envs
+  = envs { incommingLinks = S.insert hAddr $ incommingLinks envs }
+
+isMatchedIncommingHAddr :: HAddr -> Envs -> Bool
+isMatchedIncommingHAddr hAddr envs
+  = S.member hAddr $ incommingLinks envs
+
+
+
+isMatchedLocalHAddr :: HAddr -> Envs -> Bool
+isMatchedLocalHAddr hAddr envs
+  = S.member hAddr $ matchedLocalAddrs envs
 
 addMatchedLocalAddrs :: HAddr -> Envs -> Envs
 addMatchedLocalAddrs matchedHAddr =
@@ -79,9 +96,10 @@ updateMatchedLocalAddrs :: (S.Set HAddr -> S.Set HAddr) -> Envs -> Envs
 updateMatchedLocalAddrs f envs =
   envs { matchedLocalAddrs = f $ matchedLocalAddrs envs }
 
+
 -- | The arguments are
---   the matching address
---   , the matched address
+--   the matching address,
+--   the matched address
 --   and the envs to update.
 addLocalLink2Addr :: Addr -> HAddr -> Envs -> Envs
 addLocalLink2Addr matchingAddr matchedHAddr = addMatchedLocalAddrs matchedHAddr
@@ -90,19 +108,40 @@ addLocalLink2Addr matchingAddr matchedHAddr = addMatchedLocalAddrs matchedHAddr
 updateLocalLink2Addr :: (M.Map Addr HAddr -> M.Map Addr HAddr) -> Envs -> Envs
 updateLocalLink2Addr f envs = envs { localLink2Addr = f $ localLink2Addr envs }
 
+lookupLocalLink2Addr :: Addr -> Envs -> Maybe HAddr
+lookupLocalLink2Addr matchingAddr envs
+  = M.lookup matchingAddr $ localLink2Addr envs
+
 updateFreeLink2Addr ::
   (M.Map String HAddr -> M.Map String HAddr) -> Envs -> Envs
 updateFreeLink2Addr f envs = envs { freeLink2Addr = f $ freeLink2Addr envs }
+
+
+
+lookupFreeLink2Addr :: String -> Envs -> Maybe HAddr
+lookupFreeLink2Addr linkName envs
+  = M.lookup linkName $ freeLink2Addr envs
+
 
 
 addFreeLink2Addr :: String -> HAddr -> Envs -> Envs
 addFreeLink2Addr linkName matchedHAddr =
   updateFreeLink2Addr (M.insert linkName matchedHAddr)
 
+
 updateFreeAddr2Indeg ::
   (M.Map HAddr Indeg -> M.Map HAddr Indeg) -> Envs -> Envs
 updateFreeAddr2Indeg f envs = envs { freeAddr2Indeg = f $ freeAddr2Indeg envs }
 
+
+lookupFreeAddr2Indeg :: HAddr -> Envs -> Maybe Indeg
+lookupFreeAddr2Indeg matchingAddr envs
+  = M.lookup matchingAddr $ freeAddr2Indeg envs
+
+
+insertFreeAddr2Indeg :: HAddr -> Indeg -> Envs -> Envs
+insertFreeAddr2Indeg hAddr indeg envs
+  =  envs { freeAddr2Indeg = M.insert hAddr indeg $ freeAddr2Indeg envs }
 
 insertPCtxName2Node :: String -> Node -> Envs -> Envs
 insertPCtxName2Node name node envs
