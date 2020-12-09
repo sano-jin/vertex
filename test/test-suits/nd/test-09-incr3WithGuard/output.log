@@ -1,3 +1,49 @@
-Error : Parse error at "vertex" (line 19, column 16):
-unexpected ":"
-expecting "$", lowercase letter, "'", integer, literal string, uppercase letter, "_" or "("
+0: proc(load, L10, 0). proc(load, L10, 0). proc(load, L10, 0). L10 -> 0. 
+1: proc(load, L10, 0). proc(load, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+2: proc(load, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+3: proc(load, L10, 0). proc(load, L10, 0). proc(store, L10, 1). L10 -> 0. 
+4: proc(incr, L10, 0). proc(incr, L10, 0). proc(incr, L10, 0). L10 -> 0. 
+5: proc(load, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+6: proc(incr, L10, 0). proc(incr, L10, 0). proc(store, L10, 1). L10 -> 0. 
+7: proc(incr, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+8: proc(incr, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+9: proc(store, L10, 1). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+10: proc(incr, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+11: proc(store, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+12: proc(store, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+13: proc(halt, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+14: proc(incr, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+15: proc(load, L10, 0). proc(store, L10, 1). proc(store, L10, 1). L10 -> 0. 
+16: proc(load, L10, 0). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+17: proc(load, L10, 0). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+18: proc(incr, L10, 1). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+19: proc(load, L10, 0). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+20: proc(store, L10, 2). proc(store, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+21: proc(incr, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+22: proc(store, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+23: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+24: proc(incr, L10, 1). proc(incr, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+25: proc(load, L10, 0). proc(load, L10, 0). proc(halt, L10, 1). L10 -> 1. 
+26: proc(load, L10, 0). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+27: proc(incr, L10, 1). proc(incr, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+28: proc(load, L10, 0). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+29: proc(incr, L10, 1). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+30: proc(store, L10, 2). proc(store, L10, 2). proc(halt, L10, 1). L10 -> 1. 
+31: proc(incr, L10, 1). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+32: proc(store, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+33: proc(halt, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+34: proc(load, L10, 0). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+35: proc(incr, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+36: proc(store, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+37: proc(halt, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 3. 
+
+'# of States'(stored)  = 38.
+'# of States'(end)     = 4.
+'# of Transitions'     = 49.
+
+Termianl state(s):
+13: proc(halt, L10, 1). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 1. 
+23: proc(halt, L10, 2). proc(halt, L10, 1). proc(halt, L10, 1). L10 -> 2. 
+33: proc(halt, L10, 2). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 2. 
+37: proc(halt, L10, 3). proc(halt, L10, 2). proc(halt, L10, 1). L10 -> 3. 
+
