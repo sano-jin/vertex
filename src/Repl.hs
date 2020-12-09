@@ -10,8 +10,7 @@ import           VM.VM                          ( State(..)
                                                 )
 
 
-
--- | runtime
+-- | Runtime
 run :: (State -> String) -> Int -> State -> IO ()
 run state2String stepN oldState = case reduce oldState of
   (newState, rule):_ ->
@@ -34,7 +33,3 @@ readAndRun state2String input =
       let initialState = State (initializeHeap procVals) rules
       in  putStrLn ("0: \n" ++ state2String initialState ++ "\n")
           >> run state2String 1 initialState
-
-
-
-

@@ -47,16 +47,20 @@ readAndVisND state2String input = case typeCheck =<< normalize =<< compile input
           (runND state2String 0 (initialPath initialState) initialState)
 
 
-readAndRunND :: (State -> String) -> String -> IO ()
-readAndRunND state2String input = case typeCheck =<< normalize =<< compile input of
-  Left err -> putStrLn ("Error : " ++ show err)
-  Right (procVals, rules) ->
-    let initialState = State (initializeHeap procVals) rules
-    in  putStrLn ("0: " ++ state2String initialState)
+readAndRunND ::
+  ((State -> String) -> Path -> String) ->
+  (State -> String) ->
+  String ->
+  IO ()
+readAndRunND showResult state2String input =
+  case typeCheck =<< normalize =<< compile input of
+    Left err -> putStrLn ("Error : " ++ show err)
+    Right (procVals, rules) ->
+      let initialState = State (initializeHeap procVals) rules
+      in  putStrLn ("0: " ++ state2String initialState)
           >>  runND state2String 0 (initialPath initialState) initialState
           >>= putStrLn
-          .   showEnds state2String
---          .   showAllStates state2String
+          .   showResult state2String
 
 data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
 -- ^ The arguments are
@@ -98,7 +102,7 @@ addState2Path oldStateId (Path stateN states transitions) (newState, appliedRule
 showAllStates :: (State -> String) -> Path -> String
 showAllStates state2String path@(Path stateN states transitions) =
   let terminalStates = path2TerminalStates path
-  in  "State(s):\n"
+  in  "\nState(s):\n"
         ++ unlines
              (reverse $ map
                (\(stateId, state) -> show stateId ++ ": " ++ state2String state)

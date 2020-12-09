@@ -74,8 +74,8 @@ tMap f (TyEnv mapping seed) = TyEnv (M.map f mapping) seed
 --   using the type environment and increment the seed of the type variable.
 maybeType2Ty :: TyEnv -> Maybe Type -> (Ty, TyEnv)
 maybeType2Ty (TyEnv mapping i) Nothing          = (TyVar i, TyEnv mapping $ i + 1)
-maybeType2Ty pCtxEnv (Just TypeInt   )            = (TyInt, pCtxEnv)
-maybeType2Ty pCtxEnv (Just TypeString)            = (TyString, pCtxEnv) 
+maybeType2Ty pCtxEnv (Just TypeInt   )          = (TyInt, pCtxEnv)
+maybeType2Ty pCtxEnv (Just TypeString)          = (TyString, pCtxEnv) 
 maybeType2Ty (TyEnv mapping i) (Just TypeUnary) = (TyUnary i, TyEnv mapping $ i + 1)
 
 -- | A helper function to apply a function to the linkVal of the given procVal.
@@ -224,7 +224,7 @@ checkOpProcVal tyEnv (LocalAliasVal 0 _ pCtx@(ProcessContextVal name maybeType@(
         uncurry (unifyType pCtx) (swap $ maybeType2Ty tyEnv maybeType) ty
       return $ tInsert name unifiedType newTyEnv
     Nothing -> throwError $ UnboundProcessContext pCtx
-checkOpProcVal _ (LocalAliasVal _ _ linkVal) =
+checkOpProcVal _ (LocalAliasVal 0 _ linkVal) =
   throwError $ UnexpectedOpOnGuard linkVal
 checkOpProcVal _ procVal =
   error
