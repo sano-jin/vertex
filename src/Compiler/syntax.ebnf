@@ -40,6 +40,7 @@ atom10 =
     | AtomName
     | Integer
     | processContext  
+    | listAbbreviation
 
 processContext = "$" AtomName [ ":" type ]
 
@@ -59,6 +60,9 @@ pointing_to =
 
 indirection =
     | LinkName "->" pointing_to    
+
+listAbbreviation =
+    | "[" { atom0 ","} atom0 [ "|" atom0 ] "]"
 
 
 (* "." < ":-" < ","  *)

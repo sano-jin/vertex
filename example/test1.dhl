@@ -1,0 +1,8 @@
+'Hoge'(fuga, hige).
+'.'(fuga, hige).
+[a, b, c, d | []].
+\X Y.(
+   [X, Y],
+   X -> x,
+   Y -> y
+)

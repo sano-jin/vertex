@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe #-}
+-- {-# LANGUAGE Safe #-}
 
 module Compiler.Parser
   ( readExpr
@@ -16,6 +16,8 @@ import           Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token
                                                as Token
 
+import           Debug.Trace
+
 -- | Lexer
 languageDef :: GenLanguageDef String u Identity
 languageDef = emptyDef
@@ -24,8 +26,8 @@ languageDef = emptyDef
   , Token.commentLine     = "%"
   , Token.identStart      = letter
   , Token.identLetter     = alphaNum <|> char '_' <|> char '\''
-  , Token.opStart         = oneOf "+-*:=/><@|"
-  , Token.opLetter        = oneOf "+-*:=/><@|"
+  , Token.opStart         = oneOf "+-*:=/><@|[]\\"
+  , Token.opLetter        = oneOf "+-*:=/><@|[]\\"
   , Token.reservedNames   = []
   , Token.reservedOpNames = [ "+"
                             , "-"
@@ -43,22 +45,26 @@ languageDef = emptyDef
                             , "->"
                             , "\\"
                             , "|"
+                            , "["
+                            , "]"
                             ]
   }
 
 lexer :: Token.GenTokenParser String u Identity
 lexer = Token.makeTokenParser languageDef
 
-parens :: Parser a -> Parser a
+parens, brackets :: Parser a -> Parser a
 parens = Token.parens lexer
+brackets = Token.brackets lexer
 
-dot :: Parser String
-dot = Token.dot lexer
+dot, comma :: Parser String
+dot   = Token.dot lexer
+comma = Token.comma lexer
 
 integer :: Parser Integer
 integer = Token.integer lexer
 
-whiteSpace, colon, assign, backslash, dollar, atat, turnstile, arrow, bar
+whiteSpace, colon, assign, backslash, dollar, atat, turnstile, arrow, bar, lSqBra, rSqBra
   :: Parser ()
 whiteSpace = Token.whiteSpace lexer
 colon      = reserved ":"
@@ -69,6 +75,9 @@ atat       = reserved "@@"
 turnstile  = reserved ":-"
 arrow      = reserved "->"
 bar        = reserved "|"
+lSqBra     = reserved "["
+rSqBra     = reserved "]"
+
 
 commaSep :: Parser a -> Parser [a]
 commaSep = Token.commaSep lexer
@@ -164,6 +173,7 @@ parseAtom10 =
     <|> LinkLit
     <$> linkName
     <|> parens parseAtom0
+    <|> parseListAbbreviation
 
 parseProcessContext = liftA2 ProcessContextLit (dollar >> atomName)
   $ optionMaybe (colon >> parseType)
@@ -194,5 +204,14 @@ parseProc =
             _ -> return [AliasLit Nothing link]
         )
 
+parseListAbbreviation :: Parser LinkLit
+parseListAbbreviation =
+  brackets $ do
+  leftElems <- commaSep parseAtom0
+  (do rightElem <- bar >> parseAtom0
+      return $ foldr (\l r -> AtomLit "." [l, r]) rightElem leftElems
+    ) <|> return (foldr (\l r -> AtomLit "." [l, r]) (AtomLit "[]" []) leftElems)
+
+  
 readExpr :: String -> Either ParseError [ProcLit]
 readExpr = parse whileParser "vertex"
