@@ -13,7 +13,7 @@ import           VM.VM                          ( State(..)
                                                 , state2DGraph
                                                 )
 import           System.Random
-
+import           Compiler.TypeCheck             ( typeCheck )
 
 -- | Setting the display
 windowWidth, windowHeight :: Num a => a
@@ -31,7 +31,7 @@ main = do
 
 
 readStateAndDisplay :: String -> IO ()
-readStateAndDisplay input = case normalize =<< compile input of
+readStateAndDisplay input = case typeCheck =<< normalize =<< compile input of
   Left err -> putStrLn ("Error : " ++ show err)
   Right (procVals, rules) ->
     let initialState = State (initializeHeap procVals) rules

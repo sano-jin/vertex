@@ -20,5 +20,3 @@ proc(incr, X, $y)
 store @@
 proc(store, X, $y:int), X -> $x:int
 :- proc(halt, X, $y), X -> $y.
-
-
