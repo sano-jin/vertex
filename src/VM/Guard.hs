@@ -17,21 +17,32 @@ import           VM.Heap                        ( Node(..)
 -- import           Data.Tuple.Extra               ( second )
 import           Control.Monad
 
-
-binopInt :: Envs -> (Integer -> Integer -> Integer) -> LinkVal -> LinkVal -> Node
-binopInt envs f l r
+{--|
+binopIntArith :: Envs -> (Integer -> Integer -> Integer) -> LinkVal -> LinkVal -> Node
+binopIntArith envs f l r
   = case (eval envs l, eval envs r) of
       (NData (IntAtom i1), NData (IntAtom i2)) ->
         NData $ IntAtom $ f i1 i2
       _ -> error $ "unexpected value when evaluating "
            ++ show l ++ " and " ++ show r
+|--}
 
+binopInt :: Envs -> (Integer -> Integer -> a) -> LinkVal -> LinkVal -> a
+binopInt envs f l r
+  = case (eval envs l, eval envs r) of
+      (NData (IntAtom i1), NData (IntAtom i2)) ->
+        f i1 i2
+      _ -> error $ "unexpected value when evaluating "
+           ++ show l ++ " and " ++ show r
+
+binopIntArith :: Envs -> (Integer -> Integer -> Integer) -> LinkVal -> LinkVal -> Node
+binopIntArith envs f = binopInt envs (\l r -> NData $ IntAtom $ f l r)
 
 eval :: Envs -> LinkVal -> Node
-eval envs (AtomVal "+" [l, r]) = binopInt envs (+) l r 
-eval envs (AtomVal "-" [l, r]) = binopInt envs (-) l r 
-eval envs (AtomVal "*" [l, r]) = binopInt envs (*) l r 
-eval envs (AtomVal "/" [l, r]) = binopInt envs div l r 
+eval envs (AtomVal "+" [l, r]) = binopIntArith envs (+) l r 
+eval envs (AtomVal "-" [l, r]) = binopIntArith envs (-) l r 
+eval envs (AtomVal "*" [l, r]) = binopIntArith envs (*) l r 
+eval envs (AtomVal "/" [l, r]) = binopIntArith envs div l r 
 eval _     (DataVal dataAtom)   = NData dataAtom
 eval envs (ProcessContextVal name _) = lookupPCtxName2Node name envs
 eval _ linkVal = error $ "unexpected value when evaluating " ++ show linkVal
@@ -44,6 +55,18 @@ updateEnvs envs (LocalAliasVal 0 _ (AtomVal "/=" [l, r]))
     else Nothing
 updateEnvs envs (LocalAliasVal 0 _ (AtomVal "=" [l, r]))
   = if eval envs l == eval envs r then Just envs
+    else Nothing
+updateEnvs envs (LocalAliasVal 0 _ (AtomVal "<" [l, r]))
+  = if binopInt envs (<) l r then Just envs
+    else Nothing
+updateEnvs envs (LocalAliasVal 0 _ (AtomVal "<=" [l, r]))
+  = if binopInt envs (<=) l r then Just envs
+    else Nothing
+updateEnvs envs (LocalAliasVal 0 _ (AtomVal ">" [l, r]))
+  = if binopInt envs (>) l r then Just envs
+    else Nothing
+updateEnvs envs (LocalAliasVal 0 _ (AtomVal ">=" [l, r]))
+  = if binopInt envs (>=) l r then Just envs
     else Nothing
 updateEnvs _ _
   = error "should have eliminated in the compilation phase"

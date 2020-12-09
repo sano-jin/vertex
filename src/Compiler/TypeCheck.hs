@@ -105,9 +105,13 @@ isPolymorphicOp :: String -> Bool
 isPolymorphicOp op = S.member op $ S.fromList ["=", "/="]
 
 -- | Check the boundness and the op on the guard of the rule
-isIntOp :: String -> Bool
-isIntOp op =
-  S.member op $ S.fromList ["+", "-", "*", "/", "<=", ">=", "<", ">"]
+isIntArithOp :: String -> Bool
+isIntArithOp op =
+  S.member op $ S.fromList ["+", "-", "*", "/"]
+
+isIntRelOp :: String -> Bool
+isIntRelOp op =
+  S.member op $ S.fromList ["<=", ">=", "<", ">"]
 
 
 -- | Extract the name of the process context.
@@ -134,9 +138,9 @@ checkOpLinkVal tyEnv pCtx@(ProcessContextVal name maybeType) =
     Nothing -> throwError $ UnboundProcessContext pCtx
 checkOpLinkVal tyEnv atomVal@(AtomVal atomName [l, r]) =
   checkBinaryOp atomVal tyEnv l r
-  =<< if isIntOp atomName
-    then return TyInt
-    else throwError $ UnexpectedOpOnGuard atomVal
+  =<< if isIntArithOp atomName
+      then return TyInt
+      else throwError $ UnexpectedOpOnGuard atomVal
 checkOpLinkVal tyEnv (DataVal (IntAtom _)) = return (tyEnv, TyInt)
 checkOpLinkVal tyEnv (DataVal (StringAtom _)) =
   return (tyEnv, TyString)
@@ -207,8 +211,10 @@ checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
           <$> checkOpLinkVal tyEnv r
     else
       do (inferedTy, newTyEnv) <-
-            if isPolymorphicOp atomName
+            if isPolymorphicOp atomName 
             then return $ maybeType2Ty tyEnv $ Just TypeUnary
+            else if isIntRelOp atomName
+            then return $ maybeType2Ty tyEnv $ Just TypeInt
             else throwError $ UnexpectedOpOnGuard linkVal
          fst <$> checkBinaryOp linkVal newTyEnv l r inferedTy
         
