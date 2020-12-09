@@ -55,6 +55,7 @@ readAndRunND state2String input = case typeCheck =<< normalize =<< compile input
           >>  runND state2String 0 (initialPath initialState) initialState
           >>= putStrLn
           .   showEnds state2String
+--          .   showAllStates state2String
 
 data Path = Path Int [(Int, State)] [((Int, Int), Rule)]
 -- ^ The arguments are
