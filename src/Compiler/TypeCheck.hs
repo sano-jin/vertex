@@ -116,7 +116,7 @@ isIntRelOp op =
 
 -- | Extract the name of the process context.
 --   Only used to gain the name of the left hand-side process context'name
---   of the assignment (:=).
+--   of the assignment ":=".
 extractPCtxName :: LinkVal -> ThrowsCompileError String
 extractPCtxName (ProcessContextVal name Nothing) = return name
 extractPCtxName linkVal@(ProcessContextVal _ (Just _)) =
@@ -124,7 +124,6 @@ extractPCtxName linkVal@(ProcessContextVal _ (Just _)) =
   -- ^ Type constraint on the left hand side of the assignment
 extractPCtxName linkVal =
   error $ "unexpected " ++ show linkVal ++ ". Should not have collectly parsed."
-
 
 -- | Check at the guard
 checkOpLinkVal

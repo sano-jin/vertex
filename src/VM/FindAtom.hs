@@ -18,7 +18,6 @@ import           Compiler.Process
 import           Compiler.Syntax               
 import qualified Data.Map.Strict               as M
 import           Data.Maybe
-import           GHC.Base                       ( (<|>) )
 import           VM.Envs                        ( Envs(..)
                                                 , addFreeLink2Addr
                                                 , addLocalLink2Addr

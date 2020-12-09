@@ -2,6 +2,8 @@
 module ND
   ( readAndRunND
   , readAndVisND
+  , showEnds
+  , showAllStates
   ) where
 import           Compiler.Compiler              ( compile )
 import           Compiler.TypeCheck             ( typeCheck )
@@ -22,7 +24,6 @@ import qualified Data.Set                      as S
 import           Vis.DGraph                     ( DGraph
                                                 , map2DGraph
                                                 )
-import           Vis.DGVis
 
 
 path2DGraph :: Floating s => Path -> DGraph String s
@@ -136,7 +137,7 @@ showAllStates state2String path@(Path stateN states transitions) =
 
 
 showEnds :: (State -> String) -> Path -> String
-showEnds state2String path@(Path stateN states transitions) =
+showEnds state2String path@(Path stateN _ transitions) =
   let terminalStates = path2TerminalStates path
   in  "\n"
         ++ "'# of States'(stored)  = "
@@ -163,7 +164,7 @@ runND state2String oldStateID oldPath oldState =
         $ reduceND oldState
   in  mapM_
           ( putStrLn
-          . (\(stateId, (state, rule)) ->
+          . (\(stateId, (state, _)) ->
                show stateId ++ ": "
                ++ state2String state
             )

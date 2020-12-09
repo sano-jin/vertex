@@ -4,22 +4,17 @@ module Compiler.Envs
   ( Envs(..)
   , updateLocalMapAddrIndeg
   , updateLocalEnv
-  , updateFreeTailEnv
   , addFreeTail
   , addFreeHead
-  , updateAddrSeed
   , nullEnvs
   , incrAddrSeed
   , incrLocalIndeg
-  , HasHead
-  , EnvList
-  , EnvSet
   , hasLink
   ) where
 import           Compiler.Process
 import qualified Data.Map.Strict               as M
 import qualified Data.Set                      as S
--- import           Debug.Trace
+
 
 type HasHead = Bool
 type EnvList = [(String, (Addr, HasHead))]
@@ -27,7 +22,6 @@ type EnvList = [(String, (Addr, HasHead))]
 
 type EnvSet = S.Set String
 -- ^ A type for the environment of free links
-
 
 
 -- | A type for the Envirnment of links
@@ -68,9 +62,7 @@ updateFreeHeadEnv f envs = envs { freeHeadEnv = f $ freeHeadEnv envs }
 addFreeHead :: String -> Envs -> Envs
 addFreeHead = updateFreeHeadEnv . S.insert
 
-updateAddrSeed :: (Int -> Int) -> Envs -> Envs
-updateAddrSeed f envs = envs { addrSeed = f $ addrSeed envs }
-
+-- | The initial envs 
 nullEnvs :: Envs
 nullEnvs = Envs { localEnv          = []
                 , localMapAddrIndeg = M.empty
@@ -79,15 +71,19 @@ nullEnvs = Envs { localEnv          = []
                 , addrSeed          = 0
                 }
 
+-- | Increse the seed for the local addresses by 1.
+--   This should be hided and done implicitly when creating a new local link.
 incrAddrSeed :: Envs -> Envs
-incrAddrSeed = updateAddrSeed (+ 1)
+incrAddrSeed envs = envs { addrSeed =  addrSeed envs + 1 }
 
 incrLocalIndeg :: Addr -> Envs -> Envs
 incrLocalIndeg addr = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)
 
--- | Currently this does not check whether the envs has the local links.
+-- | Checks whether the link appeared in the process.
+--   Notice the 0-indegree local link is ignored.
+--   Since it is automatically added at compiling phase even user didn't write it.
 hasLink :: Envs -> Bool
-hasLink envs = -- trace ("debug trace " ++ show envs)
+hasLink envs =
   not (M.null $ M.filter (/= 0) $ localMapAddrIndeg envs)
   || not (S.null $ freeTailEnv envs)
   || not (S.null $ freeHeadEnv envs)

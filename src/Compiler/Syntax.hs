@@ -29,9 +29,9 @@ data LinkLit = LinkLit String
              | AtomLit String [LinkLit]
                -- ^ p(X1,...,Xm)
              | DataLit DataAtom
-               -- ^ N : int(N)
+               -- ^ 1, "str", ...
              | ProcessContextLit String (Maybe Type)
-               -- ^ $p : type
+               -- ^ $p : <type constraint>
 
 instance Show LinkLit where
   show = showLink
@@ -56,7 +56,7 @@ instance Show Type where
 
 
 -- | A process can be
---   an Atom (aliasing from link)
+--   an Atom (indirected from link)
 --   a rule
 --   or a link creation.
 data ProcLit = AliasLit (Maybe String) LinkLit

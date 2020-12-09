@@ -6,12 +6,9 @@ module VM.VM
   , isStateEq
   , reduceND
   , state2DGraph
---  , showTransition
   ) where
 import           Compiler.Process
 import           Data.Maybe
-import           Data.Tuple.Extra
-import           GHC.Base
 import           VM.Envs
 import           VM.FindAtom                    ( findAtoms )
 import           VM.Guard                       ( updateEnvsWithGuard )
@@ -31,10 +28,11 @@ state2DGraph :: Floating s => State -> DGraph String s
 state2DGraph (State heap _) = heap2DGraph heap
 
 -- | Shows the state.
---   Pritty print the heap and the rules.
+--   Pritty print the heap.
+--   Currently omit the rules for the simplicity
+--   (may change in the near future)
 showState :: State -> String
 showState (State heap _) = show heap
-  -- ++ showRules rules
 
 -- | Shows the state.
 --   Print all the addresses and the nodes in the heap.
@@ -58,12 +56,6 @@ execRule heap rule@(Rule _ lhs guard rhs rhsRules) =
     map
     (\newEnvs -> (push heap rhs newEnvs, rhsRules, rule))
     newEnvsList
-
-
-applyTillFail :: (a -> Maybe b) -> [a] -> Maybe b
-applyTillFail f (h : t) = f h <|> applyTillFail f t
-applyTillFail _ []      = Nothing
-
 
 -- | Runs the program and returns the next state.
 reduce :: State -> [(State, Rule)]

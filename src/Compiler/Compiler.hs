@@ -23,7 +23,16 @@ module Compiler.Compiler
                 , ShadowingProcessContext
                 )
   ) where
-import           Compiler.Envs
+import           Compiler.Envs                  ( Envs(..)
+                                                , updateLocalMapAddrIndeg
+                                                , updateLocalEnv
+                                                , addFreeTail
+                                                , addFreeHead
+                                                , nullEnvs
+                                                , incrAddrSeed
+                                                , incrLocalIndeg
+                                                , hasLink
+                                                )
 import qualified Compiler.Parser               as Parser
                                                 ( ParseError
                                                 , readExpr
@@ -41,19 +50,14 @@ import           Data.Tuple.Extra
 import           Util.Util                      ( monadicMapAccumL )
 
 type ThrowsCompileError = Either CompileError
--- ^ a type for handling results and errors
+-- ^ A type for handling results and errors
 
 -- type IOThrowsError = ExceptT CompileError IO
 instance Show CompileError where
   show = showCompileError
 
 
-
-
-
-
-
--- | type for denoting compile errors
+-- | A type for denoting compile errors
 data CompileError = IsNotSerial String
                   | IsNotFunctional String
                   | RuleOnLHS ProcLit
@@ -63,16 +67,19 @@ data CompileError = IsNotSerial String
                   | ParseError Parser.ParseError
                   | IsNotSerialAfterNormalization [(S.Set Addr, ProcVal)]
                   | NotInjectiveProcessContext LinkVal
-                    -- ^ checked in the Compiler.CheckGuard
+                    -- ^ checked in the Compiler.TypeCheck
                   | UnexpectedTypeConstraint LinkVal
-                    -- ^ checked in the Compiler.CheckGuard
+                    -- ^ checked in the Compiler.TypeCheck
                   | UnexpectedOpOnGuard LinkVal
-                    -- ^ checked in the Compiler.CheckGuard
+                    -- ^ checked in the Compiler.TypeCheck
                   | LinkOnGuard ProcLit
                   | RuleOnGuard ProcLit [Rule]
                   | UnboundProcessContext LinkVal
+                    -- ^ checked in the Compiler.TypeCheck
                   | MultipleUtypedProcessContexts [LinkVal]
+                    -- ^ checked in the Compiler.TypeCheck
                   | ShadowingProcessContext LinkVal
+                    -- ^ checked in the Compiler.TypeCheck
 
 -- | Functions for showing errors.
 showCompileError :: CompileError -> String
@@ -127,7 +134,7 @@ updateAssocList _ _ [] = []
 
 
 -- | Check if the links are the local link or not.
---   If it is a local link, then increse its indegree in the environment
+--   If it is a local link, then increse its indegree in the environment.
 compilePointingToLit :: Envs -> LinkLit -> (Envs, LinkVal)
 compilePointingToLit envs (LinkLit linkName) =
   case lookup linkName $ localEnv envs of
@@ -141,7 +148,7 @@ compilePointingToLit envs (ProcessContextLit name maybeType)
 
 -- | Check if the incoming link is the local link or not.
 --   Also, check the "functional condition",
---   which specifies that the head of the same link should not have appeared in the process
+--   which specifies that the head of the same link should not have appeared in the process.
 --   Notice the indegree of the local link are not set correctly for this time.
 --   Here, initially, we just set it to be 0.
 --   It will be correctly set after checking all the process
@@ -172,13 +179,17 @@ compileProcLit envs (AliasLit Nothing pointingTo) =
 
 
 -- | A Rule `(P :- Q)` has several conditions.
+--
 --   - There should be no rules on `Q`,
 --     otherwise thrors the "RuleOnLHS" error.
+--
 --   - `fl(P)` must be a superset of `fl(Q)`,
 --     otherwise thrors the "NewFreeLinksOnRHS" error.
+--
 --   - For any free tail link `X` in P,
 --     there must be a free tail link `X` that has the same name in `Q`,
 --     otherwise thrors the "NotRedirectedLinks" error.
+--
 --   Also, this sets the indeg of all the local links
 --   appears in the processes on the left/right hand-sides
 compileProcLit envs ruleLit@(RuleLit maybeName lhs guardLit rhs)

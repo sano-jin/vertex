@@ -30,7 +30,6 @@ module VM.Heap
   , heap2ProcVals
   , heap2DGraph
   , hSize
-  , initTestHeap -- Should be eliminated
   ) where
 import           Compiler.Process
 import           Compiler.Syntax               (DataAtom)
@@ -43,8 +42,9 @@ import           Vis.DGraph                     ( DGraph
 
 heap2DGraph :: Floating s => Heap -> DGraph String s
 heap2DGraph (Heap _ mapHAddr2IndegNode) =
-  map2DGraph $ M.map (translateNode . snd) $ M.mapKeys hAddr2Int
-                                                       mapHAddr2IndegNode
+  map2DGraph
+  $ M.map (translateNode . snd)
+  $ M.mapKeys hAddr2Int mapHAddr2IndegNode
  where
   translateNode (NAtom atomName links) = (atomName     , map hAddr2Int links)
   translateNode (NInd  link          ) = ("->"         , [hAddr2Int link]   )
@@ -66,13 +66,14 @@ data Node = NAtom AtomName [HAddr]
           | NInd HAddr
             -- ^ Indirect to Addr
           | NData DataAtom
+            -- ^ Data (int, string)
           deriving(Eq, Show)
 
 type IndegNode = (Indeg, Node)
 data Heap = Heap [HAddr] (M.Map HAddr IndegNode)
   -- ^ Heap is consists of ...
-  -- - the list of free addresses
-  -- - the map from addresses to the tuples of the indegree and the node
+  --   the list of free addresses and
+  --   the map from addresses to the tuples of the indegree and the node
 
 instance Show Heap where
   show = showHeap
@@ -126,9 +127,7 @@ showHeapNode hAddr oldHeap (indeg, _) =
   in  (newHeap, incommingLink ++ str)
 
 
--- | (This should) pritty print the heap.
---   Not yet implemented the prity printing.
---   This just shows the node and the address of the nodes in the heap in order.
+-- | Pritty print the heap.
 --   This function is a instance of the `show`.
 showHeap :: Heap -> String
 showHeap oldHeap =
@@ -164,11 +163,11 @@ showHeapForDebugging indentLevel (Heap _ mapHAddr2IndegNode) =
 type AtomList = [HAddr]
 -- ^ AtomList is a list of addresses (pointers)
 
--- | initial heap
+-- | Initial heap
 initialHeap :: Heap
 initialHeap = Heap (map HAddr [1 ..]) M.empty
 
--- | translate heap to Atom List (assoc list)
+-- | Translate heap to Atom List (assoc list)
 toAtomList :: Heap -> AtomList
 toAtomList (Heap _ mapHAddr2IndegNode) = map fst $ M.toList mapHAddr2IndegNode
 
@@ -208,7 +207,8 @@ hAlloc :: Heap -> IndegNode -> (Heap, HAddr)
 hAlloc (Heap (hAddr : freeAddrs) mapHAddr2IndegNode) resource =
   (Heap freeAddrs (M.insert hAddr resource mapHAddr2IndegNode), hAddr)
 hAlloc (Heap [] _) _ = error "run out of the free addresses"
-  -- ^ This NEVER happen. Since the free addresses are represented with the INFINITE list.
+  -- ^ This NEVER happen.
+  --   Since the free addresses are represented with the INFINITE list.
 
 -- | Replace resource at the given address with a certain resource
 hReplace :: HAddr -> IndegNode -> Heap -> Heap
@@ -277,23 +277,6 @@ normalizeHeap heap = case hLookupVal (isNInd . snd) heap of
   Nothing -> heap
   _       -> error "should not reach here"
 
-
--- | A heap for testing.
---   Should be eliminated after testing.
-initTestHeap :: Heap
-initTestHeap =
-  let assocList =
-        [ (1, NAtom "a" [HAddr 3, HAddr 1])   -- 1
-        , (0, NAtom "b" [HAddr 3])            -- 2
-        , (2, NAtom "c" [])                   -- 3
-        , (0, NAtom "d" [])                   -- 4
-        , (0, NAtom "e" [HAddr 6, HAddr 6])   -- 5
-        , (2, NAtom "f" [])                   -- 6
-        , (0, NAtom "g" [HAddr 8])            -- 7
-        , (1, NAtom "h" [])                   -- 8
-        , (1, NAtom "i" [HAddr 9])            -- 9
-        ]
-  in  fst $ mapAccumL hAlloc initialHeap assocList
-
+-- | Test if the heap is null or not
 hNull :: Heap -> Bool
 hNull (Heap _ mapAddr2IndegNode) = M.null mapAddr2IndegNode

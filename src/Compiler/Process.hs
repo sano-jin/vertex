@@ -23,6 +23,8 @@ import           Compiler.Syntax                ( Type(..)
 type Addr = Int
 type Indeg = Int
 type AtomName = String
+-- ^ These types should be replaced with the "newtype"
+--   to avoid confusion (mixing use).
 
 data LinkVal = FreeLinkVal String
                -- ^ X
@@ -31,9 +33,9 @@ data LinkVal = FreeLinkVal String
              | AtomVal AtomName [LinkVal]
                -- ^ p(X1,...,Xm)
              | DataVal DataAtom
-               -- ^ N : int(N)
+               -- ^ 1, "str", ...
              | ProcessContextVal String (Maybe Type)
-               -- ^ $p : type
+               -- ^ $p : <type constraint>
              deriving(Eq, Ord)
 
 instance Show LinkVal where
@@ -151,4 +153,4 @@ showProcs :: Procs -> String
 showProcs (procVals, rules) =
   let dot = if null procVals || null rules then "" else ". "
   in  showProcVals procVals ++ dot ++ showRules rules
-
+  
