@@ -10,10 +10,11 @@ import           VM.VM                          ( State(..)
                                                 )
 
 
+
 -- | runtime
 run :: (State -> String) -> Int -> State -> IO ()
 run state2String stepN oldState = case reduce oldState of
-  Just (newState, rule) ->
+  (newState, rule):_ ->
     putStrLn
         (  show stepN
         ++ ": "
@@ -23,7 +24,7 @@ run state2String stepN oldState = case reduce oldState of
         ++ "\n"
         )
       >> run state2String (stepN + 1) newState
-  Nothing -> return ()
+  [] -> return ()
 
 readAndRun :: (State -> String) -> String -> IO ()
 readAndRun state2String input =

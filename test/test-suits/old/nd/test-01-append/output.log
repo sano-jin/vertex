@@ -1,0 +1,12 @@
+0: append(cons(a, cons(b, nil)), cons(c, nil)). 
+1: cons(a, append(cons(b, nil), cons(c, nil))). 
+2: cons(a, cons(b, append(nil, cons(c, nil)))). 
+3: cons(a, cons(b, nil)). cons(c, nil). 
+
+'# of States'(stored)  = 4.
+'# of States'(end)     = 1.
+'# of Transitions'     = 3.
+
+Termianl state(s):
+3: cons(a, cons(b, nil)). cons(c, nil). 
+

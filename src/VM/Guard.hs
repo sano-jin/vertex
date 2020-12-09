@@ -48,6 +48,5 @@ updateEnvs envs (LocalAliasVal 0 _ (AtomVal "=" [l, r]))
 updateEnvs _ _
   = error "should have eliminated in the compilation phase"
 
-updateEnvsWithGuard :: Envs -> [ProcVal] -> Maybe Envs
-updateEnvsWithGuard envs procVals
-  = foldM updateEnvs envs procVals
+updateEnvsWithGuard :: [ProcVal] -> Envs -> Maybe Envs
+updateEnvsWithGuard = flip $ foldM updateEnvs

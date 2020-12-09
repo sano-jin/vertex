@@ -185,8 +185,8 @@ checkLinkVal heap _ envs (FreeLinkVal freeLinkName, hAddr) =
 --   the traversing atomlist,
 --   the process that want to match to the heap,
 --   and the envirnonmemnt
-findAtom :: (AtomList, Heap) -> AtomList -> [ProcVal] -> Envs -> Maybe Envs
-findAtom _ _ [] envs = Just envs
+findAtom :: (AtomList, Heap) -> AtomList -> [ProcVal] -> Envs -> [Envs]
+findAtom _ _ [] envs = [envs]
 findAtom _ _ (LocalAliasVal _ fromAddr (LocalLinkVal toAddr) : _) _ =
   error $ "Local to Local indirection \""
   ++ show fromAddr ++ " -> " ++ show toAddr ++ "\" is not normalized"
@@ -200,50 +200,61 @@ findAtom _ _ (FreeAliasVal fromLinkName (FreeLinkVal toLinkName) : _) _ =
   error $ "Free 2 Free indirection on LHS is not implemented. \""
   ++ fromLinkName ++ " -> " ++ toLinkName ++ "\" is not normalized"
 findAtom (atomList, heap) (hAddr : tAtomList) procVal@(LocalAliasVal indeg matchingAddr atomVal : tProcVals) envs
-  = if isMatchedIncommingHAddr hAddr envs
-       -- Has already matched
-       || case lookupLocalLink2Addr matchingAddr envs of
-            Just hAddr' -> hAddr' /= hAddr
-            Nothing     -> False
-    then findAtom (atomList, heap) tAtomList procVal envs
-         -- non-injective matching of atoms
-    else
-      let envs' =
-           addIncommingLinks hAddr
+  = let rest = 
+          findAtom (atomList, heap) tAtomList procVal envs
+        -- The rest result for the case that this match failed.
+        -- This is mainly used for the non-deterministic execution.
+    in
+      if isMatchedIncommingHAddr hAddr envs
+         -- Has already matched with the other incomming link.
+         || case lookupLocalLink2Addr matchingAddr envs of
+              Just hAddr' -> hAddr' /= hAddr
+              Nothing     -> False
+      then rest
+           -- Failed with non-injective matching of atoms.
+      else
+        let envs' =
+              addIncommingLinks hAddr
               . addLocalLink2Addr matchingAddr hAddr
               $ envs
-      in  (   checkLinkVal heap (Just indeg) envs' (atomVal, hAddr)
-          >>= findAtom (atomList, heap) atomList tProcVals
-          ) <|> findAtom (atomList, heap) tAtomList procVal envs
+        in  case checkLinkVal heap (Just indeg) envs' (atomVal, hAddr) of
+              Just envs'' -> 
+                findAtom (atomList, heap) atomList tProcVals envs'' ++ rest
+              Nothing -> rest
 findAtom (atomList, heap) (hAddr : tAtomList) procVal@(FreeAliasVal linkName atomVal : tProcVals) envs
-  = if isMatchedIncommingHAddr hAddr envs
-       -- Has already matched
-       || case lookupFreeLink2Addr linkName envs of
-            Just hAddr' -> hAddr' /= hAddr
-            Nothing     -> False
-    then findAtom (atomList, heap) tAtomList procVal envs
-         -- non-injective matching of atoms
-    else
-      let envs' =
-            addIncommingLinks hAddr
+  = let rest = 
+          findAtom (atomList, heap) tAtomList procVal envs
+        -- The rest result for the case that this match failed.
+        -- This is mainly used for the non-deterministic execution.
+    in
+      if isMatchedIncommingHAddr hAddr envs
+         -- Has already matched
+         || case lookupFreeLink2Addr linkName envs of
+              Just hAddr' -> hAddr' /= hAddr
+              Nothing     -> False
+      then rest
+           -- non-injective matching of atoms
+      else
+        let envs' =
+              addIncommingLinks hAddr
               . addFreeLink2Addr linkName hAddr
               . updateFreeAddr2Indeg (insertIfNone hAddr (getIndeg hAddr heap))
               $ envs
-      in  (   checkLinkVal heap Nothing envs' (atomVal, hAddr)
-          >>= findAtom (atomList, heap) atomList tProcVals
-          )
-            <|> findAtom (atomList, heap) tAtomList procVal envs
-findAtom _ [] (_ : _) _ = Nothing
+        in  case checkLinkVal heap Nothing envs' (atomVal, hAddr) of
+              Just envs'' -> 
+                findAtom (atomList, heap) atomList tProcVals envs'' ++ rest
+              Nothing -> rest
+findAtom _ [] (_ : _) _ = []
 
 
 -- | findAtoms tests whether the given process (template) would match that on heap.
 --
---   - If matches, it returns the environment,
+--   - it returns the list of the matched environment,
 --     which is a collection of the correspondence of the links in the given process
 --     and the matched addresses on the heap
 --
---   - If it did't match, just returns the `Nothing`.
-findAtoms :: [ProcVal] -> Heap -> Maybe Envs
+--   - If it did't match at all, it just returns the `[]`.
+findAtoms :: [ProcVal] -> Heap -> [Envs]
 findAtoms procVals heap =
   let atomList = toAtomList heap
   in  findAtom (atomList, heap) atomList procVals nullEnvs

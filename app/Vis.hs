@@ -64,11 +64,11 @@ updateState
   -> ((g, DGraph String s), State)
 updateState (EventKey (SpecialKey KeySpace) Down _ _) ((g, oldDGraph), oldState)
   = case reduce oldState of
-    Just (nextState, _) ->
-      ( ( randamizeDGraph (windowWidth * 0.3) (windowHeight * 0.3) g
-        $ state2DGraph nextState
+      (nextState, _):_ ->
+        ( ( randamizeDGraph (windowWidth * 0.3) (windowHeight * 0.3) g
+            $ state2DGraph nextState
+          )
+        , nextState
         )
-      , nextState
-      )
-    Nothing -> ((g, oldDGraph), oldState)
+      [] -> ((g, oldDGraph), oldState)
 updateState _ model = model
