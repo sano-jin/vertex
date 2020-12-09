@@ -158,6 +158,7 @@ Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex
     - E.g. `stack exec dhli -- example/sample.dhl`
   - put `--nd` for the non-deterministic execution 
     - E.g. `stack exec dhli -- example/nd1.dhl --nd`
+    - add `--show-all` for more detailed result (this shows the all transitions).
 - `dhlvis`
   - visualizes the graph rewriting process in the ordinary execution.
     - E.g. `stack exec dhlvis -- example/cube.dhl`

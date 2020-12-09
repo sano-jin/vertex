@@ -13,7 +13,7 @@ windowWidth = 640
 windowHeight = 480
 
 window :: Display
-window = InWindow "DHLMNtal Visualizer" (windowWidth, windowHeight) (100, 100)
+window = InWindow "DHLMNtal State Viewer" (windowWidth, windowHeight) (100, 100)
 
 main :: IO ()
 main = do
