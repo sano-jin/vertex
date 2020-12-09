@@ -10,7 +10,7 @@ test() {
     echo "$input" > "${DIR}/input.dhl"
     echo $DIR
     echo "$input"
-    stack exec dhli -- "${DIR}/input.dhl" --nd >  "${DIR}/output.log"
+    stack exec dhli -- "${DIR}/input.dhl" --nd --show-all >  "${DIR}/output.log"
     echo ""
     i=$((i+1))
     echo $i
@@ -20,7 +20,7 @@ test single_a                "a, a, a. a :- ."
 test append                  \
 "append(cons(a, cons(b, nil)), cons(c, nil)).
 R -> append(cons(H, T), L) :- R -> cons(H, append(T, L)).
-R -> append(nil, L) :- R -> nil."
+R -> append(nil, L) :- R -> L."
 test abd                    "a. a :- b. b :- c."
 test ring                   "a. a:-b.b:-c.c:-d.d:-e.e:-f.f:-a."
 test nd3                    \
@@ -37,6 +37,9 @@ a:-b.
 a:-c.
 a:-d.
 d,d :- a,a."
+test nd5                   \
+"a(b), a(c).
+a(X) :- d(X)."
 test honey                 \
 "r, r, r, r, l, l, l, l, b.
 b, r :- s.

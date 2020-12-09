@@ -1,0 +1,16 @@
+0: a(L6, L4). a(L5, L6). a(L4, L5). L6 -> link. L5 -> link. L4 -> link. 
+1: a(L3, L2). a(L3, L1). a(L1, L2). L3 -> link. L2 -> link. L1 -> link. 
+
+State(s):
+0: a(L6, L4). a(L5, L6). a(L4, L5). L6 -> link. L5 -> link. L4 -> link. 
+1: a(L3, L2). a(L3, L1). a(L1, L2). L3 -> link. L2 -> link. L1 -> link. 
+
+Terminal state(s):
+1: a(L3, L2). a(L3, L1). a(L1, L2). L3 -> link. L2 -> link. L1 -> link. 
+
+Transiton(s):
+0 ~> 1 with a rule "a(L0, L1), a(L1, L2), a(L2, L0), L0 -> link, L1 -> link, L2 -> link :- a(L0, L1), a(L0, L2), a(L2, L1), L0 -> link, L1 -> link, L2 -> link".
+
+'# of States'(stored)  = 2.
+'# of States'(end)     = 1.
+'# of Transitions'     = 1.

@@ -9,14 +9,40 @@
 8: d. c. 
 9: d. d. 
 
-'# of States'(stored)  = 10.
-'# of States'(end)     = 5.
-'# of Transitions'     = 13.
+State(s):
+0: a. a. 
+1: a. b. 
+2: a. c. 
+3: a. d. 
+4: b. b. 
+5: c. b. 
+6: d. b. 
+7: c. c. 
+8: d. c. 
+9: d. d. 
 
-Termianl state(s):
+Terminal state(s):
 4: b. b. 
 5: c. b. 
 6: d. b. 
 7: c. c. 
 8: d. c. 
 
+Transiton(s):
+0 ~> 1 with a rule "a :- b".
+0 ~> 2 with a rule "a :- c".
+0 ~> 3 with a rule "a :- d".
+1 ~> 4 with a rule "a :- b".
+1 ~> 5 with a rule "a :- c".
+1 ~> 6 with a rule "a :- d".
+2 ~> 5 with a rule "a :- b".
+2 ~> 7 with a rule "a :- c".
+2 ~> 8 with a rule "a :- d".
+3 ~> 6 with a rule "a :- b".
+3 ~> 8 with a rule "a :- c".
+3 ~> 9 with a rule "a :- d".
+9 ~> 0 with a rule "d, d :- a, a".
+
+'# of States'(stored)  = 10.
+'# of States'(end)     = 5.
+'# of Transitions'     = 13.

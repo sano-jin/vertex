@@ -5,9 +5,24 @@
 4: e. 
 5: f. 
 
+State(s):
+0: a. 
+1: b. 
+2: c. 
+3: d. 
+4: e. 
+5: f. 
+
+Terminal state(s):
+
+Transiton(s):
+0 ~> 1 with a rule "a :- b".
+1 ~> 2 with a rule "b :- c".
+2 ~> 3 with a rule "c :- d".
+3 ~> 4 with a rule "d :- e".
+4 ~> 5 with a rule "e :- f".
+5 ~> 0 with a rule "f :- a".
+
 '# of States'(stored)  = 6.
 '# of States'(end)     = 0.
 '# of Transitions'     = 6.
-
-Termianl state(s):
-

@@ -1,0 +1,23 @@
+0: a(c). a(b). 
+1: a(c). d(b). 
+2: d(c). a(b). 
+3: d(c). d(b). 
+
+State(s):
+0: a(c). a(b). 
+1: a(c). d(b). 
+2: d(c). a(b). 
+3: d(c). d(b). 
+
+Terminal state(s):
+3: d(c). d(b). 
+
+Transiton(s):
+0 ~> 1 with a rule "a(X) :- d(X)".
+0 ~> 2 with a rule "a(X) :- d(X)".
+1 ~> 3 with a rule "a(X) :- d(X)".
+2 ~> 3 with a rule "a(X) :- d(X)".
+
+'# of States'(stored)  = 4.
+'# of States'(end)     = 1.
+'# of Transitions'     = 4.

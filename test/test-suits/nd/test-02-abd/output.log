@@ -2,10 +2,18 @@
 1: b. 
 2: c. 
 
+State(s):
+0: a. 
+1: b. 
+2: c. 
+
+Terminal state(s):
+2: c. 
+
+Transiton(s):
+0 ~> 1 with a rule "a :- b".
+1 ~> 2 with a rule "b :- c".
+
 '# of States'(stored)  = 3.
 '# of States'(end)     = 1.
 '# of Transitions'     = 2.
-
-Termianl state(s):
-2: c. 
-

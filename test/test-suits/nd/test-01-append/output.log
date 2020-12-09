@@ -1,12 +1,22 @@
 0: append(cons(a, cons(b, nil)), cons(c, nil)). 
 1: cons(a, append(cons(b, nil), cons(c, nil))). 
 2: cons(a, cons(b, append(nil, cons(c, nil)))). 
-3: cons(a, cons(b, nil)). cons(c, nil). 
+3: cons(a, cons(b, cons(c, nil))). 
+
+State(s):
+0: append(cons(a, cons(b, nil)), cons(c, nil)). 
+1: cons(a, append(cons(b, nil), cons(c, nil))). 
+2: cons(a, cons(b, append(nil, cons(c, nil)))). 
+3: cons(a, cons(b, cons(c, nil))). 
+
+Terminal state(s):
+3: cons(a, cons(b, cons(c, nil))). 
+
+Transiton(s):
+0 ~> 1 with a rule "R -> append(cons(H, T), L) :- R -> cons(H, append(T, L))".
+1 ~> 2 with a rule "R -> append(cons(H, T), L) :- R -> cons(H, append(T, L))".
+2 ~> 3 with a rule "R -> append(nil, L) :- R -> L".
 
 '# of States'(stored)  = 4.
 '# of States'(end)     = 1.
 '# of Transitions'     = 3.
-
-Termianl state(s):
-3: cons(a, cons(b, nil)). cons(c, nil). 
-

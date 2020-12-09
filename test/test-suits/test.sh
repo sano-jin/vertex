@@ -47,5 +47,5 @@ if [ $isBuild -eq 0 ]
 then
     testDIR "normal/" ""
     testDIR "errors/" ""
-    testDIR "nd/" "--nd"
+    testDIR "nd/" "--nd --show-all"
 fi

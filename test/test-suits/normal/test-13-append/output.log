@@ -7,6 +7,6 @@ cons(a, append(cons(b, nil), cons(c, nil))).
 2: R -> append(cons(H, T), L) :- R -> cons(H, append(T, L)) ~> 
 cons(a, cons(b, append(nil, cons(c, nil)))). 
 
-3: R -> append(nil, L) :- R -> nil ~> 
-cons(a, cons(b, nil)). cons(c, nil). 
+3: R -> append(nil, L) :- R -> L ~> 
+cons(a, cons(b, cons(c, nil))). 
 

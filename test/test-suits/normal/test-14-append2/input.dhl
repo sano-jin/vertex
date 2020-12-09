@@ -1,0 +1,3 @@
+append([a, b], [c]).
+R -> append([H|T], L) :- R -> [H|append(T, L)].
+R -> append([], L) :- R -> L.

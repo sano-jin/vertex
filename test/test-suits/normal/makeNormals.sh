@@ -33,7 +33,11 @@ test locallink_on_lhs2       "\X.\Y.(X -> a(X), c(d(X))) :- b, c . d."
 test append                  \
 "append(cons(a, cons(b, nil)), cons(c, nil)).
 R -> append(cons(H, T), L) :- R -> cons(H, append(T, L)).
-R -> append(nil, L) :- R -> nil."
+R -> append(nil, L) :- R -> L."
+test append2                  \
+"append([a, b], [c]).
+R -> append([H|T], L) :- R -> [H|append(T, L)].
+R -> append([], L) :- R -> L."
 test processContext1        \
 "a(\$p) :- \$p' := \$p + 1 | b(\$p'). a(1)."
 test intIsUnary "a(3). a(\$p:unary) :- \$q := \$p + 1 | b(\$q)"
