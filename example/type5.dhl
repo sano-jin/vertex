@@ -1,0 +1,8 @@
+a(1), 1.
+
+a($p), $q :- $q = $p, $q:string | b($q).
+
+load @@
+proc(load, X, $y), X -> $x
+:- $y:int, $x:int
+|  proc(incr, X, $x), X -> $x.
