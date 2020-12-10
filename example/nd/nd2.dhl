@@ -1,0 +1,12 @@
+% Simple program to check nondeterministic execution
+% (10 states, non-confluent, non-terminating)
+%
+% Copied from the LMNtal's LaViT/demo/
+
+a, a.
+
+a:-b.
+a:-c.
+a:-d.
+
+d,d :- a,a.

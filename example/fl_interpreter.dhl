@@ -82,7 +82,7 @@ function_abbreviation @@
 R -> fun([X|Xs], Body)
 :- R -> lam(X, fun(Xs, Body)).
 
-nullaly_function @@
+nullary_function @@
 R -> fun([], Body)
 :- R -> Body.
 

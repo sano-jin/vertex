@@ -1,0 +1,7 @@
+% Run the state viewer to obtain the honeycomb structure.
+
+r, r, r, r, l, l, l, l, b.
+b, r :- s.
+b, l :- s.
+r, s :- r, b.
+l, s :- l, b

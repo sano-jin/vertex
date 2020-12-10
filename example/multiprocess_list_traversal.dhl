@@ -1,0 +1,16 @@
+% Multiprocess list traversal
+% 
+% This is an example to show the advantage over the (flat) LMNtal.
+% The following program models the situation that 
+% the 3 multi processes are to traverse the one shared list.
+% LMNtal was rather hard to write the program that the "sharing" will occurs.
+
+% The initial graph.
+\X.(
+  proc(X), proc(X), proc(X),
+  X -> cons(a, cons(b, cons(c, nil)))
+).
+
+traverse @@
+proc(P), P -> cons(E, N)
+:- proc(N), P -> cons(E, N).

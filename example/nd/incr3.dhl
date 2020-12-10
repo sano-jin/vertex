@@ -1,0 +1,65 @@
+%  The global variable incremented by multiprocess
+% 
+%  This program corresponds to the following Promela (SPIN) program.
+%  ```
+%  int x = 0;
+%  proctype Proc() {
+%      int y = 0; /* local variable */
+%      y = x; /* LOAD */
+%      y = y + 1; /* INCREMENT */
+%      x = y; /* STORE */
+%  }
+%  init{
+%      run Proc();
+%      run Proc();
+%      run Proc();
+%  }
+%  ```
+%  
+%  Also, this can be written in LMNtal as following.
+%  ```
+%  proc(load, 0).
+%  proc(load, 0).
+%  proc(load, 0).
+%  x(0).
+%  
+%  % Load the global variable
+%  proc(load, Y), x(X)
+%    :- int(X), int(Y) 
+%       | proc(increment, X), x(X).
+%  
+%  % Increment the local variable
+%  proc(increment, Y)
+%    :- Y1 = Y + 1
+%       | proc(store, Y1).
+%  
+%  % Store the local variable to the global variable
+%  proc(store, Y), x(X)
+%    :- int(X), int(Y) 
+%       | proc(halt, Y), x(Y).
+%  ```
+
+
+% The initial graph.
+\X.(
+    proc(load, X, 0),
+    proc(load, X, 0),
+    proc(load, X, 0),
+    X -> 0
+).
+
+% Load the value of the global variable to the local variable.
+load @@
+proc(load, X, $y:int), X -> $x:int
+:- proc(incr, X, $x), X -> $x.
+
+% Increment the value of the local variable.
+incr @@
+proc(incr, X, $y)
+:- $y' := $y + 1 
+|  proc(store, X, $y').
+
+% Store the value of the local variable to the global variable.
+store @@
+proc(store, X, $y:int), X -> $x:int
+:- proc(halt, X, $y), X -> $y.

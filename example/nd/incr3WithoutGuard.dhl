@@ -1,0 +1,214 @@
+%  The global variable incremented by multiprocess
+% 
+%  You will probably like the one with the guard and the typed process context.
+%  This is just an example that showing the functionality of the guard can be 
+%  replaced by the (infinite) rules.
+%
+%  This program corresponds to the following Promela (SPIN) program.
+%  ```
+%  int x = 0;
+%  proctype Proc() {
+%      int y = 0; /* local variable */
+%      y = x; /* LOAD */
+%      y = y + 1; /* INCREMENT */
+%      x = y; /* STORE */
+%  }
+%  init{
+%      run Proc();
+%      run Proc();
+%      run Proc();
+%  }
+%  ```
+%  
+%  Also, this can be written in LMNtal as following.
+%  ```
+%  proc(load, 0).
+%  proc(load, 0).
+%  proc(load, 0).
+%  x(0).
+%  
+%  % Load the global variable
+%  proc(load, Y), x(X)
+%    :- int(X), int(Y) 
+%       | proc(increment, X), x(X).
+%  
+%  % Increment the local variable
+%  proc(increment, Y)
+%    :- Y1 = Y + 1
+%       | proc(store, Y1).
+%  
+%  % Store the local variable to the global variable
+%  proc(store, Y), x(X)
+%    :- int(X), int(Y) 
+%       | proc(halt, Y), x(Y).
+%  ```
+
+
+% The initial graph.
+\X.(
+    proc(load, X, 0),
+    proc(load, X, 0),
+    proc(load, X, 0),
+    X -> 0
+).
+
+
+% Load the global variable.
+
+load @@ 
+proc(load, X, 0), X -> 0
+:- proc(incr, X, 0), X -> 0.
+
+load @@
+proc(load, X, 1), X -> 0
+:- proc(incr, X, 0), X -> 0.
+
+load @@
+proc(load, X, 2), X -> 0
+:- proc(incr, X, 0), X -> 0.
+
+load @@
+proc(load, X, 3), X -> 0
+:- proc(incr, X, 0), X -> 0.
+
+
+load @@
+proc(load, X, 0), X -> 1
+:- proc(incr, X, 1), X -> 1.
+
+load @@
+proc(load, X, 1), X -> 1
+:- proc(incr, X, 1), X -> 1.
+
+load @@
+proc(load, X, 2), X -> 1
+:- proc(incr, X, 1), X -> 1.
+
+load @@
+proc(load, X, 3), X -> 1
+:- proc(incr, X, 1), X -> 1.
+
+
+load @@
+proc(load, X, 0), X -> 2
+:- proc(incr, X, 2), X -> 2.
+
+load @@
+proc(load, X, 1), X -> 2
+:- proc(incr, X, 2), X -> 2.
+
+load @@
+proc(load, X, 2), X -> 2
+:- proc(incr, X, 2), X -> 2.
+
+load @@
+proc(load, X, 3), X -> 2
+:- proc(incr, X, 2), X -> 2.
+
+
+load @@
+proc(load, X, 0), X -> 3
+:- proc(incr, X, 3), X -> 3.
+
+load @@
+proc(load, X, 1), X -> 3
+:- proc(incr, X, 3), X -> 3.
+
+load @@
+proc(load, X, 2), X -> 3
+:- proc(incr, X, 3), X -> 3.
+
+load @@
+proc(load, X, 3), X -> 3
+:- proc(incr, X, 3), X -> 3.
+
+
+
+% Increment the local variable.
+
+incr @@
+proc(incr, X, 0)
+:- proc(store, X, 1).
+
+incr @@
+proc(incr, X, 1) 
+:- proc(store, X, 2).
+
+incr @@
+proc(incr, X, 2) 
+:- proc(store, X, 3).
+
+incr @@
+proc(incr, X, 3) 
+:- proc(store, X, 4).
+
+
+
+% Store the global variable.
+
+store @@
+proc(store, X, 0), X -> 0
+:- proc(halt, X, 0), X -> 0.
+
+store @@
+proc(store, X, 1), X -> 0
+:- proc(halt, X, 1), X -> 1.
+
+store @@
+proc(store, X, 2), X -> 0
+:- proc(halt, X, 2), X -> 2.
+
+store @@
+proc(store, X, 3), X -> 0
+:- proc(halt, X, 3), X -> 3.
+
+
+store @@
+proc(store, X, 0), X -> 1
+:- proc(halt, X, 0), X -> 0.
+
+store @@
+proc(store, X, 1), X -> 1
+:- proc(halt, X, 1), X -> 1.
+
+store @@
+proc(store, X, 2), X -> 1
+:- proc(halt, X, 2), X -> 2.
+
+store @@
+proc(store, X, 3), X -> 1
+:- proc(halt, X, 3), X -> 3.
+
+
+store @@
+proc(store, X, 0), X -> 2
+:- proc(halt, X, 0), X -> 0.
+
+store @@
+proc(store, X, 1), X -> 2
+:- proc(halt, X, 1), X -> 1.
+
+store @@
+proc(store, X, 2), X -> 2
+:- proc(halt, X, 2), X -> 2.
+
+store @@
+proc(store, X, 3), X -> 2
+:- proc(halt, X, 3), X -> 3.
+
+
+store @@
+proc(store, X, 0), X -> 3
+:- proc(halt, X, 0), X -> 0.
+
+store @@
+proc(store, X, 1), X -> 3
+:- proc(halt, X, 1), X -> 1.
+
+store @@
+proc(store, X, 2), X -> 3
+:- proc(halt, X, 2), X -> 2.
+
+store @@
+proc(store, X, 3), X -> 3
+:- proc(halt, X, 3), X -> 3.

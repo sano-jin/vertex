@@ -1,9 +1,28 @@
+% A List appending example.
+%
+% You may also write like this.
+% Notice that the `X1 -> [E1, ..., En|T]` is just an abbreveation for the
+% `X1 -> '.'(E1, X2), ..., Xn -> '.'(En, T)`.
+%
+% ```
+% % This is as same as `append('.'(a, '.'(b, '[]')), '.'(c, '[]'))`.
+% append([a, b], [c]).
+% 
+% append_cons @@
+% R -> append([H|T], L) :- R -> [H|append(T, L)].
+%  
+% append_nil @@
+% R -> append([], L) :- R -> L.
+% ```
+
+% The initial graph.
 append(cons(a, cons(b, nil)), cons(c, nil)).
 
-/* append cons */
+append_cons @@
 R -> append(cons(H, T), L)
 :- R -> cons(H, append(T, L)).
 
-/* append nil */
+append_nil @@
 R -> append(nil, L)
 :- R -> L.
+

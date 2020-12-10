@@ -1,0 +1,9 @@
+append(cons(a, cons(b, nil)), cons(c, nil)).
+
+/* append cons */
+R -> append(cons(H, T), L)
+:- R -> cons(H, append(T, L)).
+
+/* append nil */
+R -> append(nil, L)
+:- R -> L.

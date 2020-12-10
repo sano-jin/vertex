@@ -114,7 +114,7 @@ You can use `--nd` (non-deterministic) option to construct the state transition 
 
 This can be also applied to the not-terminating program.
 
-For example, `example/nd1.dhl` is a following program.
+For example, `example/nd/cycle.dhl` is a following program.
 ```
 a.
 
@@ -128,7 +128,7 @@ f :- a.
 
 You can run this with the `--nd` option.
 ```bash
-stack exec dhli  -- example/nd1.dhl --nd
+stack exec dhli  -- example/nd/cycle.dhl --nd
 ```
 
 
@@ -137,7 +137,7 @@ Also, you can visualize the state transition space.
 Run `stateViewer` as below.
 
 ```bash
-stack exec stateViewer  -- example/nd1.dhl
+stack exec stateViewer  -- example/nd/cycle.dhl
 ```
 
 ![stateViewer_nd1](https://github.com/sano-jin/vertex/blob/develop/doc/stateViewer_nd1.png)
@@ -157,14 +157,14 @@ Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex
   - the ordinary (one-way) execution if you put no option.
     - E.g. `stack exec dhli -- example/sample.dhl`
   - put `--nd` for the non-deterministic execution 
-    - E.g. `stack exec dhli -- example/nd1.dhl --nd`
+    - E.g. `stack exec dhli -- example/nd/cycle.dhl --nd`
     - add `--show-all` for more detailed result (this shows the all transitions).
 - `dhlvis`
   - visualizes the graph rewriting process in the ordinary execution.
-    - E.g. `stack exec dhlvis -- example/cube.dhl`
+    - E.g. `stack exec dhlvis -- example/vis/cube.dhl`
 - `stateViewer`
   - visualizes the state transition space (all possible states and the transitions).
-    - E.g. `stack exec stateViewer -- example/nd1.dhl`
+    - E.g. `stack exec stateViewer -- example/nd/cycle.dhl`
 
 ## Development
 

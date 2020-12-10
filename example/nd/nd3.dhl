@@ -1,0 +1,6 @@
+% Multi-state-transition with one rule.
+%
+% In this program, the same rule matches to both `a(b)` and `a(c)`.
+
+a(b), a(c).
+a(X) :- d(X).

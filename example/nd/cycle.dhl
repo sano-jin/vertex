@@ -1,0 +1,16 @@
+% Cycling program
+%
+% This program never terminates with the `normal execution`
+% However, the `non-deterministic execution` will result the finite states
+% and it shows the ring forming transitons.
+
+% The initial graph
+a.
+
+% Cycing rules.
+a :- b.
+b :- c.
+c :- d.
+d :- e.
+e :- f.
+f :- a.

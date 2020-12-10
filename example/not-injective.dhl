@@ -1,0 +1,4 @@
+% A demonstration fot the "not-injective matching"
+
+\X.X -> a(X).
+X -> a(Y) :- X -> Y, b.
