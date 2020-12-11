@@ -1,0 +1,690 @@
+0: 
+result(eval(let_rec("fac", "n", if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), app("fac", 5)), [])). 
+
+1: let_rec ~> 
+result(eval(app("fac", 5), L24)). L23 -> asc("fac", val(cl("n", if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24))). L19 -> []. L24 -> .(L23, L19). 
+
+2: eval_application ~> 
+result(app(eval("fac", L24), eval(5, L24))). L23 -> asc("fac", val(cl("n", if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24))). L19 -> []. L24 -> .(L23, L19). 
+
+3: eval_int ~> 
+result(app(eval("fac", L24), val(5))). L23 -> asc("fac", val(cl("n", if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24))). L19 -> []. L24 -> .(L23, L19). 
+
+4: resolve ~> 
+result(app(val(cp(L1)), val(5))). L24 -> .(asc("fac", val(L1)), []). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L2 -> "n". L1 -> cl(L2, L14, L24). 
+
+5: copy_closure ~> 
+result(app(val(cl("n", cp(L14), L24)), val(5))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L24 -> .(L15, L19). L14 -> if(L5, L6, L13). 
+
+6: beta_reduction ~> 
+result(eval(cp(L14), .(asc("n", val(5)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L24 -> .(L15, L19). L14 -> if(L5, L6, L13). 
+
+7: copy_if ~> 
+result(eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(5)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). 
+
+8: eval_if ~> 
+result(if(eval(cp(L5), L17), cp(L6), cp(L13), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). 
+
+9: copy_value ~> 
+result(if(eval(cp(L5), L17), 1, cp(L13), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). 
+
+10: copy_times ~> 
+result(if(eval(cp(L5), L17), 1, *(cp(L7), cp(L12)), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). 
+
+11: copy_variable ~> 
+result(if(eval(cp(L5), L17), 1, *("n", cp(L12)), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). 
+
+12: copy_application ~> 
+result(if(eval(cp(L5), L17), 1, *("n", app(cp(L8), cp(L11))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). 
+
+13: copy_variable ~> 
+result(if(eval(cp(L5), L17), 1, *("n", app("fac", cp(L11))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). 
+
+14: copy_minus ~> 
+result(if(eval(cp(L5), L17), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). 
+
+15: copy_value ~> 
+result(if(eval(cp(L5), L17), 1, *("n", app("fac", -(cp(L9), 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L9 -> "n". L5 -> <(L3, L4). 
+
+16: copy_variable ~> 
+result(if(eval(cp(L5), L17), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). L17 -> .(L23, L24). L5 -> <(L3, L4). 
+
+17: copy_less ~> 
+result(if(eval(<(cp(L3), cp(L4)), L17), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L17 -> .(L23, L24). L4 -> 1. L3 -> "n". 
+
+18: eval_less ~> 
+result(if(<(eval(cp(L3), L17), eval(cp(L4), L17)), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L4 -> 1. L3 -> "n". L17 -> .(L23, L24). 
+
+19: copy_value ~> 
+result(if(<(eval(cp(L3), L17), eval(1, L17)), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L3 -> "n". L17 -> .(L23, L24). 
+
+20: eval_int ~> 
+result(if(<(eval(cp(L3), L17), val(1)), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L17 -> .(L23, L24). L3 -> "n". 
+
+21: copy_variable ~> 
+result(if(<(eval("n", L17), val(1)), 1, *("n", app("fac", -("n", 1))), L17)). L27 -> "n". L25 -> val(5). L23 -> asc("n", L25). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L17 -> .(L23, L24). 
+
+22: resolve ~> 
+result(if(<(val(cp(L16)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L16)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L16 -> 5. 
+
+23: copy_value ~> 
+result(if(<(val(5), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(5)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+24: less_false ~> 
+result(if(val(false), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(5)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+25: if_false ~> 
+1. result(eval(*("n", app("fac", -("n", 1))), .(asc("n", val(5)), L24))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+26: eval_times ~> 
+1. result(*(eval("n", L17), eval(app("fac", -("n", 1)), L17))). L27 -> "n". L25 -> "n". L23 -> val(5). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L2 -> asc(L25, L23). L24 -> .(L15, L19). L17 -> .(L2, L24). 
+
+27: eval_application ~> 
+1. result(*(eval("n", L17), app(eval("fac", L17), eval(-("n", 1), L17)))). L27 -> "n". L25 -> "n". L23 -> val(5). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L2 -> asc(L25, L23). L24 -> .(L15, L19). L17 -> .(L2, L24). 
+
+28: eval_minus ~> 
+1. result(*(eval("n", L17), app(eval("fac", L17), -(eval("n", L17), eval(1, L17))))). L27 -> "n". L25 -> "n". L23 -> val(5). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L2 -> asc(L25, L23). L24 -> .(L15, L19). L17 -> .(L2, L24). 
+
+29: eval_int ~> 
+1. result(*(eval("n", L17), app(eval("fac", L17), -(eval("n", L17), val(1))))). L27 -> "n". L25 -> "n". L23 -> val(5). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L2 -> asc(L25, L23). L24 -> .(L15, L19). L17 -> .(L2, L24). 
+
+30: lookup ~> 
+1. result(*(eval("n", L17), app(eval("fac", L24), -(eval("n", L17), val(1))))). L27 -> "n". L25 -> "n". L23 -> val(5). L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L2 -> asc(L25, L23). L17 -> .(L2, L24). L24 -> .(L15, L19). 
+
+31: resolve ~> 
+1. result(*(val(cp(L16)), app(eval("fac", L24), -(eval("n", .(asc("n", val(L16)), L24)), val(1))))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L27, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L16 -> 5. L24 -> .(L15, L19). 
+
+32: resolve ~> 
+1. result(*(val(cp(L16)), app(val(cp(L1)), -(eval("n", .(asc("n", val(L16)), L24)), val(1))))). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L24 -> .(L15, L19). L16 -> 5. L1 -> cl(L27, L14, L24). 
+
+33: resolve ~> 
+1. result(*(val(cp(L16)), app(val(cp(L1)), -(val(cp(L16)), val(1))))). .(asc("n", val(L16)), L24). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L24 -> .(L15, L19). L1 -> cl(L27, L14, L24). L16 -> 5. 
+
+34: copy_value ~> 
+1. result(*(val(5), app(val(cp(L1)), -(val(cp(L16)), val(1))))). .(asc("n", val(L16)), L24). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L24 -> .(L15, L19). L16 -> 5. L1 -> cl(L27, L14, L24). 
+
+35: copy_value ~> 
+1. result(*(val(5), app(val(cp(L1)), -(val(5), val(1))))). .(asc("n", val(5)), L24). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L24 -> .(L15, L19). L1 -> cl(L27, L14, L24). 
+
+36: sub ~> 
+1. result(*(val(5), app(val(cp(L1)), val(4)))). .(asc("n", val(5)), L24). L27 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L24 -> .(L15, L19). L1 -> cl(L27, L14, L24). 
+
+37: copy_closure ~> 
+1. result(*(val(5), app(val(cl("n", cp(L14), L24)), val(4)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+38: beta_reduction ~> 
+1. result(*(val(5), eval(cp(L14), .(asc("n", val(4)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+39: copy_if ~> 
+1. result(*(val(5), eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(4)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+40: eval_if ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), cp(L6), cp(L13), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+41: copy_value ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, cp(L13), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+42: copy_times ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *(cp(L7), cp(L12)), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+43: copy_variable ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", cp(L12)), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+44: copy_application ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", app(cp(L8), cp(L11))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+45: copy_variable ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", app("fac", cp(L11))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+46: copy_minus ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+47: copy_value ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", app("fac", -(cp(L9), 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+48: copy_variable ~> 
+1. result(*(val(5), if(eval(cp(L5), L26), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+49: copy_less ~> 
+1. result(*(val(5), if(eval(<(cp(L3), cp(L4)), L26), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L32, L24). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). 
+
+50: eval_less ~> 
+1. result(*(val(5), if(<(eval(cp(L3), L26), eval(cp(L4), L26)), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L26 -> .(L32, L24). L24 -> .(L15, L19). 
+
+51: copy_value ~> 
+1. result(*(val(5), if(<(eval(cp(L3), L26), eval(1, L26)), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L3 -> "n". L26 -> .(L32, L24). L24 -> .(L15, L19). 
+
+52: eval_int ~> 
+1. result(*(val(5), if(<(eval(cp(L3), L26), val(1)), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L32, L24). L3 -> "n". L24 -> .(L15, L19). 
+
+53: copy_variable ~> 
+1. result(*(val(5), if(<(eval("n", L26), val(1)), 1, *("n", app("fac", -("n", 1))), L26))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> val(L38). L32 -> asc("n", L33). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L32, L24). L24 -> .(L15, L19). 
+
+54: resolve ~> 
+1. result(*(val(5), if(<(val(cp(L38)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L38)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L38 -> 4. L24 -> .(L15, L19). 
+
+55: copy_value ~> 
+1. result(*(val(5), if(<(val(4), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(4)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+56: less_false ~> 
+1. result(*(val(5), if(val(false), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(4)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+57: if_false ~> 
+1. 1. result(*(val(5), eval(*("n", app("fac", -("n", 1))), .(asc("n", val(4)), L24)))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+58: eval_times ~> 
+1. 1. result(*(val(5), *(eval("n", L26), eval(app("fac", -("n", 1)), L26)))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> "n". L32 -> val(L38). L27 -> asc(L33, L32). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L27, L24). L24 -> .(L15, L19). 
+
+59: eval_application ~> 
+1. 1. result(*(val(5), *(eval("n", L26), app(eval("fac", L26), eval(-("n", 1), L26))))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> "n". L32 -> val(L38). L27 -> asc(L33, L32). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L27, L24). L24 -> .(L15, L19). 
+
+60: eval_minus ~> 
+1. 1. result(*(val(5), *(eval("n", L26), app(eval("fac", L26), -(eval("n", L26), eval(1, L26)))))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> "n". L32 -> val(L38). L27 -> asc(L33, L32). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). L26 -> .(L27, L24). 
+
+61: eval_int ~> 
+1. 1. result(*(val(5), *(eval("n", L26), app(eval("fac", L26), -(eval("n", L26), val(1)))))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> "n". L32 -> val(L38). L27 -> asc(L33, L32). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L27, L24). L24 -> .(L15, L19). 
+
+62: lookup ~> 
+1. 1. result(*(val(5), *(eval("n", L26), app(eval("fac", L24), -(eval("n", L26), val(1)))))). .(asc("n", val(5)), L24). L38 -> 4. L35 -> "n". L33 -> "n". L32 -> val(L38). L27 -> asc(L33, L32). L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L26 -> .(L27, L24). L24 -> .(L15, L19). 
+
+63: resolve ~> 
+1. 1. result(*(val(5), *(val(cp(L38)), app(eval("fac", L24), -(eval("n", .(asc("n", val(L38)), L24)), val(1)))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L35, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L38 -> 4. L24 -> .(L15, L19). 
+
+64: resolve ~> 
+1. 1. result(*(val(5), *(val(cp(L38)), app(val(cp(L1)), -(eval("n", .(asc("n", val(L38)), L24)), val(1)))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L38 -> 4. L1 -> cl(L35, L14, L24). L24 -> .(L15, L19). 
+
+65: resolve ~> 
+1. 1. .(asc("n", val(L38)), L24). result(*(val(5), *(val(cp(L38)), app(val(cp(L1)), -(val(cp(L38)), val(1)))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L35, L14, L24). L38 -> 4. L24 -> .(L15, L19). 
+
+66: copy_value ~> 
+1. 1. .(asc("n", val(L38)), L24). result(*(val(5), *(val(4), app(val(cp(L1)), -(val(cp(L38)), val(1)))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L38 -> 4. L1 -> cl(L35, L14, L24). L24 -> .(L15, L19). 
+
+67: copy_value ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), app(val(cp(L1)), -(val(4), val(1)))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L35, L14, L24). L24 -> .(L15, L19). 
+
+68: sub ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), app(val(cp(L1)), val(3))))). .(asc("n", val(5)), L24). L35 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L35, L14, L24). L24 -> .(L15, L19). 
+
+69: copy_closure ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), app(val(cl("n", cp(L14), L24)), val(3))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+70: beta_reduction ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), eval(cp(L14), .(asc("n", val(3)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+71: copy_if ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(3)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+72: eval_if ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), cp(L6), cp(L13), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+73: copy_value ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, cp(L13), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+74: copy_times ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *(cp(L7), cp(L12)), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+75: copy_variable ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", cp(L12)), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+76: copy_application ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", app(cp(L8), cp(L11))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+77: copy_variable ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", app("fac", cp(L11))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+78: copy_minus ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+79: copy_value ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", app("fac", -(cp(L9), 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+80: copy_variable ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(cp(L5), L36), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+81: copy_less ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(eval(<(cp(L3), cp(L4)), L36), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L41, L24). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). 
+
+82: eval_less ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(eval(cp(L3), L36), eval(cp(L4), L36)), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L36 -> .(L41, L24). L24 -> .(L15, L19). 
+
+83: copy_value ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(eval(cp(L3), L36), eval(1, L36)), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L3 -> "n". L36 -> .(L41, L24). L24 -> .(L15, L19). 
+
+84: eval_int ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(eval(cp(L3), L36), val(1)), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L41, L24). L3 -> "n". L24 -> .(L15, L19). 
+
+85: copy_variable ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(eval("n", L36), val(1)), 1, *("n", app("fac", -("n", 1))), L36)))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> val(L47). L41 -> asc("n", L42). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L41, L24). L24 -> .(L15, L19). 
+
+86: resolve ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(val(cp(L47)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L47)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L47 -> 3. L24 -> .(L15, L19). 
+
+87: copy_value ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(<(val(3), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(3)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+88: less_false ~> 
+1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), if(val(false), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(3)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+89: if_false ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), eval(*("n", app("fac", -("n", 1))), .(asc("n", val(3)), L24))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+90: eval_times ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(eval("n", L36), eval(app("fac", -("n", 1)), L36))))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> "n". L41 -> val(L47). L35 -> asc(L42, L41). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L35, L24). L24 -> .(L15, L19). 
+
+91: eval_application ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(eval("n", L36), app(eval("fac", L36), eval(-("n", 1), L36)))))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> "n". L41 -> val(L47). L35 -> asc(L42, L41). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L35, L24). L24 -> .(L15, L19). 
+
+92: eval_minus ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(eval("n", L36), app(eval("fac", L36), -(eval("n", L36), eval(1, L36))))))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> "n". L41 -> val(L47). L35 -> asc(L42, L41). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L35, L24). L24 -> .(L15, L19). 
+
+93: eval_int ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(eval("n", L36), app(eval("fac", L36), -(eval("n", L36), val(1))))))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> "n". L41 -> val(L47). L35 -> asc(L42, L41). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L35, L24). L24 -> .(L15, L19). 
+
+94: lookup ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(eval("n", L36), app(eval("fac", L24), -(eval("n", L36), val(1))))))). .(asc("n", val(5)), L24). L47 -> 3. L44 -> "n". L42 -> "n". L41 -> val(L47). L35 -> asc(L42, L41). L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L36 -> .(L35, L24). L24 -> .(L15, L19). 
+
+95: resolve ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(cp(L47)), app(eval("fac", L24), -(eval("n", .(asc("n", val(L47)), L24)), val(1))))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L44, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L47 -> 3. L24 -> .(L15, L19). 
+
+96: resolve ~> 
+1. 1. 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(cp(L47)), app(val(cp(L1)), -(eval("n", .(asc("n", val(L47)), L24)), val(1))))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L47 -> 3. L1 -> cl(L44, L14, L24). L24 -> .(L15, L19). 
+
+97: resolve ~> 
+1. 1. .(asc("n", val(L47)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(cp(L47)), app(val(cp(L1)), -(val(cp(L47)), val(1))))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L44, L14, L24). L47 -> 3. L24 -> .(L15, L19). 
+
+98: copy_value ~> 
+1. 1. .(asc("n", val(L47)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), app(val(cp(L1)), -(val(cp(L47)), val(1))))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L47 -> 3. L1 -> cl(L44, L14, L24). L24 -> .(L15, L19). 
+
+99: copy_value ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), app(val(cp(L1)), -(val(3), val(1))))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L44, L14, L24). L24 -> .(L15, L19). 
+
+100: sub ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), app(val(cp(L1)), val(2)))))). .(asc("n", val(5)), L24). L44 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L44, L14, L24). L24 -> .(L15, L19). 
+
+101: copy_closure ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), app(val(cl("n", cp(L14), L24)), val(2)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+102: beta_reduction ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), eval(cp(L14), .(asc("n", val(2)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+103: copy_if ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(2)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+104: eval_if ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), cp(L6), cp(L13), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+105: copy_value ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, cp(L13), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+106: copy_times ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *(cp(L7), cp(L12)), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+107: copy_variable ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", cp(L12)), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+108: copy_application ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", app(cp(L8), cp(L11))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+109: copy_variable ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", app("fac", cp(L11))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+110: copy_minus ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+111: copy_value ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", app("fac", -(cp(L9), 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+112: copy_variable ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(cp(L5), L45), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+113: copy_less ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(eval(<(cp(L3), cp(L4)), L45), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L50, L24). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). 
+
+114: eval_less ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(eval(cp(L3), L45), eval(cp(L4), L45)), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L45 -> .(L50, L24). L24 -> .(L15, L19). 
+
+115: copy_value ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(eval(cp(L3), L45), eval(1, L45)), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L3 -> "n". L45 -> .(L50, L24). L24 -> .(L15, L19). 
+
+116: eval_int ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(eval(cp(L3), L45), val(1)), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L50, L24). L3 -> "n". L24 -> .(L15, L19). 
+
+117: copy_variable ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(eval("n", L45), val(1)), 1, *("n", app("fac", -("n", 1))), L45))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> val(L56). L50 -> asc("n", L51). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L50, L24). L24 -> .(L15, L19). 
+
+118: resolve ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(val(cp(L56)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L56)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L56 -> 2. L24 -> .(L15, L19). 
+
+119: copy_value ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(<(val(2), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(2)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+120: less_false ~> 
+1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), if(val(false), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(2)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+121: if_false ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), eval(*("n", app("fac", -("n", 1))), .(asc("n", val(2)), L24)))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+122: eval_times ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(eval("n", L45), eval(app("fac", -("n", 1)), L45)))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> "n". L50 -> val(L56). L44 -> asc(L51, L50). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L44, L24). L24 -> .(L15, L19). 
+
+123: eval_application ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(eval("n", L45), app(eval("fac", L45), eval(-("n", 1), L45))))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> "n". L50 -> val(L56). L44 -> asc(L51, L50). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L44, L24). L24 -> .(L15, L19). 
+
+124: eval_minus ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(eval("n", L45), app(eval("fac", L45), -(eval("n", L45), eval(1, L45)))))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> "n". L50 -> val(L56). L44 -> asc(L51, L50). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L44, L24). L24 -> .(L15, L19). 
+
+125: eval_int ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(eval("n", L45), app(eval("fac", L45), -(eval("n", L45), val(1)))))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> "n". L50 -> val(L56). L44 -> asc(L51, L50). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L44, L24). L24 -> .(L15, L19). 
+
+126: lookup ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(eval("n", L45), app(eval("fac", L24), -(eval("n", L45), val(1)))))))). .(asc("n", val(5)), L24). L56 -> 2. L53 -> "n". L51 -> "n". L50 -> val(L56). L44 -> asc(L51, L50). L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L45 -> .(L44, L24). L24 -> .(L15, L19). 
+
+127: resolve ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(cp(L56)), app(eval("fac", L24), -(eval("n", .(asc("n", val(L56)), L24)), val(1)))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L53, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L56 -> 2. L24 -> .(L15, L19). 
+
+128: resolve ~> 
+1. 1. 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(cp(L56)), app(val(cp(L1)), -(eval("n", .(asc("n", val(L56)), L24)), val(1)))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L56 -> 2. L1 -> cl(L53, L14, L24). L24 -> .(L15, L19). 
+
+129: resolve ~> 
+1. 1. .(asc("n", val(L56)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(cp(L56)), app(val(cp(L1)), -(val(cp(L56)), val(1)))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L53, L14, L24). L56 -> 2. L24 -> .(L15, L19). 
+
+130: copy_value ~> 
+1. 1. .(asc("n", val(L56)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), app(val(cp(L1)), -(val(cp(L56)), val(1)))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L56 -> 2. L1 -> cl(L53, L14, L24). L24 -> .(L15, L19). 
+
+131: copy_value ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), app(val(cp(L1)), -(val(2), val(1)))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L53, L14, L24). L24 -> .(L15, L19). 
+
+132: sub ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), app(val(cp(L1)), val(1))))))). .(asc("n", val(5)), L24). L53 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L53, L14, L24). L24 -> .(L15, L19). 
+
+133: copy_closure ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), app(val(cl("n", cp(L14), L24)), val(1))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+134: beta_reduction ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), eval(cp(L14), .(asc("n", val(1)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+135: copy_if ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(1)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+136: eval_if ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), cp(L6), cp(L13), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+137: copy_value ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, cp(L13), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+138: copy_times ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *(cp(L7), cp(L12)), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+139: copy_variable ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", cp(L12)), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+140: copy_application ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", app(cp(L8), cp(L11))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+141: copy_variable ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", app("fac", cp(L11))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+142: copy_minus ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+143: copy_value ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", app("fac", -(cp(L9), 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+144: copy_variable ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(cp(L5), L54), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+145: copy_less ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(eval(<(cp(L3), cp(L4)), L54), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L59, L24). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). 
+
+146: eval_less ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(eval(cp(L3), L54), eval(cp(L4), L54)), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L54 -> .(L59, L24). L24 -> .(L15, L19). 
+
+147: copy_value ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(eval(cp(L3), L54), eval(1, L54)), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L3 -> "n". L54 -> .(L59, L24). L24 -> .(L15, L19). 
+
+148: eval_int ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(eval(cp(L3), L54), val(1)), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L59, L24). L3 -> "n". L24 -> .(L15, L19). 
+
+149: copy_variable ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(eval("n", L54), val(1)), 1, *("n", app("fac", -("n", 1))), L54)))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> val(L65). L59 -> asc("n", L60). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L59, L24). L24 -> .(L15, L19). 
+
+150: resolve ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(val(cp(L65)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L65)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L65 -> 1. L24 -> .(L15, L19). 
+
+151: copy_value ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(<(val(1), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(1)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+152: less_false ~> 
+1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), if(val(false), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(1)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+153: if_false ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), eval(*("n", app("fac", -("n", 1))), .(asc("n", val(1)), L24))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+154: eval_times ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(eval("n", L54), eval(app("fac", -("n", 1)), L54))))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> "n". L59 -> val(L65). L53 -> asc(L60, L59). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L53, L24). L24 -> .(L15, L19). 
+
+155: eval_application ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(eval("n", L54), app(eval("fac", L54), eval(-("n", 1), L54)))))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> "n". L59 -> val(L65). L53 -> asc(L60, L59). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L53, L24). L24 -> .(L15, L19). 
+
+156: eval_minus ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(eval("n", L54), app(eval("fac", L54), -(eval("n", L54), eval(1, L54))))))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> "n". L59 -> val(L65). L53 -> asc(L60, L59). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L53, L24). L24 -> .(L15, L19). 
+
+157: eval_int ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(eval("n", L54), app(eval("fac", L54), -(eval("n", L54), val(1))))))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> "n". L59 -> val(L65). L53 -> asc(L60, L59). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L53, L24). L24 -> .(L15, L19). 
+
+158: lookup ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(eval("n", L54), app(eval("fac", L24), -(eval("n", L54), val(1))))))))). .(asc("n", val(5)), L24). L65 -> 1. L62 -> "n". L60 -> "n". L59 -> val(L65). L53 -> asc(L60, L59). L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L54 -> .(L53, L24). L24 -> .(L15, L19). 
+
+159: resolve ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(cp(L65)), app(eval("fac", L24), -(eval("n", .(asc("n", val(L65)), L24)), val(1))))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L62, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L65 -> 1. L24 -> .(L15, L19). 
+
+160: resolve ~> 
+1. 1. 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(cp(L65)), app(val(cp(L1)), -(eval("n", .(asc("n", val(L65)), L24)), val(1))))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L65 -> 1. L1 -> cl(L62, L14, L24). L24 -> .(L15, L19). 
+
+161: resolve ~> 
+1. 1. .(asc("n", val(L65)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(cp(L65)), app(val(cp(L1)), -(val(cp(L65)), val(1))))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L62, L14, L24). L65 -> 1. L24 -> .(L15, L19). 
+
+162: copy_value ~> 
+1. 1. .(asc("n", val(L65)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), app(val(cp(L1)), -(val(cp(L65)), val(1))))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L65 -> 1. L1 -> cl(L62, L14, L24). L24 -> .(L15, L19). 
+
+163: copy_value ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), app(val(cp(L1)), -(val(1), val(1))))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L62, L14, L24). L24 -> .(L15, L19). 
+
+164: sub ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), app(val(cp(L1)), val(0)))))))). .(asc("n", val(5)), L24). L62 -> "n". L22 -> "fac". L19 -> []. L18 -> val(L1). L15 -> asc(L22, L18). L14 -> if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). L1 -> cl(L62, L14, L24). L24 -> .(L15, L19). 
+
+165: copy_closure ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), app(val(cl("n", cp(L14), L24)), val(0)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+166: beta_reduction ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), eval(cp(L14), .(asc("n", val(0)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, L14, L24)). L15 -> asc(L22, L18). L13 -> *("n", app("fac", -("n", 1))). L6 -> 1. L5 -> <("n", 1). L14 -> if(L5, L6, L13). L24 -> .(L15, L19). 
+
+167: copy_if ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), eval(if(cp(L5), cp(L6), cp(L13)), .(asc("n", val(0)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+168: eval_if ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), cp(L6), cp(L13), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, L6, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L13 -> *(L7, L12). L6 -> 1. L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+169: copy_value ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, cp(L13), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, L13), L24)). L15 -> asc(L22, L18). L12 -> app("fac", -("n", 1)). L7 -> "n". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L13 -> *(L7, L12). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+170: copy_times ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *(cp(L7), cp(L12)), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *(L7, L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L12 -> app(L8, L11). L7 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+171: copy_variable ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", cp(L12)), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", L12)), L24)). L15 -> asc(L22, L18). L11 -> -("n", 1). L8 -> "fac". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L12 -> app(L8, L11). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+172: copy_application ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", app(cp(L8), cp(L11))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", app(L8, L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L11 -> -(L9, L10). L8 -> "fac". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+173: copy_variable ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", app("fac", cp(L11))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", app("fac", L11))), L24)). L15 -> asc(L22, L18). L10 -> 1. L9 -> "n". L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L11 -> -(L9, L10). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+174: copy_minus ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", app("fac", -(cp(L9), cp(L10)))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", app("fac", -(L9, L10)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L10 -> 1. L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+175: copy_value ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", app("fac", -(cp(L9), 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", app("fac", -(L9, 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L9 -> "n". L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+176: copy_variable ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(cp(L5), L63), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(L5, 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L5 -> <(L3, L4). L24 -> .(L15, L19). 
+
+177: copy_less ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(eval(<(cp(L3), cp(L4)), L63), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L63 -> .(L68, L24). L4 -> 1. L3 -> "n". L24 -> .(L15, L19). 
+
+178: eval_less ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(eval(cp(L3), L63), eval(cp(L4), L63)), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<(L3, L4), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L4 -> 1. L3 -> "n". L63 -> .(L68, L24). L24 -> .(L15, L19). 
+
+179: copy_value ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(eval(cp(L3), L63), eval(1, L63)), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L3 -> "n". L63 -> .(L68, L24). L24 -> .(L15, L19). 
+
+180: eval_int ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(eval(cp(L3), L63), val(1)), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<(L3, 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L63 -> .(L68, L24). L3 -> "n". L24 -> .(L15, L19). 
+
+181: copy_variable ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(eval("n", L63), val(1)), 1, *("n", app("fac", -("n", 1))), L63))))))). .(asc("n", val(5)), L24). L74 -> 0. L71 -> "n". L69 -> val(L74). L68 -> asc("n", L69). L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L63 -> .(L68, L24). L24 -> .(L15, L19). 
+
+182: resolve ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(val(cp(L74)), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(L74)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L74 -> 0. L24 -> .(L15, L19). 
+
+183: copy_value ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(<(val(0), val(1)), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(0)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+184: less_true ~> 
+1. 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), if(val(true), 1, *("n", app("fac", -("n", 1))), .(asc("n", val(0)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+185: if_true ~> 
+1. *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), eval(1, .(asc("n", val(0)), L24)))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+186: eval_int ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), *(val(1), val(1))))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+187: mul ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), *(val(2), val(1)))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+188: mul ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), *(val(3), val(2))))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+189: mul ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), *(val(4), val(6)))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+190: mul ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(*(val(5), val(24))). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+191: mul ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(val(120)). .(asc("n", val(5)), L24). L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+192: gc_cons ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 1. .(asc("n", val(3)), L24). 1. .(asc("n", val(4)), L24). result(val(120)). 5. L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+193: gc_cons ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 1. .(asc("n", val(2)), L24). 4. 1. .(asc("n", val(3)), L24). 1. result(val(120)). 5. L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+194: gc_cons ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 1. .(asc("n", val(1)), L24). 3. 1. .(asc("n", val(2)), L24). 4. 1. 1. result(val(120)). 5. L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+195: gc_cons ~> 
+1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 2. 1. .(asc("n", val(1)), L24). 3. 1. 4. 1. 1. result(val(120)). 5. L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+196: gc_cons ~> 
+1. 1. .(asc("n", val(0)), L24). *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. 1. result(val(120)). 5. L71 -> "n". L22 -> "fac". L19 -> []. L18 -> val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24)). L15 -> asc(L22, L18). L24 -> .(L15, L19). 
+
+197: gc_cons ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. 1. result(val(120)). 5. L71 -> "n". L24 -> .(asc("fac", val(cl(L71, if(<("n", 1), 1, *("n", app("fac", -("n", 1)))), L24))), []). 
+
+198: gc_cons_loop ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. 1. result(val(120)). []. 5. if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+199: gc_nil ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. 1. result(val(120)). 5. if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+200: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. 1. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+201: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. 1. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+202: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. 4. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+203: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. 1. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+204: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. 3. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+205: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. 1. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+206: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). 2. result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+207: gc_int ~> 
+0. 1. 1. *("n", app("fac", -("n", 1))). result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+208: gc_int ~> 
+0. 1. *("n", app("fac", -("n", 1))). result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+209: gc_int ~> 
+0. *("n", app("fac", -("n", 1))). result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+210: gc_int ~> 
+*("n", app("fac", -("n", 1))). result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+211: gc_times ~> 
+app("fac", -("n", 1)). "n". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+212: gc_app ~> 
+-("n", 1). "fac". "n". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+213: gc_minus ~> 
+1. "n". "fac". "n". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+214: gc_int ~> 
+"n". "fac". "n". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+215: gc_variable ~> 
+"n". "fac". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+216: gc_variable ~> 
+"n". result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+217: gc_variable ~> 
+result(val(120)). if(<("n", 1), 1, *("n", app("fac", -("n", 1)))). 
+
+218: gc_if ~> 
+result(val(120)). *("n", app("fac", -("n", 1))). 1. <("n", 1). 
+
+219: gc_int ~> 
+result(val(120)). *("n", app("fac", -("n", 1))). <("n", 1). 
+
+220: gc_times ~> 
+result(val(120)). app("fac", -("n", 1)). "n". <("n", 1). 
+
+221: gc_app ~> 
+result(val(120)). -("n", 1). "fac". "n". <("n", 1). 
+
+222: gc_minus ~> 
+result(val(120)). 1. "n". "fac". "n". <("n", 1). 
+
+223: gc_int ~> 
+result(val(120)). "n". "fac". "n". <("n", 1). 
+
+224: gc_less ~> 
+result(val(120)). "n". "fac". "n". 1. "n". 
+
+225: gc_int ~> 
+result(val(120)). "n". "fac". "n". "n". 
+
+226: gc_variable ~> 
+result(val(120)). "n". "fac". "n". 
+
+227: gc_variable ~> 
+result(val(120)). "n". "fac". 
+
+228: gc_variable ~> 
+result(val(120)). "n". 
+
+229: gc_variable ~> 
+result(val(120)). 
+

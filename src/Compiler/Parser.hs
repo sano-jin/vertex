@@ -10,6 +10,7 @@ import           Compiler.Syntax                ( LinkLit(..)
                                                 , DataAtom(..)
                                                 )
 import           Control.Applicative            ( liftA2 )
+import           Control.Monad                  ( ap )
 import           Data.Functor.Identity
 import           Text.ParserCombinators.Parsec
 import           Text.ParserCombinators.Parsec.Language
@@ -28,22 +29,9 @@ languageDef = emptyDef
   , Token.opStart         = oneOf "+-*:=/><@|\\"
   , Token.opLetter        = oneOf "+-*:=/><@|\\"
   , Token.reservedNames   = []
-  , Token.reservedOpNames = [ "+"
-                            , "-"
-                            , "*"
-                            , "/"
-                            , ":"
-                            , ":="
-                            , "="
-                            , "/="
-                            , "<="
-                            , ">="
-                            , "<"
-                            , ">"
-                            , "@@"
-                            , "->"
-                            , "\\"
-                            , "|"
+  , Token.reservedOpNames = [ "+", "-", "*", "/"
+                            , "=", "/=", "<=", ">=", "<", ">"
+                            , ":", ":-", ":=", "@@", "->", "\\", "|"
                             ]
   }
 
@@ -54,43 +42,39 @@ parens, brackets :: Parser a -> Parser a
 parens = Token.parens lexer
 brackets = Token.brackets lexer
 
-dot :: Parser String
-dot = Token.dot lexer
-
 integer :: Parser Integer
 integer = Token.integer lexer
 
-whiteSpace, colon, assign, backslash, dollar, atat, turnstile, arrow, bar :: Parser ()
+whiteSpace :: Parser ()
 whiteSpace = Token.whiteSpace lexer
-colon      = reserved ":"
-assign     = reserved ":="
-backslash  = reserved "\\"
-dollar     = reserved "$"
-atat       = reserved "@@"
-turnstile  = reserved ":-"
-arrow      = reserved "->"
-bar        = reserved "|"
 
+reservedOp :: String -> Parser String
+reservedOp op = op <$ Token.reservedOp lexer op
+
+colon, assign, backslash, dollar, atat, turnstile, arrow, bar, dot :: Parser String
+colon     = reservedOp ":"
+assign    = reservedOp ":="
+backslash = reservedOp "\\"
+dollar    = reservedOp "$"
+atat      = reservedOp "@@"
+turnstile = reservedOp ":-"
+arrow     = reservedOp "->"
+bar       = reservedOp "|"
+dot       = Token.dot lexer
 
 commaSep :: Parser a -> Parser [a]
 commaSep = Token.commaSep lexer
 
-reserved :: String -> Parser ()
-reserved = Token.reservedOp lexer
-
 atomName, linkName, stringLit :: Parser String
 atomName =
   Token.lexeme lexer
-    $   liftA2 (:) lower (many $ alphaNum <|> char '_' <|> char '\'')
+    $   liftA2 (:) lower       (many $ alphaNum <|> char '_' <|> char '\'')
     <|> liftA2 (:) (char '\'') ((++ "\'") <$> manyTill anyChar (char '\''))
 
 linkName =
   Token.lexeme lexer
-    $   liftA2 (:) (upper <|> char '_')
-    $   many
-    $   alphaNum
-    <|> char '_'
-    <|> char '\''
+    $ liftA2 (:) (upper <|> char '_')
+    $ many $ alphaNum <|> char '_' <|> char '\''
 
 stringLit = Token.stringLiteral lexer
 
@@ -123,91 +107,61 @@ parseCreates = do
 parseAtom0, parseAtom4, parseAtom5, parseAtom7, parseAtom10, parseProcessContext, parseData
   :: Parser LinkLit
 parseAtom0 =
-  try
-      (do
-        pCtx  <- parseProcessContext
-        atom4 <- assign >> parseAtom4
-        return $ AtomLit ":=" [pCtx, atom4]
-      )
+  try (liftA2 (binaryAtom ":=") parseProcessContext $ assign >> parseAtom4)
     <|> parseAtom4
 
 parseAtom4 = do
   left <- parseAtom5
-  (do
-      op <-
-        "="
-        <$  reserved "="
-        <|> "/="
-        <$  reserved "/="
-        <|> ">"
-        <$  reserved ">"
-        <|> "<"
-        <$  reserved "<"
-        <|> "<="
-        <$  reserved "<="
-        <|> ">="
-        <$  reserved ">="
-      right <- parseAtom5
-      return $ AtomLit op [left, right]
-    )
+  parseBinaryOps ["=", "/=", ">", "<", "<=", ">="] `ap` return left `ap` parseAtom5
     <|> return left
 
 binaryAtom :: String -> LinkLit -> LinkLit -> LinkLit
 binaryAtom name l r = AtomLit name [l, r]
 
-parseBinaryOp :: String -> Parser (LinkLit -> LinkLit -> LinkLit)
-parseBinaryOp op = binaryAtom op <$ reserved op
+parseBinaryOps :: [String] -> Parser (LinkLit -> LinkLit -> LinkLit)
+parseBinaryOps = choice . map (fmap binaryAtom . reservedOp)
 
-parseAtom5 = chainl1 parseAtom7 $ parseBinaryOp "+" <|> parseBinaryOp "-"
-
-parseAtom7 = chainl1 parseAtom10 $ parseBinaryOp "*" <|> parseBinaryOp "/"
+parseAtom5 = chainl1 parseAtom7  $ parseBinaryOps ["+", "-"]
+parseAtom7 = chainl1 parseAtom10 $ parseBinaryOps ["*", "/"]
 
 parseAtom10 =
   liftA2 AtomLit atomName (parens (commaSep parseAtom0) <|> return [])
     <|> parseProcessContext
     <|> parseData
-    <|> LinkLit
-    <$> linkName
+    <|> LinkLit <$> linkName
     <|> parens parseAtom0
     <|> parseListAbbreviation
 
-parseProcessContext = liftA2 ProcessContextLit (dollar >> atomName)
+parseProcessContext =
+  liftA2 ProcessContextLit (dollar >> atomName)
   $ optionMaybe $ colon >> parseType
 
 parseType :: Parser Type
-parseType =
-  TypeInt
-    <$  reserved "int"
-    <|> TypeString
-    <$  reserved "string"
-    <|> TypeUnary
-    <$  reserved "unary"
+parseType = TypeInt    <$  reservedOp "int"
+        <|> TypeString <$  reservedOp "string"
+        <|> TypeUnary  <$  reservedOp "unary"
 
 parseData = DataLit <$> (IntAtom <$> integer <|> StringAtom <$> stringLit)
 
 parseProc =
-  try (parens parseLine)
-  <|> try (do
-              from <- linkName
-              to   <- arrow >> parseAtom0
-              return [AliasLit (Just from) to]
+  parens parseLine
+    <|> try
+          (do
+            from <- linkName
+            to   <- arrow >> parseAtom0
+            return [AliasLit (Just from) to]
           )
-  <|> (do
-          link <- parseAtom0
-          case link of
-            LinkLit linkNameStr ->
-              unexpected $ "link \"" ++ linkNameStr ++ "\""
-            _ -> return [AliasLit Nothing link]
-        )
+    <|> (checkNotLink =<< parseAtom0)
+ where
+  checkNotLink (LinkLit linkNameStr) =
+    unexpected $ "link \"" ++ linkNameStr ++ "\""
+  checkNotLink link = return [AliasLit Nothing link]
 
 parseListAbbreviation :: Parser LinkLit
-parseListAbbreviation =
-  brackets $ do
+parseListAbbreviation = brackets $ do
   leftElems <- commaSep parseAtom0
-  (do rightElem <- bar >> parseAtom0
-      return $ foldr (binaryAtom ".") rightElem leftElems
-    ) <|> return (foldr (binaryAtom ".") (AtomLit "[]" []) leftElems)
-
+  flip (foldr $ binaryAtom ".") leftElems
+    <$> ((bar >> parseAtom0) <|> return (AtomLit "[]" []))
 
 readExpr :: String -> Either ParseError [ProcLit]
 readExpr = parse whileParser "vertex"

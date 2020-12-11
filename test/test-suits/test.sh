@@ -37,7 +37,7 @@ testDIR() {
 	    echo "which is expected to be"
 	    echo "${expected}" | indentStdin
 
-	    break
+	    # break
 	fi
     done
 }
