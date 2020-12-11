@@ -1,7 +1,7 @@
 % Multiply all numbers in the root membrane
 % nondeterministically.
-% Numbers are unary atoms whose links are
-% connected to the atom 'n'.
+% Numbers are nullary atoms whose incomming links are
+% fromt to the atom 'n'.
 %
 % Copied from the LMNtal's LaViT/demo/
 

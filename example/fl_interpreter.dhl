@@ -64,7 +64,8 @@ result(eval(
 let_rec @@
 R -> eval(let_rec($var:string, V, E1, E2), Env)
 :- \Env'.(
-   R -> eval(E2, Env'), Env' -> [asc($var, val(cl(V, E1, Env')))|Env]
+   R -> eval(E2, Env'),
+   Env' -> [asc($var, val(cl(V, E1, Env')))|Env]
 ).
 
 
