@@ -51,7 +51,8 @@ result(eval(
 
 % /*
 result(eval(
-	let_rec(["fac", "n"],
+	let_rec("fac",
+		"n",
 		if("n" < 1, 1, "n" * app("fac", "n" - 1)),
 		app("fac", 5)
 	),
@@ -61,22 +62,24 @@ result(eval(
 
 
 let_rec @@
-R -> eval(let_rec([V|Vs], E1, E2), Env)
+R -> eval(let_rec($var:string, V, E1, E2), Env)
 :- \Env'.(
    R -> eval(E2, Env'),
-   Env' -> [asc(V, eval(fun(Vs, E1), Env'))|Env]
+   Env' -> [asc($var, val(cl(V, E1, Env')))|Env]
 ).
+
 
 eval_if @@
 R -> eval(if(E1, E2, E3), Env)
 :- R -> if(eval(E1, Env), E2, E3, Env).
 
 
+
 let_abbreviation @@
 R -> let([X|Xs], E1, E2)
 :- R -> app(lam(X, E2), fun(Xs, E1)).
 
-curry @@
+function_abbreviation @@
 R -> fun([X|Xs], Body)
 :- R -> lam(X, fun(Xs, Body)).
 
