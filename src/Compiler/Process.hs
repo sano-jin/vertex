@@ -13,6 +13,8 @@ module Compiler.Process
   , showRules
   , showSet
   , showRulesForDebugging
+  , incrAddr
+  , fromInt
   ) where
 import           Data.List
 import qualified Data.Set                      as S
@@ -20,7 +22,17 @@ import           Compiler.Syntax                ( Type(..)
                                                 , DataAtom(..)
                                                 )
 
-type Addr = Int
+newtype Addr = Addr Int
+             deriving(Eq, Ord)
+instance Show Addr where
+  show (Addr addr) = "L" ++ show addr
+
+incrAddr :: Addr -> Addr
+incrAddr (Addr addr) = Addr $ addr + 1
+
+fromInt :: Int -> Addr
+fromInt = Addr
+
 type Indeg = Int
 type AtomName = String
 -- ^ These types should be replaced with the "newtype"
@@ -59,14 +71,14 @@ showProcVals = intercalate ", " . map show
 
 showProcVal :: ProcVal -> String
 showProcVal (LocalAliasVal indeg addr linkVal) =
-  let incommingLink = if indeg > 0 then "L" ++ show addr ++ " -> " else ""
+  let incommingLink = if indeg > 0 then show addr ++ " -> " else ""
   in  incommingLink ++ show linkVal
 showProcVal (FreeAliasVal linkName linkVal) =
   linkName ++ " -> " ++ show linkVal
 
 showLinkVal :: LinkVal -> String
 showLinkVal (FreeLinkVal  linkName ) = linkName
-showLinkVal (LocalLinkVal addr     ) = "L" ++ show addr
+showLinkVal (LocalLinkVal addr     ) = show addr
 showLinkVal (AtomVal atomName links) = if null links
   then atomName
   else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
@@ -78,7 +90,7 @@ showLinkVal (ProcessContextVal name maybeType) =
 -- | Show indegree if the indegree is bigger than 0.
 showProcValForDebugging :: ProcVal -> String
 showProcValForDebugging (LocalAliasVal indeg addr linkVal) = if indeg > 0
-  then "L" ++ show addr ++ " -> (" ++ show indeg ++ ", " ++ show linkVal ++ ")"
+  then show addr ++ " -> (" ++ show indeg ++ ", " ++ show linkVal ++ ")"
   else show linkVal
 showProcValForDebugging procVal = showProcVal procVal
 
@@ -143,8 +155,6 @@ showRulesForDebugging indentLevel = intercalate "\n"
 showSubRulesForDebugging :: [Rule] -> String
 showSubRulesForDebugging =
   intercalate ", " . map (paren . showRuleForDebugging)
-
-
 
 type Procs = ([ProcVal], [Rule])
 -- ^ Processes are specified with atoms and rules

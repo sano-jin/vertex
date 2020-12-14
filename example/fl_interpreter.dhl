@@ -49,11 +49,22 @@ result(eval(
 */
 
 
-% /*
+/*
 result(eval(
 	let_rec(["fac", "n"],
 		if("n" < 1, 1, "n" * app("fac", "n" - 1)),
 		app("fac", 5)
+	),
+	[]
+)).
+*/
+
+
+% /*
+result(eval(
+	let_rec(["fib", "x", "y", "n"],
+		if("n" < 1, "y", app(app(app("fib", "y"), "x" + "y"), "n" - 1)),
+		app(app(app("fib", 0), 1), 6)
 	),
 	[]
 )).

@@ -57,6 +57,8 @@ newtype HAddr = HAddr Int
 instance Show HAddr where
   show (HAddr addr) = show addr
 
+hAddr2Addr :: HAddr -> Addr
+hAddr2Addr = fromInt . hAddr2Int
 
 hAddr2Int :: HAddr -> Int
 hAddr2Int (HAddr addr) = addr
@@ -79,13 +81,14 @@ instance Show Heap where
   show = showHeap
 
 heapNode2ProcVal :: HAddr -> (Indeg, Node) -> ProcVal
-heapNode2ProcVal (HAddr addr) (indeg, NAtom atomName links) =
-  LocalAliasVal indeg addr $ AtomVal atomName
-  $ map (LocalLinkVal . hAddr2Int) links
-heapNode2ProcVal (HAddr addr) (indeg, NInd link) =
-  LocalAliasVal indeg addr $ LocalLinkVal $ hAddr2Int link
-heapNode2ProcVal (HAddr addr) (indeg, NData dataAtom) =
-  LocalAliasVal indeg addr $ DataVal dataAtom
+heapNode2ProcVal hAddr (indeg, NAtom atomName links) =
+  LocalAliasVal indeg (hAddr2Addr hAddr) $ AtomVal atomName
+  $ map (LocalLinkVal . hAddr2Addr) links
+heapNode2ProcVal hAddr (indeg, NInd link) =
+  LocalAliasVal indeg (hAddr2Addr hAddr) $ LocalLinkVal $ hAddr2Addr link
+heapNode2ProcVal hAddr (indeg, NData dataAtom) =
+  LocalAliasVal indeg (hAddr2Addr hAddr)  $ DataVal dataAtom
+
 
 heap2ProcVals :: Heap -> [ProcVal]
 heap2ProcVals (Heap _ mapHAddr2IndegNode) =

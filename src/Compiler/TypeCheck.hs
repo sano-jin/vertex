@@ -102,16 +102,16 @@ checkInjectivityProcVals = foldM (applyToLinkVal . checkInjectivityLinkVal) tEmp
 
 -- | Check the boundness and the op on the guard of the rule
 isPolymorphicOp :: String -> Bool
-isPolymorphicOp op = S.member op $ S.fromList ["=", "/="]
+isPolymorphicOp op = S.member op $ S.fromList ["'='", "'/='"]
 
 -- | Check the boundness and the op on the guard of the rule
 isIntArithOp :: String -> Bool
 isIntArithOp op =
-  S.member op $ S.fromList ["+", "-", "*", "/"]
+  S.member op $ S.fromList ["'+'", "'-'", "'*'", "'/'"]
 
 isIntRelOp :: String -> Bool
 isIntRelOp op =
-  S.member op $ S.fromList ["<=", ">=", "<", ">"]
+  S.member op $ S.fromList ["'<='", "'>='", "'<'", "'>'"]
 
 
 -- | Extract the name of the process context.
@@ -200,7 +200,7 @@ checkBinaryOp linkVal tyEnv left right inferedType = do
 -- | Check on the guard.
 checkOpProcVal :: TyEnv -> ProcVal -> ThrowsCompileError TyEnv
 checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
-  = if atomName == ":="
+  = if atomName == "':='"
     then do
       leftPCtxName <- extractPCtxName l
       if tMember leftPCtxName tyEnv

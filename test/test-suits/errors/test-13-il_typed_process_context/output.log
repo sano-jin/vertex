@@ -1,1 +1,1 @@
-Error : Unexpected type constraint =($p, 1)
+Error : Unexpected type constraint '='($p, 1)

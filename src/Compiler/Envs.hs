@@ -36,7 +36,7 @@ data Envs = Envs
                    -- ^ A set of free tail link names
   , freeHeadEnv       :: EnvSet
                    -- ^ A set of free head link names
-  , addrSeed          :: Int
+  , addrSeed          :: Addr
                    -- ^ the number of the local links appeared in the process
   }
   deriving Show
@@ -68,13 +68,13 @@ nullEnvs = Envs { localEnv          = []
                 , localMapAddrIndeg = M.empty
                 , freeTailEnv       = S.empty
                 , freeHeadEnv       = S.empty
-                , addrSeed          = 0
+                , addrSeed          = fromInt 0
                 }
 
 -- | Increse the seed for the local addresses by 1.
 --   This should be hided and done implicitly when creating a new local link.
 incrAddrSeed :: Envs -> Envs
-incrAddrSeed envs = envs { addrSeed =  addrSeed envs + 1 }
+incrAddrSeed envs = envs { addrSeed = incrAddr $ addrSeed envs }
 
 incrLocalIndeg :: Addr -> Envs -> Envs
 incrLocalIndeg addr = updateLocalMapAddrIndeg (M.adjust (+ 1) addr)

@@ -1,12 +1,12 @@
 0: 
-append(.(a, .(b, [])), .(c, [])). 
+append('.'(a, '.'(b, [])), '.'(c, [])). 
 
-1: R -> append(.(H, T), L) :- R -> .(H, append(T, L)) ~> 
-.(a, append(.(b, []), .(c, []))). 
+1: R -> append('.'(H, T), L) :- R -> '.'(H, append(T, L)) ~> 
+'.'(a, append('.'(b, []), '.'(c, []))). 
 
-2: R -> append(.(H, T), L) :- R -> .(H, append(T, L)) ~> 
-.(a, .(b, append([], .(c, [])))). 
+2: R -> append('.'(H, T), L) :- R -> '.'(H, append(T, L)) ~> 
+'.'(a, '.'(b, append([], '.'(c, [])))). 
 
 3: R -> append([], L) :- R -> L ~> 
-.(a, .(b, .(c, []))). 
+'.'(a, '.'(b, '.'(c, []))). 
 

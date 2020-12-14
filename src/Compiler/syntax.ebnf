@@ -6,16 +6,16 @@ line =
     | list
 
 list =
-    | {process ","} process
+    | {creation ","}* creation
     | Null
 
 creation =
-    | {"\" {linkName " "} + "." } process    
+    | {"\" {LinkName " "}* + "." }* process    
 
 process =
-    | atom0             (* starting from AtomName *)
-      			(* the weakest operator precedence *)
-    | indirection       (* starting from PointerName *)
+    | atom0             (* mostly starting from AtomName 
+      			   but may start with the LinkName *)
+    | indirection       (* starting from LinkName *)
     | "(" line ")"      (* starting from opening parentheses *)
 
 atom0 = processContext ":=" atom4 | atom4
@@ -29,10 +29,10 @@ atom4 =
     | atom5 
 
 atom5 = 
-    | {atom7 "+"} atom7
+    | {atom7 "+"}* atom7
 
 atom7 = 
-    | {atom10 "*"} atom10
+    | {atom10 "*"}* atom10
 
 atom10 =
     | AtomName "(" ")"
@@ -51,7 +51,7 @@ type =
     | "unary"
 
 linkList =
-    | {pointing_to ","} pointing_to
+    | {pointing_to ","}* pointing_to
     | Null
 
 pointing_to = 
@@ -62,7 +62,7 @@ indirection =
     | LinkName "->" pointing_to    
 
 listAbbreviation =
-    | "[" { atom0 ","} atom0 [ "|" atom0 ] "]"
+    | "[" { atom0 ","}* atom0 [ "|" atom0 ] "]"
 
 
 (* "." < ":-" < ","  *)

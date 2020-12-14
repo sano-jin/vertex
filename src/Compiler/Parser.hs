@@ -69,7 +69,7 @@ atomName, linkName, stringLit :: Parser String
 atomName =
   Token.lexeme lexer
     $   liftA2 (:) lower       (many $ alphaNum <|> char '_' <|> char '\'')
-    <|> liftA2 (:) (char '\'') ((++ "\'") <$> manyTill anyChar (char '\''))
+    <|> liftA2 (:) (char '\'') ((++ "'") <$> manyTill anyChar (char '\''))
 
 linkName =
   Token.lexeme lexer
@@ -116,7 +116,7 @@ parseAtom4 = do
     <|> return left
 
 binaryAtom :: String -> LinkLit -> LinkLit -> LinkLit
-binaryAtom name l r = AtomLit name [l, r]
+binaryAtom name l r = AtomLit ("'" ++ name ++ "'") [l, r]
 
 parseBinaryOps :: [String] -> Parser (LinkLit -> LinkLit -> LinkLit)
 parseBinaryOps = choice . map (fmap binaryAtom . reservedOp)
