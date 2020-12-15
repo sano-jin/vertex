@@ -7,7 +7,7 @@ module Compiler.Parser
 import           Compiler.Syntax                ( LinkLit(..)
                                                 , ProcLit(..)
                                                 , Type(..)
-                                                , DataAtom(..)
+                                                , AtomName(..)
                                                 )
 import           Control.Applicative            ( liftA2 )
 import           Control.Monad                  ( ap )
@@ -65,8 +65,8 @@ dot       = Token.dot lexer
 commaSep :: Parser a -> Parser [a]
 commaSep = Token.commaSep lexer
 
-atomName, linkName, stringLit :: Parser String
-atomName =
+symbolAtomName, linkName, stringLit :: Parser String
+symbolAtomName =
   Token.lexeme lexer
     $   liftA2 (:) lower       (many $ alphaNum <|> char '_' <|> char '\'')
     <|> liftA2 (:) (char '\'') ((++ "'") <$> manyTill anyChar (char '\''))
@@ -86,7 +86,7 @@ whileParser = (whiteSpace >> parseBlock) <* eof
 parseBlock = concat <$> sepEndBy1 parseLine dot
 
 parseLine = do
-  maybeRuleName <- optionMaybe $ try $ atomName <* atat
+  maybeRuleName <- optionMaybe $ try $ symbolAtomName <* atat
   x             <- parseList
   (do
       y <- turnstile >> parseList
@@ -116,7 +116,7 @@ parseAtom4 = do
     <|> return left
 
 binaryAtom :: String -> LinkLit -> LinkLit -> LinkLit
-binaryAtom name l r = AtomLit ("'" ++ name ++ "'") [l, r]
+binaryAtom name l r = AtomLit (Symbol $ "'" ++ name ++ "'") [l, r]
 
 parseBinaryOps :: [String] -> Parser (LinkLit -> LinkLit -> LinkLit)
 parseBinaryOps = choice . map (fmap binaryAtom . reservedOp)
@@ -125,23 +125,26 @@ parseAtom5 = chainl1 parseAtom7  $ parseBinaryOps ["+", "-"]
 parseAtom7 = chainl1 parseAtom10 $ parseBinaryOps ["*", "/"]
 
 parseAtom10 =
-  liftA2 AtomLit atomName (parens (commaSep parseAtom0) <|> return [])
+  liftA2 AtomLit
+  (Symbol <$> symbolAtomName) (parens (commaSep parseAtom0) <|> return [])
     <|> parseProcessContext
     <|> parseData
     <|> LinkLit <$> linkName
     <|> parens parseAtom0
     <|> parseListAbbreviation
 
-parseProcessContext =
-  liftA2 ProcessContextLit (dollar >> atomName)
-  $ optionMaybe $ colon >> parseType
+parseProcessContext = do
+  pCtxName  <- dollar >> symbolAtomName
+  args      <- brackets (commaSep parseAtom0) <|> return []
+  maybeType <- optionMaybe $ colon >> parseType
+  return $ AtomLit (ProcessContext pCtxName maybeType) args
 
 parseType :: Parser Type
 parseType = TypeInt    <$  reservedOp "int"
         <|> TypeString <$  reservedOp "string"
         <|> TypeUnary  <$  reservedOp "unary"
 
-parseData = DataLit <$> (IntAtom <$> integer <|> StringAtom <$> stringLit)
+parseData = flip AtomLit [] <$> (Int <$> integer <|> String <$> stringLit)
 
 parseProc =
   parens parseLine
@@ -161,7 +164,7 @@ parseListAbbreviation :: Parser LinkLit
 parseListAbbreviation = brackets $ do
   leftElems <- commaSep parseAtom0
   flip (foldr $ binaryAtom ".") leftElems
-    <$> ((bar >> parseAtom0) <|> return (AtomLit "[]" []))
+    <$> ((bar >> parseAtom0) <|> return (AtomLit (Symbol "[]") []))
 
 readExpr :: String -> Either ParseError [ProcLit]
 readExpr = parse whileParser "vertex"

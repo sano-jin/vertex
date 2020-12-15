@@ -18,9 +18,7 @@ module Compiler.Process
   ) where
 import           Data.List
 import qualified Data.Set                      as S
-import           Compiler.Syntax                ( Type(..)
-                                                , DataAtom(..)
-                                                )
+import           Compiler.Syntax                ( AtomName(..) )
 
 newtype Addr = Addr Int
              deriving(Eq, Ord)
@@ -34,7 +32,7 @@ fromInt :: Int -> Addr
 fromInt = Addr
 
 type Indeg = Int
-type AtomName = String
+-- type AtomName = String
 -- ^ These types should be replaced with the "newtype"
 --   to avoid confusion (mixing use).
 
@@ -44,10 +42,6 @@ data LinkVal = FreeLinkVal String
                -- ^ X
              | AtomVal AtomName [LinkVal]
                -- ^ p(X1,...,Xm)
-             | DataVal DataAtom
-               -- ^ 1, "str", ...
-             | ProcessContextVal String (Maybe Type)
-               -- ^ $p : <type constraint>
              deriving(Eq, Ord)
 
 instance Show LinkVal where
@@ -55,7 +49,7 @@ instance Show LinkVal where
 
 data ProcVal = LocalAliasVal Indeg Addr LinkVal
                -- ^ \X. ... X -> p(X1,...,Xm)
-             | FreeAliasVal AtomName LinkVal
+             | FreeAliasVal String LinkVal
                -- ^ X -> p(X1,...,Xm)
              deriving(Eq)
 
@@ -79,12 +73,11 @@ showProcVal (FreeAliasVal linkName linkVal) =
 showLinkVal :: LinkVal -> String
 showLinkVal (FreeLinkVal  linkName ) = linkName
 showLinkVal (LocalLinkVal addr     ) = show addr
-showLinkVal (AtomVal atomName links) = if null links
-  then atomName
-  else atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
-showLinkVal (DataVal dataAtom) = show dataAtom
-showLinkVal (ProcessContextVal name maybeType) =
+showLinkVal (AtomVal (ProcessContext name maybeType) _) =
   "$" ++ name ++ maybe "" ((":" ++) . show) maybeType
+showLinkVal (AtomVal atomName links) = if null links
+  then show atomName
+  else show atomName ++ "(" ++ intercalate ", " (map show links) ++ ")"
 
 
 -- | Show indegree if the indegree is bigger than 0.

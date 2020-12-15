@@ -13,6 +13,7 @@ commentary with @some markup@.
 
 module VM.Heap
   ( Node(..)
+  , HAtomName(..)
   , Heap
   , AtomList
   , HAddr
@@ -30,9 +31,11 @@ module VM.Heap
   , heap2ProcVals
   , heap2DGraph
   , hSize
+  , hAtomName2AtomName
+  , atomName2HAtomName
   ) where
 import           Compiler.Process
-import           Compiler.Syntax               (DataAtom)
+import           Compiler.Syntax               ( AtomName(..) )
 import           Data.List
 import qualified Data.Map.Strict               as M
 import           Data.Tuple.Extra
@@ -40,15 +43,15 @@ import           Vis.DGraph                     ( DGraph
                                                 , map2DGraph
                                                 )
 
+
 heap2DGraph :: Floating s => Heap -> DGraph String s
 heap2DGraph (Heap _ mapHAddr2IndegNode) =
   map2DGraph
   $ M.map (translateNode . snd)
   $ M.mapKeys hAddr2Int mapHAddr2IndegNode
  where
-  translateNode (NAtom atomName links) = (atomName     , map hAddr2Int links)
+  translateNode (NAtom atomName links) = (show atomName     , map hAddr2Int links)
   translateNode (NInd  link          ) = ("->"         , [hAddr2Int link]   )
-  translateNode (NData dataAtom      ) = (show dataAtom, []                 )
 
 
 newtype HAddr = HAddr Int
@@ -63,13 +66,32 @@ hAddr2Addr = fromInt . hAddr2Int
 hAddr2Int :: HAddr -> Int
 hAddr2Int (HAddr addr) = addr
 
-data Node = NAtom AtomName [HAddr]
+data Node = NAtom HAtomName [HAddr]
             -- ^ NAtom SymbolAtomName [Link]
+            -- ^ Data (int, string)
           | NInd HAddr
             -- ^ Indirect to Addr
-          | NData DataAtom
-            -- ^ Data (int, string)
           deriving(Eq, Show)
+
+data HAtomName = HInt Integer
+               | HString String
+               | HSymbol String
+              deriving (Eq, Ord)
+
+instance Show HAtomName where
+  show (HInt    i   ) = show i
+  show (HString str ) = show str
+  show (HSymbol name) = name
+
+hAtomName2AtomName :: HAtomName -> AtomName
+hAtomName2AtomName (HInt    i   ) = Int i
+hAtomName2AtomName (HString str ) = String str
+hAtomName2AtomName (HSymbol name) = Symbol name
+
+atomName2HAtomName :: AtomName -> HAtomName
+atomName2HAtomName (Int    i   ) = HInt i
+atomName2HAtomName (String str ) = HString str
+atomName2HAtomName (Symbol name) = HSymbol name
 
 type IndegNode = (Indeg, Node)
 data Heap = Heap [HAddr] (M.Map HAddr IndegNode)
@@ -81,13 +103,12 @@ instance Show Heap where
   show = showHeap
 
 heapNode2ProcVal :: HAddr -> (Indeg, Node) -> ProcVal
-heapNode2ProcVal hAddr (indeg, NAtom atomName links) =
-  LocalAliasVal indeg (hAddr2Addr hAddr) $ AtomVal atomName
+heapNode2ProcVal hAddr (indeg, NAtom hAtomName links) =
+  LocalAliasVal indeg (hAddr2Addr hAddr)
+  $ AtomVal (hAtomName2AtomName hAtomName)
   $ map (LocalLinkVal . hAddr2Addr) links
 heapNode2ProcVal hAddr (indeg, NInd link) =
   LocalAliasVal indeg (hAddr2Addr hAddr) $ LocalLinkVal $ hAddr2Addr link
-heapNode2ProcVal hAddr (indeg, NData dataAtom) =
-  LocalAliasVal indeg (hAddr2Addr hAddr)  $ DataVal dataAtom
 
 
 heap2ProcVals :: Heap -> [ProcVal]
@@ -107,9 +128,8 @@ showLinkedHeapNode oldHeap hAddr = case hSafeLookup hAddr oldHeap of
           mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
         stringArgs =
           if null args then "" else "(" ++ intercalate ", " args ++ ")"
-    in  (newHeap, atomName ++ stringArgs)
+    in  (newHeap, show atomName ++ stringArgs)
   Just (1, NInd link) -> showLinkedHeapNode (hDelete hAddr oldHeap) link
-  Just (1, NData dataAtom) -> (hDelete hAddr oldHeap, show dataAtom)
   Just _              -> (oldHeap, "L" ++ show hAddr)
 
 showHeapNode :: HAddr -> Heap -> IndegNode -> (Heap, String)
@@ -120,10 +140,7 @@ showHeapNode hAddr oldHeap (indeg, NAtom atomName links) =
       mapAccumL showLinkedHeapNode (hDelete hAddr oldHeap) links
     stringArgs = if null args then "" else "(" ++ intercalate ", " args ++ ")"
   in
-    (newHeap, incommingLink ++ atomName ++ stringArgs)
-showHeapNode hAddr oldHeap (indeg, NData dataAtom) =
-  let incommingLink = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
-  in  (hDelete hAddr oldHeap, incommingLink ++ show dataAtom)
+    (newHeap, incommingLink ++ show atomName ++ stringArgs)
 showHeapNode hAddr oldHeap (indeg, _) =
   let incommingLink  = if indeg > 0 then "L" ++ show hAddr ++ " -> " else ""
       (newHeap, str) = showLinkedHeapNode oldHeap hAddr
@@ -253,7 +270,6 @@ normalizeNode fromHAddr toHAddr (NAtom atomName links) = NAtom atomName
   where substitute = substituteHAddr fromHAddr toHAddr
 normalizeNode fromHAddr toHAddr (NInd hAddr) =
   NInd $ substituteHAddr fromHAddr toHAddr hAddr
-normalizeNode _ _ nInt = nInt
 
 -- | Substitute addresses of the nodes to the given address
 normalizeAddrNode

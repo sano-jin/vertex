@@ -20,7 +20,7 @@ module Compiler.TypeCheck
   ) where
 import           Compiler.Process
 import           Compiler.Syntax                ( Type(..)
-                                                , DataAtom(..)
+                                                , AtomName(..)
                                                 )
 import           Control.Monad.Except    hiding ( guard )
 import qualified Data.Set                      as S
@@ -86,7 +86,7 @@ applyToLinkVal f (FreeAliasVal  _   linkVal) = f linkVal
 
 -- | Check the injectivity and collect process contexts on the LHS of the rule. 
 checkInjectivityLinkVal :: TyEnv -> LinkVal -> ThrowsCompileError TyEnv
-checkInjectivityLinkVal tyEnv linkVal@(ProcessContextVal name maybeType) =
+checkInjectivityLinkVal tyEnv linkVal@(AtomVal (ProcessContext name maybeType) _) =
   if tMember name tyEnv
     then throwError $ NotInjectiveProcessContext linkVal
     else return . uncurry (tInsert name) $ maybeType2Ty tyEnv maybeType
@@ -118,8 +118,8 @@ isIntRelOp op =
 --   Only used to gain the name of the left hand-side process context'name
 --   of the assignment ":=".
 extractPCtxName :: LinkVal -> ThrowsCompileError String
-extractPCtxName (ProcessContextVal name Nothing) = return name
-extractPCtxName linkVal@(ProcessContextVal _ (Just _)) =
+extractPCtxName (AtomVal (ProcessContext name Nothing) _) = return name
+extractPCtxName linkVal@(AtomVal (ProcessContext _ (Just _)) _) =
   throwError $ UnexpectedTypeConstraint linkVal
   -- ^ Type constraint on the left hand side of the assignment
 extractPCtxName linkVal =
@@ -128,20 +128,20 @@ extractPCtxName linkVal =
 -- | Check at the guard
 checkOpLinkVal
   :: TyEnv -> LinkVal -> ThrowsCompileError (TyEnv, Ty)
-checkOpLinkVal tyEnv pCtx@(ProcessContextVal name maybeType) =
+checkOpLinkVal tyEnv pCtx@(AtomVal (ProcessContext name maybeType) _) =
   case tLookup name tyEnv of
     Just ty -> do
       (newTyEnv, unifiedType) <-
         uncurry (unifyType pCtx) (swap $ maybeType2Ty tyEnv maybeType) ty
       return (tInsert name unifiedType newTyEnv, unifiedType)
     Nothing -> throwError $ UnboundProcessContext pCtx
-checkOpLinkVal tyEnv atomVal@(AtomVal atomName [l, r]) =
+checkOpLinkVal tyEnv atomVal@(AtomVal (Symbol atomName) [l, r]) =
   checkBinaryOp atomVal tyEnv l r
   =<< if isIntArithOp atomName
       then return TyInt
       else throwError $ UnexpectedOpOnGuard atomVal
-checkOpLinkVal tyEnv (DataVal (IntAtom _)) = return (tyEnv, TyInt)
-checkOpLinkVal tyEnv (DataVal (StringAtom _)) =
+checkOpLinkVal tyEnv (AtomVal (Int _) _) = return (tyEnv, TyInt)
+checkOpLinkVal tyEnv (AtomVal (String _) _) =
   return (tyEnv, TyString)
 checkOpLinkVal _ linkVal = throwError $ UnexpectedOpOnGuard linkVal
 
@@ -199,7 +199,7 @@ checkBinaryOp linkVal tyEnv left right inferedType = do
 
 -- | Check on the guard.
 checkOpProcVal :: TyEnv -> ProcVal -> ThrowsCompileError TyEnv
-checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
+checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal (Symbol atomName) [l, r]))
   = if atomName == "':='"
     then do
       leftPCtxName <- extractPCtxName l
@@ -217,7 +217,7 @@ checkOpProcVal tyEnv (LocalAliasVal 0 _ linkVal@(AtomVal atomName [l, r]))
             else throwError $ UnexpectedOpOnGuard linkVal
          fst <$> checkBinaryOp linkVal newTyEnv l r inferedTy
         
-checkOpProcVal tyEnv (LocalAliasVal 0 _ pCtx@(ProcessContextVal name maybeType@(Just _)))
+checkOpProcVal tyEnv (LocalAliasVal 0 _ pCtx@(AtomVal (ProcessContext name maybeType@(Just _)) _))
   = case tLookup name tyEnv of
     Just ty -> do
       (newTyEnv, unifiedType) <-
@@ -237,16 +237,16 @@ checkOpProcVals = flip $ foldM checkOpProcVal
 
 
 isProcessContext :: ProcVal -> Bool
-isProcessContext (LocalAliasVal _ _ (ProcessContextVal _ _)) = True
+isProcessContext (LocalAliasVal _ _ (AtomVal (ProcessContext _ _) _)) = True
 isProcessContext _ = False
 
 
 -- | Check the free occurence and the type constraints on the RHS of the rule.
 --   Currently the typing on the RHS of the rule is not supported.
 collectTypesLinkVal :: TyEnv -> LinkVal -> ThrowsCompileError TyEnv
-collectTypesLinkVal _ pCtx@(ProcessContextVal _ (Just _)) =
+collectTypesLinkVal _ pCtx@(AtomVal (ProcessContext _ (Just _)) _) =
   throwError $ UnexpectedTypeConstraint pCtx
-collectTypesLinkVal tyEnv pCtx@(ProcessContextVal name Nothing) =
+collectTypesLinkVal tyEnv pCtx@(AtomVal (ProcessContext name Nothing) _) =
   if tMember name tyEnv
     then return tyEnv
     else throwError $ UnboundProcessContext pCtx
@@ -272,7 +272,7 @@ checkMultipleUtypedProcessContexts tyEnv =
         else return tyEnv
  where
   maybeProcessContextVal (name, TyVar _)
-    = Just $ ProcessContextVal name Nothing
+    = Just $ AtomVal (ProcessContext name Nothing) []
   maybeProcessContextVal _ = Nothing
 
 -- | Convert "Ty" to the "Maybe Type"
@@ -285,8 +285,8 @@ ty2MaybeType (TyVar _)   = Nothing
 -- | Set the type of the process contexts to the infered type
 --   based on the given type environment.  
 setInferedTypeLinkVal :: TyEnv -> LinkVal -> LinkVal
-setInferedTypeLinkVal tyEnv (ProcessContextVal name _)
-  = ProcessContextVal name $ ty2MaybeType $ tUnsafeLookup name tyEnv 
+setInferedTypeLinkVal tyEnv (AtomVal (ProcessContext name _) links)
+  = AtomVal (ProcessContext name $ ty2MaybeType $ tUnsafeLookup name tyEnv) links
 setInferedTypeLinkVal tyEnv (AtomVal atomName links)
   = AtomVal atomName $ map (setInferedTypeLinkVal tyEnv) links
 setInferedTypeLinkVal _ linkOrData = linkOrData

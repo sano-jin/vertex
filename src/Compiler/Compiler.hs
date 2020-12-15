@@ -142,9 +142,6 @@ compilePointingToLit envs (LinkLit linkName) =
     Just (addr, _) -> (incrLocalIndeg addr envs, LocalLinkVal addr)
 compilePointingToLit envs (AtomLit atomName links) =
   second (AtomVal atomName) $ mapAccumL compilePointingToLit envs links
-compilePointingToLit envs (DataLit dataAtom) = (envs, DataVal dataAtom)  
-compilePointingToLit envs (ProcessContextLit name maybeType)
-  = (envs, ProcessContextVal name maybeType)  
 
 -- | Check if the incoming link is the local link or not.
 --   Also, check the "functional condition",

@@ -11,3 +11,4 @@ monadicMapAccumL f a (b : bs) = do
   return (a'', c : cs)
 monadicMapAccumL _ a [] = return (a, [])
 
+

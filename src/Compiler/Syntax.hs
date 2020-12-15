@@ -18,7 +18,7 @@ module Compiler.Syntax
   , LinkLit(..)
   , ProcLit(..)
   , Type(..)
-  , DataAtom(..)
+  , AtomName(..)
   ) where
 import           Data.List                      ( intercalate )
 
@@ -26,23 +26,26 @@ import           Data.List                      ( intercalate )
 --   or an embedded atom if the indegree of the pointing atom is 1.
 data LinkLit = LinkLit String
                -- ^ X
-             | AtomLit String [LinkLit]
+             | AtomLit AtomName [LinkLit]
                -- ^ p(X1,...,Xm)
-             | DataLit DataAtom
-               -- ^ 1, "str", ...
-             | ProcessContextLit String (Maybe Type)
-               -- ^ $p : <type constraint>
+               -- , 1
+               -- , "str", ...
+               -- , $p : <type constraint>               
 
 instance Show LinkLit where
   show = showLink
 
-data DataAtom = IntAtom Integer
-              | StringAtom String
+data AtomName = Symbol String
+              | Int Integer
+              | String String
+              | ProcessContext String (Maybe Type)
               deriving (Eq, Ord)
-
-instance Show DataAtom where
-  show (IntAtom    i  ) = show i
-  show (StringAtom str) = show str
+instance Show AtomName where
+  show (Int    i   ) = show i
+  show (String str ) = show str
+  show (Symbol name) = show name
+  show (ProcessContext name maybeType) =
+    name ++ ":" ++ show maybeType
 
 data Type = TypeInt
           | TypeString
@@ -101,8 +104,7 @@ showLinkList args = "(" ++ unwordsList args ++ ")"
 -- | Show the given link or the embedded atom
 showLink :: LinkLit -> String
 showLink (LinkLit name     ) = name
-showLink (AtomLit name args) = name ++ showLinkList args
-showLink (DataLit dataAtom ) = show dataAtom
-showLink (ProcessContextLit name maybeType) =
+showLink (AtomLit (ProcessContext name maybeType) _) =
   "$" ++ name ++ maybe "" ((":" ++) . show) maybeType
+showLink (AtomLit name args) = show name ++ showLinkList args
 

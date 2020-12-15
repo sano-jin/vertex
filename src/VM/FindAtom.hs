@@ -36,6 +36,7 @@ import           VM.Heap                        ( AtomList
                                                 , Heap
                                                 , Node(..)
                                                 , HAddr
+                                                , HAtomName(..)
                                                 , getIndeg
                                                 , hLookup
                                                 , toAtomList
@@ -57,10 +58,6 @@ checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(AtomVal _ _, hAddr) =
   if isMatchedLocalHAddr hAddr envs 
   then Nothing -- non-injective matching
   else checkLinkVal heap maybeIndeg envs linkValAddr
-checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr@(DataVal _, hAddr) =
-  if isMatchedLocalHAddr hAddr envs 
-  then Nothing -- non-injective matching
-  else checkLinkVal heap maybeIndeg envs linkValAddr
 checkEmbeddedLinkVal heap maybeIndeg envs linkValAddr =
   checkLinkVal heap maybeIndeg envs linkValAddr
 
@@ -78,11 +75,31 @@ checkIndeg (Just indeg) hIndeg
 --   This doesn't check the matching address is a member of the `matchedLocalAddrs`
 --   Since we want to use this also for matching the atom of the head of the incomming link.
 checkLinkVal :: Heap -> Maybe Indeg -> Envs -> (LinkVal, HAddr) -> Maybe Envs
+checkLinkVal heap maybeIndeg envs (AtomVal (ProcessContext name (Just type_)) _, hAddr) =
+  case hLookup hAddr heap of
+    (hIndeg, node) ->
+      if checkIndeg maybeIndeg hIndeg
+         && isNodeSameType node type_
+      then
+        let newEnvs = insertPCtxName2Node name node envs in
+          Just $ if isNothing maybeIndeg then newEnvs
+                 else addMatchedLocalAddrs hAddr newEnvs
+                    -- If the maybeIndeg == Nothing, the incomming link is a free link
+                    -- otherwise, it is a local link and it should be added
+                    -- to the matchedLocalAddrs of envs
+      else Nothing
+  where isNodeSameType (NAtom (HInt _   ) []) TypeInt    = True
+        isNodeSameType (NAtom (HString _) []) TypeString = True
+        isNodeSameType (NAtom _ []          ) TypeUnary  = True
+        isNodeSameType (_                   ) _          = False
+checkLinkVal _ _ _  pCtxVal@(AtomVal (ProcessContext _ Nothing) _, _)
+  = error $ "matching of the untyped process context is not implemented "
+    ++ show pCtxVal
 checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
   case hLookup hAddr heap of
     (hIndeg, NAtom hAtomName hLinks) ->
       if checkIndeg maybeIndeg hIndeg 
-         && atomName == hAtomName
+         && isNodeSameName atomName hAtomName
          && length links == length hLinks
       then
         let
@@ -97,44 +114,11 @@ checkLinkVal heap maybeIndeg envs (AtomVal atomName links, hAddr) =
           foldM (checkEmbeddedLinkVal heap (Just 1)) envs' zippedLinks
       else
         Nothing
-    (_, NData _) -> Nothing
     _           -> error "indirection traversing is not implemented yet"
-checkLinkVal heap maybeIndeg envs (DataVal dataAtom, hAddr) =
-  case hLookup hAddr heap of
-    (hIndeg, NData hDataAtom) ->
-      if checkIndeg maybeIndeg hIndeg
-         && dataAtom == hDataAtom
-      then Just $ if isNothing maybeIndeg
-                  then envs
-                  else addMatchedLocalAddrs hAddr envs
-                    -- If the maybeIndeg == Nothing, the incomming link is a free link
-                    -- otherwise, it is a local link and it should be added
-                    -- to the matchedLocalAddrs of envs
-      else Nothing
-    (_, NAtom _ _) -> Nothing
-    _              -> error "indirection traversing is not implemented yet"
-checkLinkVal heap maybeIndeg envs (ProcessContextVal name (Just type_), hAddr) =
-  case hLookup hAddr heap of
-    (hIndeg, node) ->
-      if checkIndeg maybeIndeg hIndeg
-         && isNodeSameType node type_
-      then
-        let newEnvs = insertPCtxName2Node name node envs in
-          Just $ if isNothing maybeIndeg then newEnvs
-                 else addMatchedLocalAddrs hAddr newEnvs
-                    -- If the maybeIndeg == Nothing, the incomming link is a free link
-                    -- otherwise, it is a local link and it should be added
-                    -- to the matchedLocalAddrs of envs
-      else Nothing
-  where isNodeSameType (NData (IntAtom _   )) TypeInt    = True
-        isNodeSameType (NData (StringAtom _)) TypeString = True
-        isNodeSameType (NData _             ) TypeUnary  = True
-        isNodeSameType (NAtom _ []          ) TypeUnary  = True
-        isNodeSameType (_                   ) _          = False
-        
-checkLinkVal _ _ _  pCtxVal@(ProcessContextVal _ Nothing, _)
-  = error $ "matching of the untyped process context is not implemented "
-    ++ show pCtxVal
+  where isNodeSameName (Int i1)       (HInt    i2)  = i1 == i2
+        isNodeSameName (String s1)    (HString s2)  = s1 == s2
+        isNodeSameName (Symbol name1) (HSymbol name2) = name1 == name2
+        isNodeSameName _ _ = False
     
 checkLinkVal _ _ envs (LocalLinkVal matchingAddr, hAddr) =
   case lookupLocalLink2Addr matchingAddr envs of

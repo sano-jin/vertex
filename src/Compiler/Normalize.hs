@@ -19,7 +19,7 @@ normalizeLocal2LocalLinkVal fromAddr toAddr (LocalLinkVal addr) =
   LocalLinkVal $ substituteAddr fromAddr toAddr addr
 normalizeLocal2LocalLinkVal fromAddr toAddr (AtomVal atomName links) =
   AtomVal atomName $ map (normalizeLocal2LocalLinkVal fromAddr toAddr) links
-normalizeLocal2LocalLinkVal _ _ freeLinkOrData = freeLinkOrData
+normalizeLocal2LocalLinkVal _ _ freeLink = freeLink
 
 normalizeLocal2LocalAliasVal :: (Addr, Indeg) -> Addr -> ProcVal -> ProcVal
 normalizeLocal2LocalAliasVal (fromAddr, fromIndeg) toAddr (LocalAliasVal indeg addr linkVal)
@@ -49,7 +49,7 @@ normalizeLocal2FreeLinkVal fromAddr toLinkName (LocalLinkVal addr) =
   if fromAddr == addr then FreeLinkVal toLinkName else LocalLinkVal addr
 normalizeLocal2FreeLinkVal fromAddr toLinkName (AtomVal atomName links) =
   AtomVal atomName $ map (normalizeLocal2FreeLinkVal fromAddr toLinkName) links
-normalizeLocal2FreeLinkVal _ _ freeLinkOrInt = freeLinkOrInt
+normalizeLocal2FreeLinkVal _ _ free = free
 
 normalizeLocal2FreeAliasVal :: Addr -> String -> ProcVal -> ProcVal
 normalizeLocal2FreeAliasVal fromAddr toLinkName (LocalAliasVal indeg addr linkVal)
