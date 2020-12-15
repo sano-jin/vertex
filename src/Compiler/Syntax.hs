@@ -43,7 +43,7 @@ data AtomName = Symbol String
 instance Show AtomName where
   show (Int    i   ) = show i
   show (String str ) = show str
-  show (Symbol name) = show name
+  show (Symbol name) = name
   show (ProcessContext name maybeType) =
     name ++ ":" ++ show maybeType
 
