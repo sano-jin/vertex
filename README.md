@@ -146,7 +146,7 @@ You can easily see that the transitions are forming a cycle and there is no term
 
 ### For more informations
 See [here](/semantics.md) to get more description about semantics.
-[This pdf](/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
+[This pdf](/doc/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
 
 Also, feel free to take a look at the [slide](/doc/DHLMNtal.pdf) (its written in Japanese though).
 
