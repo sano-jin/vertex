@@ -1,6 +1,6 @@
 # Directed HyperLMNtal
 
-![Cube](https://github.com/sano-jin/vertex/blob/develop/doc/dhlvis_cube.png)
+![Cube](/doc/dhlvis_cube.png)
 
 *This is an experimental project*
 
@@ -48,7 +48,7 @@ Open your favorite editor, write down the former program, save it as `test1.dhl`
 stack exec dhlvis -- test1.dhl
 ```
 
-![The graphical image of the test1.dhl](https://github.com/sano-jin/vertex/blob/develop/doc/dhlvis_sample1-1.png)
+![The graphical image of the test1.dhl](doc/dhlvis_sample1-1.png)
 
 Press ESC to terminate.
 
@@ -80,7 +80,7 @@ and visualize it.
 stack exec dhlvis -- test1.dhl
 ```
 
-![The graphical image of the test1.dhl](https://github.com/sano-jin/vertex/blob/develop/doc/dhlvis_sample1-2.png)
+![The graphical image of the test1.dhl](/doc/dhlvis_sample1-2.png)
 
 Press SPACE to reduce (rewrite) 1 step.
 
@@ -140,15 +140,15 @@ Run `stateViewer` as below.
 stack exec stateViewer  -- example/nd/cycle.dhl
 ```
 
-![stateViewer_nd1](https://github.com/sano-jin/vertex/blob/develop/doc/stateViewer_nd1.png)
+![stateViewer_nd1](/doc/stateViewer_nd1.png)
 
 You can easily see that the transitions are forming a cycle and there is no terminal state.
 
 ### For more informations
-See [here](https://github.com/sano-jin/vertex/blob/master/semantics.md) to get more description about semantics.
-[This pdf](https://github.com/sano-jin/vertex/blob/master/doc/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
+See [here](/semantics.md) to get more description about semantics.
+[This pdf](/Directed_HyperFlatLMNtal.pdf) also describes the semantics.
 
-Also, feel free to take a look at the [slide](https://github.com/sano-jin/vertex/blob/master/doc/DHLMNtal.pdf) (its written in Japanese though).
+Also, feel free to take a look at the [slide](/doc/DHLMNtal.pdf) (its written in Japanese though).
 
 
 ## Tools in a nutshell
@@ -175,5 +175,5 @@ Run this test to obtain more detailed information about the state of the heap, e
 stack test --test-arguments "example/sample.dhl"
 ```
 
-Also, see [here](https://github.com/sano-jin/vertex/tree/master/test/test-suits) to get more information about testing this.
+Also, see [here](/test/test-suits) to get more information about testing this.
 
